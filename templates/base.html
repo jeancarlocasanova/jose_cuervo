@@ -1,0 +1,19 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jose Cuervo</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+<!--<img src="{# % static 'R.png' %}" alt="My image">-->
+<div class="w3-container" style="margin: 50px">
+    {% block content %}
+    {% endblock content %}
+</div>
+
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+</body>
+</html>
