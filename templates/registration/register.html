@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/login.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="">
+
+  {% csrf_token %}
+<div class="blurred-box" style="height: 500px">
+
+  <div class="user-login-box">
+    <span class="user-icon"></span>
+     {% if msg %}
+    <span class="text-danger user-name">{{ msg | safe }}</span>
+    {% else %}
+    <div class="user-name">Crea tu usuario</div>
+    {% endif %}
+    {% if success %}
+        <p class="token">{{ token }}</p>
+
+            <p class="register">
+              Favor de <a href="{% url 'login' %}" class="create text-small">Iniciar Sesion</a> usando tu Token.
+            </p>
+
+    {% else %}
+       <div class="register">Nombre de usuario</div>
+      {{ form.username  }}
+        <div class="register">Contraseña</div>
+      {{ form.password1 }}
+       <div class="register">Confirmar contraseña</div>
+      {{ form.password2 }}
+    <button type="submit" name="login"> Crear </button>
+    {% endif %}
+  </div>
+</div>
+  </form>
+{% endblock content %}

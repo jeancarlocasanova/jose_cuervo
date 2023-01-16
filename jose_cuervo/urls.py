@@ -15,15 +15,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth import views as auth_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from cuervo.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('',home_view),
 
     path('accounts/', include('django.contrib.auth.urls')),
-    path('pro/', ProjectListView.as_view(), name='pro')
+    path('register/', register_token, name="register"),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view,name='logout')
 ]
 
 urlpatterns += staticfiles_urlpatterns()

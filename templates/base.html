@@ -5,15 +5,21 @@
     <meta charset="UTF-8">
     <title>Jose Cuervo</title>
     <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/nav.css" rel="stylesheet">
+    {% block stylesheets %} {% endblock stylesheets %}
 </head>
 <body>
 <!--<img src="{# % static 'R.png' %}" alt="My image">-->
-<div class="w3-container" style="margin: 50px">
+{% include 'snippets/nav.html' %}
+
+<div class="w3-container" id="page-content-wrapper">
     {% block content %}
     {% endblock content %}
 </div>
 
+{% block javascripts %}{% endblock javascripts %}
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
+
 </body>
 </html>
