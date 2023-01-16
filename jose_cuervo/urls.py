@@ -25,11 +25,16 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('register/', register_token, name="register"),
     path('login/', login_view, name='login'),
-    path('logout/', logout_view,name='logout'),
+    path('logout/', logout_view, name='logout'),
 
-    path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('inventoryLocation/', inventoryLocation_view, name='inventoryLocation'),
-    path('marbeteHandling/', labelHandling_view, name='labelHandling')
+    path('labelStatus/', labelStatus_view, name='labelStatus'),
+    path('coilHandling/', coilHandling_view, name='coilHandling'),
+    path('depletionOfCoils/', depletionOfCoils_view, name='depletionOfCoils'),
+    path('marbeteHandling/', labelHandling_view, name='labelHandling'),
+    path('usersManagement/', usersManagement_view, name='usersManagement'),
+    path('labelTraceability/', labelTraceability_view, name='labelTraceability'),
+    path('reports/', reports_view, name='reports'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
