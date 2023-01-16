@@ -1,18 +1,18 @@
 {% load static %}
-{% if user.is_authenticated%}
+{% if user.is_authenticated %}
 <div id="wrapper">
       <!-- Sidebar -->
       <div id="sidebar-wrapper">
          <ul class="sidebar-nav nav-pills nav-stacked" id="menu">
              <img style=" margin-top:10px; margin-left:45px; height: 100px; width: 140px" src="{% static 'media/jose_cuervo_logo.png' %}"/>
             <li>
-               <a href="#"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/ubi.png' %}"/></span>Ubicaciones de Inventario</a>
+               <a href="{% url 'inventoryLocation' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/ubi.png' %}"/></span>Ubicaciones de Inventario</a>
             </li>
             <li>
                <a href="#"> <span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/botella.png' %}"/></span>Estado de Marbetes</a>
             </li>
             <li>
-               <a href="#"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/bobina.png' %}"/></span>Manejo de bobinas</a>
+               <a href="{% url 'coilHandling' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/bobina.png' %}"/></span>Manejo de bobinas</a>
             </li>
              <li>
                <a href="#"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/agotado.png' %}"/></span>Agot. de bobinas</a>

@@ -20,12 +20,15 @@ from cuervo.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',home_view),
+    path('', home_view),
 
     path('accounts/', include('django.contrib.auth.urls')),
     path('register/', register_token, name="register"),
     path('login/', login_view, name='login'),
-    path('logout/', logout_view,name='logout')
+    path('logout/', logout_view,name='logout'),
+
+    path('coilHandling/', coilHandling_view, name='coilHandling'),
+    path('inventoryLocation/', inventoryLocation_view, name='inventoryLocation'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
