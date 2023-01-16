@@ -2,11 +2,41 @@ from django.db import models
 from django.urls import reverse
 
 # Create your models here.
-#class User(models.Model):
-   # name = models.CharField(max_length=50)
-  #  description = models.CharField(max_length=200)
-  #  active = models.BooleanField(default=True)
+class inventoryLocation(models.Model):
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=200)
 
-    #def get_absolute_url(self):
-        #return reverse('project-list',kwargs={})
+class labelStatus(models.Model):
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=200)
+
+class coilStatus(models.Model):
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=200)
+
+class coilType(models.Model):
+    name = models.CharField(max_length=70)
+
+class coilProvider(models.Model):
+    name = models.CharField(max_length=70)
+
+class coil(models.Model):
+    uniqueid = models.CharField(max_length=20)
+    FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.CASCADE, null=False, help_text='Linked Coil Status')
+    FK_coilType_id = models.ForeignKey(coilType, on_delete=models.CASCADE, null=False, help_text='Linked Coil Type')
+    FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.CASCADE, null=False, help_text='Linked Coil Provider')
+    last_update = models.DateTimeField(auto_now_add=True, null=False)
+    last_edit_user = models.DateTimeField(auto_now_add=False, null=True)
+
+class label(models.Model):
+    uniqueid = models.CharField(max_length=20)
+    FK_coil_id = models.ForeignKey(coil, on_delete=models.CASCADE, null=False, help_text='Linked Coil')
+    FK_labelStatus_id = models.ForeignKey(labelStatus, on_delete=models.CASCADE, null=False, help_text='Linked Label Status')
+    FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.CASCADE, null=False, help_text='Linked Inventory Location')
+    last_update = models.DateTimeField(auto_now_add=True, null=False)
+    last_edit_user = models.DateTimeField(auto_now_add=False, null=True)
+
+
+
+
 

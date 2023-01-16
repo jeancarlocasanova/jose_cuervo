@@ -3,5 +3,5 @@ from .register import *
 from .home import *
 from .coilHandling import *
 from .inventoryLocation import *
-from .marbeteStatus import *
-from .marbeteHandling import *
+from .labelStatus import *
+from .labelHandling import *

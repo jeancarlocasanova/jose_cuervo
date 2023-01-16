@@ -29,6 +29,7 @@ urlpatterns = [
 
     path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('inventoryLocation/', inventoryLocation_view, name='inventoryLocation'),
+    path('marbeteHandling/', labelHandling_view, name='labelHandling')
 ]
 
 urlpatterns += staticfiles_urlpatterns()
