@@ -1,72 +1,47 @@
 {% extends "base.html" %}
 
-{% block stylesheets %}  <link href="/static/css/home.css" rel="stylesheet"> {% endblock stylesheets %}
+{% block stylesheets %}  <link href="/static/css/submenu.css" rel="stylesheet"> {% endblock stylesheets %}
 
 {% block content %}
 {% if user.is_authenticated %}
-<div class="p-4" style="margin-left: 250px">
-    <div class="welcome">
-      <div class="content rounded-3 p-3">
-        <h1 class="fs-3">Reportes</h1>
-        <p class="mb-0">Hello Jone Doe, welcome to your awesome dashboard!</p>
-      </div>
+<div class="cards-list">
+
+<div class="card 1">
+  <div class="card_image"> <img src="https://img.freepik.com/foto-gratis/primer-plano-botellas-vidrio-vacias-corchos-sobre-fondo-borroso_169016-20593.jpg?w=1060&t=st=1673895622~exp=1673896222~hmac=c2c9a3b2106042d2d44a87b919d9e1ea0417f645cd5dd7e2b057cd2c5874d80e" /> </div>
+  <div class="card_title title-white">
+    <p>Disponibilidad de marbetes</p>
+  </div>
+</div>
+
+  <div class="card 2">
+  <div class="card_image">
+    <img src="https://img.freepik.com/foto-gratis/cerrar-botellas-vidrio-cerveza-hielo-sobre-fondo-oscuro_1150-8903.jpg?w=1060&t=st=1673897079~exp=1673897679~hmac=c143bde84ed8892e9ab2cd16b6116ba34914499e6dfde382229af2dd125b14ff" />
     </div>
+  <div class="card_title title-white">
+    <p>Conciliación de marbetes</p>
+  </div>
+</div>
 
-    <section class="statistics mt-4">
-      <div class="row">
-        <div class="col-lg-4">
-          <div class="box d-flex rounded-2 align-items-center mb-4 mb-lg-0 p-3">
-            <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle"></i>
-            <div class="ms-3">
-              <div class="d-flex align-items-center">
-                <h3 class="mb-0">1,245</h3> <span class="d-block ms-2">Emails</span>
-              </div>
-              <p class="fs-normal mb-0">Lorem ipsum dolor sit amet</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="box d-flex rounded-2 align-items-center mb-4 mb-lg-0 p-3">
-            <i class="uil-file fs-2 text-center bg-danger rounded-circle"></i>
-            <div class="ms-3">
-              <div class="d-flex align-items-center">
-                <h3 class="mb-0">34</h3> <span class="d-block ms-2">Projects</span>
-              </div>
-              <p class="fs-normal mb-0">Lorem ipsum dolor sit amet</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="box d-flex rounded-2 align-items-center p-3">
-            <i class="uil-users-alt fs-2 text-center bg-success rounded-circle"></i>
-            <div class="ms-3">
-              <div class="d-flex align-items-center">
-                <h3 class="mb-0">5,245</h3> <span class="d-block ms-2">Users</span>
-              </div>
-              <p class="fs-normal mb-0">Lorem ipsum dolor sit amet</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <section class="charts mt-4">
-      <div class="row">
-        <div class="col-lg-6">
-          <div class="chart-container rounded-2 p-3">
-            <h3 class="fs-6 mb-3">Chart title number one</h3>
-            <canvas id="myChart"></canvas>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="chart-container rounded-2 p-3">
-            <h3 class="fs-6 mb-3">Chart title number two</h3>
-            <canvas id="myChart2"></canvas>
-          </div>
-        </div>
-      </div>
-    </section>
- </div>
+<div class="card 3">
+  <div class="card_image">
+    <img src="https://img.freepik.com/foto-gratis/primer-plano-botellas-tequila-sobre-fondo-negro_181624-59578.jpg?w=900&t=st=1673895969~exp=1673896569~hmac=d599e98f880ad27d274de15354c24107277cb4c7ddb10d5e7f70d01d94e941cf" />
+  </div>
+  <div class="card_title title-white">
+    <p>Trazabilidad de marbete</p>
+  </div>
+</div>
+
+  <div class="card 4">
+  <div class="card_image">
+    <img src="https://img.freepik.com/foto-gratis/proceso-trabajo-fabrica-acero_140725-7628.jpg?w=1060&t=st=1673894763~exp=1673895363~hmac=2d5f053f912c604369f0dee339bf299ebc27448f9b18e866e426233ffb2f8924" />
+    </div>
+  <div class="card_title title-white">
+    <p>Trazabilidad de bobina</p>
+  </div>
+  </div>
+</div>
+
 {% else %}
  <div class="w3-panel w3-yellow">
             <h3 style="color: white">No has iniciado seccion!</h3>
@@ -74,157 +49,3 @@
         </div>
 {% endif %}
 {% endblock content %}
-
-{% block javascripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Other important pens.
-// Map: https://codepen.io/themustafaomar/pen/ZEGJeZq
-// Navbar: https://codepen.io/themustafaomar/pen/VKbQyZ
-
-
-// The bar chart
-var myChart = new Chart(document.getElementById('myChart'), {
-  type: 'bar',
-  data: {
-    labels: ["January", "February", "March", "April", 'May', 'June', 'August', 'September'],
-    datasets: [{
-      label: "Lost",
-      data: [45, 25, 40, 20, 60, 20, 35, 25],
-      backgroundColor: "#0d6efd",
-      borderColor: 'transparent',
-      borderWidth: 2.5,
-      barPercentage: 0.4,
-    }, {
-      label: "Succes",
-      startAngle: 2,
-      data: [20, 40, 20, 50, 25, 40, 25, 10],
-      backgroundColor: "#dc3545",
-      borderColor: 'transparent',
-      borderWidth: 2.5,
-      barPercentage: 0.4,
-    }]
-  },
-  options: {
-    scales: {
-      yAxes: [{
-        gridLines: {},
-        ticks: {
-          stepSize: 15,
-        },
-      }],
-      xAxes: [{
-        gridLines: {
-          display: false,
-        }
-      }]
-    }
-  }
-})
-
-// The line chart
-var chart = new Chart(document.getElementById('myChart2'), {
-  type: 'line',
-  data: {
-    labels: ["January", "February", "March", "April", 'May', 'June', 'August', 'September'],
-    datasets: [{
-      label: "My First dataset",
-      data: [4, 20, 5, 20, 5, 25, 9, 18],
-      backgroundColor: 'transparent',
-      borderColor: '#0d6efd',
-      lineTension: .4,
-      borderWidth: 1.5,
-    }, {
-      label: "Month",
-      data: [11, 25, 10, 25, 10, 30, 14, 23],
-      backgroundColor: 'transparent',
-      borderColor: '#dc3545',
-      lineTension: .4,
-      borderWidth: 1.5,
-    }, {
-      label: "Month",
-      data: [16, 30, 16, 30, 16, 36, 21, 35],
-      backgroundColor: 'transparent',
-      borderColor: '#f0ad4e',
-      lineTension: .4,
-      borderWidth: 1.5,
-    }]
-  },
-  options: {
-    scales: {
-      yAxes: [{
-        gridLines: {
-          drawBorder: false
-        },
-        ticks: {
-          stepSize: 12,
-        }
-      }],
-      xAxes: [{
-        gridLines: {
-          display: false,
-        },
-      }]
-    }
-  }
-})
-
-var chart = document.getElementById('chart3');
-var myChart = new Chart(chart, {
-  type: 'line',
-  data: {
-    labels: ["One", "Two", "Three", "Four", "Five", 'Six', "Seven", "Eight"],
-    datasets: [{
-      label: "Lost",
-      lineTension: 0.2,
-      borderColor: '#d9534f',
-      borderWidth: 1.5,
-      showLine: true,
-      data: [3, 30, 16, 30, 16, 36, 21, 40, 20, 30],
-      backgroundColor: 'transparent'
-    }, {
-      label: "Lost",
-      lineTension: 0.2,
-      borderColor: '#5cb85c',
-      borderWidth: 1.5,
-      data: [6, 20, 5, 20, 5, 25, 9, 18, 20, 15],
-      backgroundColor: 'transparent'
-    },
-               {
-                 label: "Lost",
-                 lineTension: 0.2,
-                 borderColor: '#f0ad4e',
-                 borderWidth: 1.5,
-                 data: [12, 20, 15, 20, 5, 35, 10, 15, 35, 25],
-                 backgroundColor: 'transparent'
-               },
-               {
-                 label: "Lost",
-                 lineTension: 0.2,
-                 borderColor: '#337ab7',
-                 borderWidth: 1.5,
-                 data: [16, 25, 10, 25, 10, 30, 14, 23, 14, 29],
-                 backgroundColor: 'transparent'
-               }]
-  },
-  options: {
-    scales: {
-      yAxes: [{
-        gridLines: {
-          drawBorder: false
-        },
-        ticks: {
-          stepSize: 12
-        }
-      }],
-      xAxes: [{
-        gridLines: {
-          display: false,
-        },
-      }],
-    }
-  }
-})
-
-</script>
-{% endblock javascripts %}
