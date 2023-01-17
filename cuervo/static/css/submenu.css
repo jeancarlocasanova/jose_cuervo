@@ -2,12 +2,13 @@ body{
   background-color: #100e17;
 }
 .cards-list {
-  margin-left: 350px;
+  margin-left: 250px;
   z-index: 0;
   width: 65%;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   flex-wrap: wrap;
+  vertical-align: center;
 }
 
 .card {
@@ -57,10 +58,9 @@ box-shadow: 5px 5px 30px 7px rgba(255, 213, 0, 0.09), -5px -5px 30px 7px rgba(25
   color: black;
 }
 
-@media all and (max-width: 300px) {
+@media(min-width: 300px) {
   .card-list {
     /* On small screens, we are no longer using row direction but column */
     flex-direction: column;
-    margin-right: 150px
   }
 }
