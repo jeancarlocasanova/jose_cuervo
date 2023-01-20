@@ -52,3 +52,32 @@ html, body {
 a.create:link {color: #ffffff;text-decoration:none;}
 a.create:visited {color: #afabab;text-decoration:none;}
 a.create:hover {text-decoration:underline;}
+
+label{
+	color: white;
+}
+input {
+  font-size: 16px;
+  color: #fff;
+  margin-bottom: 15px;
+  border: none;
+  border-bottom: 1px solid #fff;
+  outline: none;
+  background: transparent;
+}
+
+select {
+  font-size: 16px;
+  color: #ffd500;
+  border: none;
+  border-bottom: 1px solid #fff;
+  outline: none;
+  background: transparent;
+}
+option{
+	background-color: #100e17;
+}
+
+#myTable_info{
+	color: white;
+}

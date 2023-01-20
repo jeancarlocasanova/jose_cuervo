@@ -4,10 +4,11 @@
 
 {% block content %}
 {% if user.is_authenticated %}
+
 <div class="container">
 	<h1 style="color: white; margin-bottom: 30px">Manejo de Ubicaciones de Inventario</h1>
 	<a class="create" href="{% url 'location-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Ubicación</a>
-	<table class="table">
+	<table class="table" id="myTable">
 		<thead style="background-color: #1e264e">
 			<tr>
 				<th scope="col">Nombre de Ubicación</th>
@@ -38,4 +39,15 @@
 {% endblock content %}
 
 {% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+
+            generateBarcodes();
+
+        });
+    </script>
 {% endblock javascripts %}

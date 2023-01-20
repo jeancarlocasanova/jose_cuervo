@@ -10,7 +10,7 @@ def labelStatus_view(request):
 
 class deleteStatus_view(DeleteView):
     model = labelStatus
-    template_name = 'cuervo/status_confirm_delete.html'
+    template_name = 'cuervo/label_status_confirm_delete.html'
     success_url = reverse_lazy('labelStatus')
 
 def createStatus_view(request):
@@ -21,13 +21,13 @@ def createStatus_view(request):
             name = form.cleaned_data.get("name")
             description = form.cleaned_data.get("description")
             try:
-                inventoryObj = labelStatus.objects.get(name=name)
+                labelStatusObj = labelStatus.objects.get(name=name)
             except:
-                inventoryObj = None
+                labelStatusObj = None
 
-            if inventoryObj is None:
-                inventoryObj = labelStatus.objects.create(name=name, description=description)
-                inventoryObj.save()
+            if labelStatusObj is None:
+                labelStatusObj = labelStatus.objects.create(name=name, description=description)
+                labelStatusObj.save()
                 return redirect("/labelStatus/")
             else:
                 msg = 'Este Nombre de usuario ya existe'
@@ -36,7 +36,7 @@ def createStatus_view(request):
     else:
         form = LabelStatusForm()
 
-    return render(request, "cuervo/status_create.html", {"form": form, "msg": msg})
+    return render(request, "cuervo/label_status_create.html", {"form": form, "msg": msg})
 
 def updateStatus_view(request, id):
     form = EditLabelStatusForm(request.POST or None)
@@ -57,4 +57,4 @@ def updateStatus_view(request, id):
         else:
             msg = 'Error validando el formulario'
 
-    return render(request, "cuervo/status_edit.html", {"form": form, "msg": msg})
+    return render(request, "cuervo/label_status_edit.html", {"form": form, "msg": msg})

@@ -37,6 +37,11 @@ urlpatterns = [
     path('labelStatus/edit/<int:id>', updateStatus_view, name='status-edit'),
     path('labelStatusCreate/', createStatus_view, name='status-create'),
 
+    path('coilStatus/', coilStatus_view, name='coilStatus'),
+    path('coilStatus/delete/<int:pk>', deleteCoilStatus_view.as_view(), name='coil-status-delete'),
+    path('coilStatus/edit/<int:id>', updateCoilStatus_view, name='coil-status-edit'),
+    path('coilStatusCreate/', createCoilStatus_view, name='coil-status-create'),
+
     path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('depletionOfCoils/', depletionOfCoils_view, name='depletionOfCoils'),
     path('marbeteHandling/', labelHandling_view, name='labelHandling'),

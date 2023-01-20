@@ -5,24 +5,24 @@
 {% block content %}
 {% if user.is_authenticated %}
 <div class="container">
-	<h1 style="color: white; margin-bottom: 30px">Manejo de Estado de Marbetes</h1>
-	<a class="create" href="{% url 'status-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Estado</a>
+	<h1 style="color: white; margin-bottom: 30px">Manejo de Estado de Bobinas</h1>
+	<a class="create" href="{% url 'coil-status-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Estado</a>
 	<table class="table" id="myTable">
 		<thead style="background-color: #1e264e">
 			<tr>
-				<th scope="col">Estatus del marbete</th>
+				<th scope="col">Estatus de la bobina</th>
 				<th scope="col">Descripción</th>
 				<th scope="col">Editar</th>
 				<th scope="col">Eliminar</th>
 			</tr>
 		</thead>
 		<tbody>
-		{% for i in label_status %}
+		{% for i in coil_status %}
 			<tr>
 				<td>{{ i.name }}</td>
 				<td>{{ i.description }}</td>
-				<td><a href="{% url 'status-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>
-				<td><a href="{% url 'status-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>
+				<td><a href="{% url 'coil-status-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>
+				<td><a href="{% url 'coil-status-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>
 			</tr>
 		{% endfor %}
 		</tbody>

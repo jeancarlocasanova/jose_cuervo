@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import inventoryLocation, labelStatus
+from .models import inventoryLocation, labelStatus , coilStatus
 
 class LoginForm(forms.Form):
     password = forms.CharField(
@@ -60,6 +60,14 @@ class EditLabelStatusForm(forms.Form):
         model = labelStatus
         fields = ['name', 'description']
 
-class CoilStatus(forms.Form):
+class CoilStatusForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     description = forms.CharField(required=True, widget=forms.Textarea(attrs={"class": "form"}))
+
+class EditCoilStatusForm(forms.Form):
+    name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    description = forms.CharField(required=True, widget=forms.Textarea(attrs={"class": "form"}))
+
+    class Meta:
+        model = coilStatus
+        fields = ['name', 'description']
