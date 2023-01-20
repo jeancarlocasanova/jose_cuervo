@@ -28,7 +28,15 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
 
     path('inventoryLocation/', inventoryLocation_view, name='inventoryLocation'),
+    path('inventoryLocation/delete/<int:pk>', deleteLocation_view.as_view(), name='location-delete'),
+    path('inventoryLocation/edit/<int:id>', updateLocation_view, name='location-edit'),
+    path('inventoryLocationCreate/', createLocation_view, name='location-create'),
+
     path('labelStatus/', labelStatus_view, name='labelStatus'),
+    path('labelStatus/delete/<int:pk>', deleteStatus_view.as_view(), name='status-delete'),
+    path('labelStatus/edit/<int:id>', updateStatus_view, name='status-edit'),
+    path('labelStatusCreate/', createStatus_view, name='status-create'),
+
     path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('depletionOfCoils/', depletionOfCoils_view, name='depletionOfCoils'),
     path('marbeteHandling/', labelHandling_view, name='labelHandling'),

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Crea la Ubicacion de Inventario</h2>
+    {% endif %}
+
+  <div class="user-box">
+    {{ form.name }}
+      <label>Nombre de la ubicacion</label>
+    </div>
+
+  <div class="user-box">
+    {{ form.description }}
+      <label>Descripcion de la ubicación</label>
+    </div>
+
+    <button type="submit" name="login" class="create"> Crear </button>
+  </form>
+{% endblock content %}
