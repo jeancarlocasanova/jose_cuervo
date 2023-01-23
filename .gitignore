@@ -1,12 +1,8 @@
 /cuervo/migrations/
-/.idea/codeStyles/codeStyleConfig.xml
 /.idea/dataSources.xml
 /.idea/encodings.xml
-/.idea/f2candon.iml
-/.idea/dictionaries/f2cuser.xml
+/.idea/jose_cuervo.iml
 /.idea/misc.xml
 /.idea/modules.xml
-/.idea/inspectionProfiles/Project_Default.xml
 /.idea/vcs.xml
-/.idea/jose_cuervo.iml
 /jose_cuervo/settings.py
