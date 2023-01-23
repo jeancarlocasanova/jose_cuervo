@@ -7,6 +7,6 @@
 /.idea/vcs.xml
 /jose_cuervo/settings.py
 /.idea/
-/.idea/inspectionProfiles/
+.idea/inspectionProfiles/profiles_settings.xml
 /cuervo/migrations/
 
