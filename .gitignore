@@ -9,4 +9,5 @@
 /.idea/
 .idea/inspectionProfiles/profiles_settings.xml
 /cuervo/migrations/
+/__pycache__/
 
