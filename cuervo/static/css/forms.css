@@ -16,7 +16,7 @@ body{
   position: relative;
 }
 
- .user-box .form {
+ .user-box .form, input{
   width: 100%;
   padding: 10px 0;
   font-size: 16px;
@@ -45,7 +45,13 @@ body{
   color: #ffd500;
   font-size: 12px;
 }
-
+  input:focus ~ label,
+  input:valid ~ label {
+  top: -20px;
+  left: 0;
+  color: #ffd500;
+  font-size: 12px;
+}
 
 .button{
   background: transparent;

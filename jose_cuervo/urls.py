@@ -18,6 +18,10 @@ from django.urls import path, include
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from cuervo.views import *
 
+admin.site.site_header = "Jose Cuervo Admin"
+admin.site.site_title = "Jose Cuervo Admin Portal"
+admin.site.index_title = "Welcome to Jose Cuervo Portal"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view),
@@ -29,17 +33,17 @@ urlpatterns = [
 
     path('inventoryLocation/', inventoryLocation_view, name='inventoryLocation'),
     path('inventoryLocation/delete/<int:pk>', deleteLocation_view.as_view(), name='location-delete'),
-    path('inventoryLocation/edit/<int:id>', updateLocation_view, name='location-edit'),
+    path('inventoryLocation/edit/<int:pk>', updateLocation_view.as_view(), name='location-edit'),
     path('inventoryLocationCreate/', createLocation_view, name='location-create'),
 
     path('labelStatus/', labelStatus_view, name='labelStatus'),
     path('labelStatus/delete/<int:pk>', deleteStatus_view.as_view(), name='status-delete'),
-    path('labelStatus/edit/<int:id>', updateStatus_view, name='status-edit'),
+    path('labelStatus/edit/<int:pk>', updateLabelStatus_view.as_view(), name='status-edit'),
     path('labelStatusCreate/', createStatus_view, name='status-create'),
 
     path('coilStatus/', coilStatus_view, name='coilStatus'),
     path('coilStatus/delete/<int:pk>', deleteCoilStatus_view.as_view(), name='coil-status-delete'),
-    path('coilStatus/edit/<int:id>', updateCoilStatus_view, name='coil-status-edit'),
+    path('coilStatus/edit/<int:pk>', updateCoilStatus_view.as_view(), name='coil-status-edit'),
     path('coilStatusCreate/', createCoilStatus_view, name='coil-status-create'),
 
     path('coilHandling/', coilHandling_view, name='coilHandling'),

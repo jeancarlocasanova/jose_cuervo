@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from ..models import coilStatus
-from django.views.generic import DeleteView
+from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
-from ..form import CoilStatusForm, EditCoilStatusForm
+from ..form import CoilStatusForm
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 def coilHandling_view(request):
     return render(request, "cuervo/coilHandling.html")
@@ -11,11 +13,20 @@ def coilStatus_view(request):
     coil_status = coilStatus.objects.all()
     return render(request, "cuervo/coilStatus.html", {'coil_status': coil_status})
 
-class deleteCoilStatus_view(DeleteView):
+class deleteCoilStatus_view(PermissionRequiredMixin, DeleteView):
     model = coilStatus
     template_name = 'cuervo/coil_status_confirm_delete.html'
     success_url = reverse_lazy('coilStatus')
+    permission_required = 'cuervo.delete_coilstatus'
 
+class updateCoilStatus_view(PermissionRequiredMixin, UpdateView):
+    model = coilStatus
+    template_name = 'cuervo/coil_status_edit.html'
+    success_url = reverse_lazy('coilStatus')
+    fields = ['name', 'description']
+    permission_required = 'cuervo.change_coilstatus'
+
+@permission_required('cuervo.add_coilstatus', login_url='/login/')
 def createCoilStatus_view(request):
     msg = None
     if request.method == "POST":
@@ -40,24 +51,3 @@ def createCoilStatus_view(request):
         form = CoilStatusForm()
 
     return render(request, "cuervo/coil_status_create.html", {"form": form, "msg": msg})
-
-def updateCoilStatus_view(request, id):
-    form = EditCoilStatusForm(request.POST or None)
-    msg = None
-    if request.method == "POST":
-        if form.is_valid():
-            name = form.cleaned_data.get("name")
-            description = form.cleaned_data.get("description")
-            try:
-                status = coilStatus.objects.get(id=id)
-                if status is not None:
-                    status.name = name
-                    status.description = description
-                    status.save()
-                    return redirect("/coilStatus/")
-            except coilStatus is None:
-                msg = 'Error'
-        else:
-            msg = 'Error validando el formulario'
-
-    return render(request, "cuervo/coil_status_edit.html", {"form": form, "msg": msg})
