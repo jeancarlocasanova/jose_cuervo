@@ -8,21 +8,15 @@
 <form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
   {% csrf_token %}
 
-
      {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Crea el Estado de la Bobina</h2>
+    <h2>Crea un Tipo de Bobina</h2>
     {% endif %}
 
   <div class="user-box">
     {{ form.name }}
-      <label>Nombre del estado</label>
-    </div>
-
-  <div class="user-box">
-    {{ form.description }}
-      <label>Descripcion del estado</label>
+      <label>Nombre del tipo</label>
     </div>
 
     <button type="submit" name="login" class="create"> Crear </button>

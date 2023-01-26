@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+	<h1 style="color: white; margin-bottom: 30px">Manejo de Tipo de Bobinas</h1>
+	{% if perms.cuervo.add_coiltype %}
+	<a class="create" href="{% url 'coil-type-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Tipo</a>{% endif %}
+	<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">Tipo de bobina</th>
+				 {% if perms.cuervo.change_coiltype %}
+				<th scope="col">Editar</th>{% endif %}
+				{% if perms.cuervo.delete_coiltype %}
+				<th scope="col">Eliminar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in coil_type %}
+			<tr>
+				<td>{{ i.name }}</td>
+				 {% if perms.cuervo.change_coiltype %}
+				<td><a href="{% url 'coil-type-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				{% if perms.cuervo.delete_coiltype %}
+				<td><a href="{% url 'coil-type-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock javascripts %}

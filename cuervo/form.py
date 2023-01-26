@@ -46,3 +46,9 @@ class LabelStatusForm(forms.Form):
 class CoilStatusForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     description = forms.CharField(required=True, widget=forms.Textarea(attrs={"class": "form"}))
+
+class CoilTypeForm(forms.Form):
+    name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+
+class CoilProviderForm(forms.Form):
+    name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))

@@ -46,6 +46,16 @@ urlpatterns = [
     path('coilStatus/edit/<int:pk>', updateCoilStatus_view.as_view(), name='coil-status-edit'),
     path('coilStatusCreate/', createCoilStatus_view, name='coil-status-create'),
 
+    path('coilType/', coilType_view, name='coilType'),
+    path('coilType/delete/<int:pk>', deleteCoilType_view.as_view(), name='coil-type-delete'),
+    path('coilType/edit/<int:pk>', updateCoilType_view.as_view(), name='coil-type-edit'),
+    path('coilTypeCreate/', createCoilType_view, name='coil-type-create'),
+
+    path('coilProvider/', coilProvider_view, name='coilProvider'),
+    path('coilProvider/delete/<int:pk>', deleteCoilProvider_view.as_view(), name='coil-provider-delete'),
+    path('coilProvider/edit/<int:pk>', updateCoilProvider_view.as_view(), name='coil-provider-edit'),
+    path('coilProviderCreate/', createCoilProvider_view, name='coil-provider-create'),
+
     path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('depletionOfCoils/', depletionOfCoils_view, name='depletionOfCoils'),
     path('marbeteHandling/', labelHandling_view, name='labelHandling'),
