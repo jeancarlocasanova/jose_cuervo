@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+	<h1 style="color: white; margin-bottom: 30px">Manejo de Bobinas</h1>
+	{% if perms.cuervo.add_coilstatus %}
+	<a class="create" href="{% url 'coil-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Bobina</a>{% endif %}
+	<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">ID</th>
+				<th scope="col">Estatus</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Proveedor</th>
+                <th scope="col">Ultima Modificación</th>
+                <th scope="col">Usuario</th>
+				 {% if perms.cuervo.change_coil %}
+				<th scope="col">Editar</th>{% endif %}
+				{% if perms.cuervo.delete_coil %}
+				<th scope="col">Eliminar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in coilList %}
+			<tr>
+				<td>{{ i.uniqueid }}</td>
+				<td>{{ i.FK_coilStatus_id.name }}</td>
+                <td>{{ i.FK_coilType_id.name }}</td>
+                <td>{{ i.FK_coilProvider_id.name }}</td>
+                <td>{{ i.last_update }}</td>
+                <td>{{ i.last_edit_user }}</td>
+				 {% if perms.cuervo.change_coil %}
+				<td><a href="{% url 'coil-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				{% if perms.cuervo.delete_coil %}
+				<td><a href="{% url 'coil-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock javascripts %}

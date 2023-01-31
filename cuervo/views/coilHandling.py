@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
-from ..models import coilStatus, coilType, coilProvider
+from ..models import coilStatus, coilType, coilProvider, coil
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
-from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm
+from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CoilForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from datetime import datetime
 
 def coilHandling_view(request):
     return render(request, "cuervo/coilHandling.html")
@@ -138,3 +139,53 @@ def createCoilProvider_view(request):
         form = CoilProviderForm()
 
     return render(request, "cuervo/coil_provider_create.html", {"form": form, "msg": msg})
+
+# <------ COIL CRUD --------!>
+def coil_view(request):
+    coilList = coil.objects.all()
+    return render(request, "cuervo/coil.html", {'coilList': coilList})
+
+class deleteCoil_view(PermissionRequiredMixin, DeleteView):
+    model = coil
+    template_name = 'cuervo/coil_confirm_delete.html'
+    success_url = reverse_lazy('coil')
+    permission_required = 'cuervo.delete_coil'
+
+class updateCoil_view(PermissionRequiredMixin, UpdateView):
+    model = coil
+    template_name = 'cuervo/coil_edit.html'
+    success_url = reverse_lazy('coil')
+    form_class = CoilForm
+    permission_required = 'cuervo.change_coil'
+
+
+
+
+@permission_required('cuervo.add_coil', login_url='/login/')
+def createCoil_view(request):
+    msg = None
+    if request.method == "POST":
+        form = CoilForm(request.POST)
+        if form.is_valid():
+            uniqueId = form.cleaned_data.get("uniqueid")
+            FK_coilStatus_id = form.cleaned_data.get("FK_coilStatus_id")
+            FK_coilType_id = form.cleaned_data.get("FK_coilType_id")
+            FK_coilProvider_id = form.cleaned_data.get("FK_coilProvider_id")
+            last_edit_user = request.user
+            try:
+                coilObj = coil.objects.get(uniqueid=uniqueId)
+            except:
+                coilObj = None
+
+            if coilObj is None:
+                coilObj = coil.objects.create(uniqueid=uniqueId, FK_coilStatus_id=FK_coilStatus_id, FK_coilType_id=FK_coilType_id, FK_coilProvider_id=FK_coilProvider_id, last_edit_user=last_edit_user)
+                coilObj.save()
+                return redirect("/coil/")
+            else:
+                msg = 'Este Nombre ya existe'
+        else:
+            msg = 'A ocurrido un error'
+    else:
+        form = CoilForm()
+
+    return render(request, "cuervo/coil_create.html", {"form": form, "msg": msg})

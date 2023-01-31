@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from datetime import datetime
 
 # Create your models here.
 class inventoryLocation(models.Model):
@@ -26,7 +27,7 @@ class coil(models.Model):
     FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
     FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, help_text='Linked Coil Provider')
     last_update = models.DateTimeField(auto_now_add=True, null=False)
-    last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT, null=False, help_text='Linked User' )
+    last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User' )
 
 class label(models.Model):
     uniqueid = models.CharField(max_length=20)

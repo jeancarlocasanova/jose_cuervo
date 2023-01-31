@@ -27,6 +27,19 @@ body{
   outline: none;
   background: transparent;
 }
+
+ select {
+     width: 100%;
+  font-size: 16px;
+  color: #ffd500;
+  border: none;
+  border-bottom: 1px solid #fff;
+  outline: none;
+  background: transparent;
+}
+option{
+	background-color: #100e17;
+}
  .user-box label {
   position: absolute;
   top:0;

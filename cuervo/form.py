@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import coilStatus, coilType, coilProvider, coil
 
 class LoginForm(forms.Form):
     password = forms.CharField(
@@ -52,3 +53,16 @@ class CoilTypeForm(forms.Form):
 
 class CoilProviderForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+
+class MyModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.name
+class CoilForm(forms.ModelForm):
+    uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
+    FK_coilType_id = MyModelChoiceField(queryset=coilType.objects.all())
+    FK_coilProvider_id = MyModelChoiceField(queryset=coilProvider.objects.all())
+
+    class Meta:
+        model = coil
+        fields = 'uniqueid', 'FK_coilStatus_id', 'FK_coilType_id', 'FK_coilProvider_id'
