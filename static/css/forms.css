@@ -1,0 +1,101 @@
+body{
+  margin:0;
+  padding:0;
+  background-color: #100e17;
+  font-family: sans-serif;
+}
+
+ h2 {
+  margin: 0 0 30px;
+  padding: 0;
+  color: #fff;
+  text-align: center;
+}
+
+ .user-box {
+  position: relative;
+}
+
+ .user-box .form, input{
+  width: 100%;
+  padding: 10px 0;
+  font-size: 16px;
+  color: #fff;
+  margin-bottom: 30px;
+  border: none;
+  border-bottom: 1px solid #fff;
+  outline: none;
+  background: transparent;
+}
+
+ select {
+     width: 100%;
+  font-size: 16px;
+  color: #ffd500;
+  border: none;
+  border-bottom: 1px solid #fff;
+  outline: none;
+  background: transparent;
+}
+option{
+	background-color: #100e17;
+}
+ .user-box label {
+  position: absolute;
+  top:0;
+  left: 0;
+  padding: 10px 0;
+  font-size: 16px;
+  color: #fff;
+  pointer-events: none;
+  transition: .5s;
+}
+
+ .user-box .form:focus ~ label,
+ .user-box .form:valid ~ label {
+  top: -20px;
+  left: 0;
+  color: #ffd500;
+  font-size: 12px;
+}
+  input:focus ~ label,
+  input:valid ~ label {
+  top: -20px;
+  left: 0;
+  color: #ffd500;
+  font-size: 12px;
+}
+
+.button{
+  background: transparent;
+  color: rgba(255, 213, 0, 0.67);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 35px 0;
+  padding: 10px 30px;
+  border: 2px solid rgba(255, 213, 0, 0.67);
+    font-size: 12px;
+}
+.create{
+      background: transparent;
+  color: rgba(67,190,27,0.67);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 35px 0;
+  padding: 10px 30px;
+  border: 2px solid rgba(67,190,27,0.67);
+    font-size: 12px;
+}
+.create:hover{
+  background: transparent;
+  border: 2px solid rgba(240, 240, 240, 0.68);
+    color: rgba(240, 240, 240, 0.68);
+}
+
+.button:hover{
+  background: transparent;
+  border: 2px solid rgba(240, 240, 240, 0.68);
+    color: rgba(240, 240, 240, 0.68);
+}
+
+

@@ -61,6 +61,16 @@ urlpatterns = [
     path('coil/edit/<int:pk>', updateCoil_view.as_view(), name='coil-edit'),
     path('coilCreate/', createCoil_view, name='coil-create'),
 
+    path('SKU/', sku_view, name='SKU'),
+    path('sku/delete/<int:pk>', deleteSku_view.as_view(), name='sku-delete'),
+    path('sku/edit/<int:pk>', updateSku_view.as_view(), name='sku-edit'),
+    path('skuCreate/', createSku_view, name='sku-create'),
+
+    path('skuType/', skuType_view, name='skuType'),
+    path('skuType/delete/<int:pk>', deleteSkuType_view.as_view(), name='sku-type-delete'),
+    path('skuType/edit/<int:pk>', updateSkuType_view.as_view(), name='sku-type-edit'),
+    path('skuTypeCreate/', createSkuType_view, name='sku-type-create'),
+
     path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('depletionOfCoils/', depletionOfCoils_view, name='depletionOfCoils'),
     path('marbeteHandling/', labelHandling_view, name='labelHandling'),

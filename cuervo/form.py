@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import coilStatus, coilType, coilProvider, coil
+from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU
 
 class LoginForm(forms.Form):
     password = forms.CharField(
@@ -66,3 +66,16 @@ class CoilForm(forms.ModelForm):
     class Meta:
         model = coil
         fields = 'uniqueid', 'FK_coilStatus_id', 'FK_coilType_id', 'FK_coilProvider_id'
+
+class SkuTypeForm(forms.Form):
+    name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    description = forms.CharField(required=True, widget=forms.Textarea(attrs={"class": "form"}))
+
+class SkuForm(forms.ModelForm):
+    sku = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    description = forms.CharField(required=True, widget=forms.Textarea(attrs={"class": "form"}))
+    Fk_sku_type_id = MyModelChoiceField(queryset=sku_Type.objects.all())
+
+    class Meta:
+        model = SKU
+        fields = 'sku', 'description', 'Fk_sku_type_id'

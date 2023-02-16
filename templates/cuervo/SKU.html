@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+	<h1 style="color: white; margin-bottom: 30px">Manejo de SKU</h1>
+	{% if perms.cuervo.add_sku %}
+	<a class="create" href="{% url 'sku-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Sku</a>{% endif %}
+	<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">SKU</th>
+                 <th scope="col">Descripcion</th>
+                <th scope="col">Tipo de Sku</th>
+				 {% if perms.cuervo.change_sku %}
+				<th scope="col">Editar</th>{% endif %}
+				{% if perms.cuervo.delete_sku %}
+				<th scope="col">Eliminar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in sku %}
+			<tr>
+				<td>{{ i.sku }}</td>
+            <td>{{ i.description }}</td>
+            <td>{{ i.Fk_sku_type_id.name }}</td>
+				 {% if perms.cuervo.change_sku %}
+				<td><a href="{% url 'sku-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				{% if perms.cuervo.delete_sku %}
+				<td><a href="{% url 'sku-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock javascripts %}

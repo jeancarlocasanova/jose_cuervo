@@ -158,6 +158,9 @@ class updateCoil_view(PermissionRequiredMixin, UpdateView):
     form_class = CoilForm
     permission_required = 'cuervo.change_coil'
 
+    def get_queryset(self):
+        owner = self.request.user
+        return self.model.objects.filter(last_edit_user=owner)
 
 
 

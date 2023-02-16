@@ -9,3 +9,4 @@ from .reports import *
 from .depletionOfCoils import *
 from .usersManagement import *
 from .labelTraceability import *
+from .skuHandling import *
