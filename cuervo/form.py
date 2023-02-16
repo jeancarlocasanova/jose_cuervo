@@ -1,7 +1,15 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU
+from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order
+
+
+class MyModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.name
+class ChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.sku
 
 class LoginForm(forms.Form):
     password = forms.CharField(
@@ -54,9 +62,6 @@ class CoilTypeForm(forms.Form):
 class CoilProviderForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
-class MyModelChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
-        return obj.name
 class CoilForm(forms.ModelForm):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
@@ -79,3 +84,14 @@ class SkuForm(forms.ModelForm):
     class Meta:
         model = SKU
         fields = 'sku', 'description', 'Fk_sku_type_id'
+
+class OrderForm(forms.ModelForm):
+    uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    FK_sku_id = ChoiceField(queryset=SKU.objects.all())
+
+    class Meta:
+        model = order
+        fields = 'uniqueid', 'FK_sku_id'
+
+class LineForm(forms.Form):
+    uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
