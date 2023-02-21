@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponseRedirect
 from ..models import SKU, sku_Type
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
 from ..form import SkuTypeForm, SkuForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db.models import ProtectedError
+from django.contrib import messages
 
 # <------ TYPE OF SKU CRUD --------!>
 
@@ -63,6 +65,16 @@ class deleteSku_view(PermissionRequiredMixin, DeleteView):
     template_name = 'cuervo/sku_confirm_delete.html'
     success_url = reverse_lazy('SKU')
     permission_required = 'cuervo.delete_sku'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            messages.error(request, "custom error message")
+        finally:
+            return redirect(success_url)
 
 
 class updateSku_view(PermissionRequiredMixin, UpdateView):

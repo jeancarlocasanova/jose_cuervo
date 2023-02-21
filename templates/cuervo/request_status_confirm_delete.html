@@ -45,10 +45,10 @@
 
 {% block content %}
 <form action="" method="post" style="margin-left: 350px">{% csrf_token %}
-        <p class="alert-danger">¿Estas seguro que quieres borrar "{{ object.sku }}"?</p>
+        <p class="alert-danger">¿Estas seguro que quieres borrar "{{ object.status }}"?</p>
         <i class="fas fa-trash-alt fa-2x"></i>
         <button type="submit" class="btn buttonDelete" style="margin-right: 50px">Borrar</button>
-        <button type="button" class="btn buttonEdit" value="Cancel" onclick="javascript:location.href='/SKU'">Cancelar</button>
+        <button type="button" class="btn buttonEdit" value="Cancel" onclick="javascript:location.href='/request-status'">Cancelar</button>
 </form>
 {% endblock content %}
 

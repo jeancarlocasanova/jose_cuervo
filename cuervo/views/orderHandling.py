@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-from ..models import order
+from ..models import order, order_Exec
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
-from ..form import OrderForm
+from ..form import OrderForm, AssignOrderForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
@@ -50,3 +50,29 @@ def createOrder_view(request):
         form = OrderForm()
 
     return render(request, "cuervo/order_create.html", {"form": form, "msg": msg})
+
+# <------ ASSIGN ORDER --------!>
+def assignOrder_view(request):
+    msg = None
+    if request.method == "POST":
+        form = AssignOrderForm(request.POST)
+        if form.is_valid():
+            FK_order_id = form.cleaned_data.get("FK_order_id")
+            FK_line_id = form.cleaned_data.get("FK_line_id")
+            try:
+                requestObj = order_Exec.objects.get(FK_line_id=FK_line_id)
+                requestObj = order_Exec.objects.get(FK_order_id=FK_order_id)
+            except:
+                requestObj = None
+            if requestObj is None:
+                requestObj = order_Exec.objects.create(FK_order_id=FK_order_id, FK_line_id=FK_line_id)
+                requestObj.save()
+                return redirect("/Order/")
+            else:
+                msg = 'No se le puede Asignar varias ordenes a una Linea'
+        else:
+            msg = 'A ocurrido un error'
+    else:
+        form = OrderForm()
+
+    return render(request, "cuervo/assign_order.html", {"form": form, "msg": msg})

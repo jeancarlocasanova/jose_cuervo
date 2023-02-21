@@ -53,7 +53,10 @@ box-shadow: 5px 5px 30px 7px rgba(255, 213, 0, 0.09), -5px -5px 30px 7px rgba(25
 .title-white {
   color: white;
 }
-
+.title-menu {
+  color: white;
+  text-align: center;
+}
 .title-black {
   color: black;
 }
@@ -64,3 +67,4 @@ box-shadow: 5px 5px 30px 7px rgba(255, 213, 0, 0.09), -5px -5px 30px 7px rgba(25
     flex-direction: column;
   }
 }
+

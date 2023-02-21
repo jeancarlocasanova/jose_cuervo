@@ -6,25 +6,14 @@
          <ul class="sidebar-nav nav-pills nav-stacked" id="menu">
              <img style=" margin-top:10px; margin-left:45px; height: 100px; width: 140px" src="{% static 'media/jose_cuervo_logo.png' %}"/>
             <li>
-               <a href="{% url 'inventoryLocation' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/ubi.png' %}"/></span>Ubicaciones de Inventario</a>
+               <a href="{% url 'configuration' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/config.png' %}"/></span>Configuración</a>
             </li>
             <li>
-               <a href="{% url 'labelStatus' %}"> <span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/botella.png' %}"/></span>Estado de Marbetes</a>
+               <a href="{% url 'order-menu' %}"> <span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/botella.png' %}"/></span>Ordenes</a>
             </li>
             <li>
-               <a href="{% url 'coilHandling' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/bobina.png' %}"/></span>Manejo de bobinas</a>
+               <a href="{% url 'label-menu' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/qr.png' %}"/></span>Marbetes</a>
             </li>
-             <li>
-               <a href="{% url 'depletionOfCoils' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/agotado.png' %}"/></span>Agot. de bobinas</a>
-            </li>
-            <li>
-               <a href="{% url 'labelHandling' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/qr.png' %}"/></span>Manejo de marbetes</a>
-            </li>
-            <li>
-               <a href="{% url 'usersManagement' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/user.png' %}"/></span>Administración de usuarios</a>
-            </li>
-             <li>
-               <a href="{% url 'labelTraceability' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/file.png' %}"/></span>Trazabilidad de marbetes</a>
             </li>
              <li>
                <a href="{% url 'reports' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/reportes.png' %}"/></span>Reportes</a>

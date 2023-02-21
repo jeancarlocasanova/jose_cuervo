@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order
+from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order, line
 
 
 class MyModelChoiceField(forms.ModelChoiceField):
@@ -10,6 +10,11 @@ class MyModelChoiceField(forms.ModelChoiceField):
 class ChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.sku
+
+class OLChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.uniqueid
+
 
 class LoginForm(forms.Form):
     password = forms.CharField(
@@ -95,3 +100,10 @@ class OrderForm(forms.ModelForm):
 
 class LineForm(forms.Form):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+
+class RequestStatusForm(forms.Form):
+    status = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+
+class AssignOrderForm(forms.Form):
+    FK_order_id = OLChoiceField(queryset=order.objects.all())
+    FK_line_id = OLChoiceField(queryset=line.objects.all())

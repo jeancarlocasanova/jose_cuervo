@@ -18,7 +18,7 @@ def login_view(request):
                     user = User.objects.get(id=token.user_id)
                     login(request, user)
                     return redirect("/")
-            except User.DoesNotExist:
+            except:
                 msg = 'Token incorrecto'
         else:
             msg = 'Error validating the form'

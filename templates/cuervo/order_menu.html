@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}  <link href="/static/css/submenu.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <h2 class="title-menu">ORDENES</h2>
+<div class="cards-list">
+
+<div class="card 1" onclick="javascript:location.href='/Order'">
+  <div class="card_image"> <img src="https://img.freepik.com/foto-gratis/trabajadora-almacen-comprobacion-inventario-almacen-distribucion_342744-1464.jpg?w=1060&t=st=1676993884~exp=1676994484~hmac=1431f1a13aa24c009c441531253fdb1da862e8e8efd257147847e2d888b22410" /> </div>
+  <div class="card_title title-white">
+    <p>Crear Ordenes</p>
+  </div>
+</div>
+
+  <div class="card 2" onclick="javascript:location.href='/'">
+  <div class="card_image">
+    <img src="https://www.casademexico.es/wp-content/uploads/2020/10/etiquetado-tequila-casa-de-mexico-en-espana.jpg" />
+    </div>
+  <div class="card_title title-white">
+    <p>Asignar Ordenes</p>
+  </div>
+</div>
+  </div>
+
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}

@@ -24,7 +24,10 @@ admin.site.index_title = "Welcome to Jose Cuervo Portal"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home_view),
+    path('', configurationMenu_view),
+    path('configuration/', configurationMenu_view, name='configuration'),
+    path('Ordermenu/', orderMenu_view, name='order-menu'),
+    path('labelMenu/', labelMenu_view, name='label-menu'),
 
     path('accounts/', include('django.contrib.auth.urls')),
     path('register/', register_token, name="register"),
@@ -80,6 +83,11 @@ urlpatterns = [
     path('line/delete/<int:pk>', deleteLine_view.as_view(), name='line-delete'),
     path('line/edit/<int:pk>', updateLine_view.as_view(), name='line-edit'),
     path('lineCreate/', createLine_view, name='line-create'),
+
+    path('request-status/', requestStatus_view, name='request-status'),
+    path('request-status/delete/<int:pk>', deleteRequestStatus_view.as_view(), name='request-status-delete'),
+    path('request-status/edit/<int:pk>', updateRequestStatus_view.as_view(), name='request-status-edit'),
+    path('RequestStatusCreate/', createRequestStatus_view, name='request-status-create'),
 
     path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('depletionOfCoils/', depletionOfCoils_view, name='depletionOfCoils'),
