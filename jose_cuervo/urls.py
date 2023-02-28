@@ -89,8 +89,11 @@ urlpatterns = [
     path('request-status/edit/<int:pk>', updateRequestStatus_view.as_view(), name='request-status-edit'),
     path('RequestStatusCreate/', createRequestStatus_view, name='request-status-create'),
 
+    path('assign/', assign_view, name='assign'),
+    path('stopOrder/delete/<int:pk>', StopOrder_view.as_view(), name='stop-order'),
+    path('assignOrder/', assignOrder_view, name='assign-order'),
+
     path('coilHandling/', coilHandling_view, name='coilHandling'),
-    path('depletionOfCoils/', depletionOfCoils_view, name='depletionOfCoils'),
     path('marbeteHandling/', labelHandling_view, name='labelHandling'),
     path('usersManagement/', usersManagement_view, name='usersManagement'),
     path('labelTraceability/', labelTraceability_view, name='labelTraceability'),

@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from ..form import LineForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db.models import ProtectedError
 
 # <------ LINE CRUD --------!>
 
@@ -17,6 +18,22 @@ class deleteLine_view(PermissionRequiredMixin, DeleteView):
     template_name = 'cuervo/line_confirm_delete.html'
     success_url = reverse_lazy('Line')
     permission_required = 'cuervo.delete_line'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
 
 
 class updateLine_view(PermissionRequiredMixin, UpdateView):

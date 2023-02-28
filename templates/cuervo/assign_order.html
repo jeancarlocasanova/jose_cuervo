@@ -1,10 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
 
-</body>
-</html>
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Asigna una Orden</h2>
+    {% endif %}
+
+  <div style="margin-top:20px;">
+      <label style="color:white;">Orden</label>
+    {{ form.FK_order_id }}
+    </div>
+
+
+<div style="margin-top:20px;">
+      <label style="color:white;">Linea</label>
+    {{ form.FK_line_id }}
+    </div>
+
+    <button type="submit" name="login" class="create"> Crear </button>
+  </form>
+{% endblock content %}

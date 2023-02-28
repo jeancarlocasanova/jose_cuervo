@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from ..form import OrderForm, AssignOrderForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db.models import ProtectedError,UniqueConstraint
 
 # <------ ORDER CRUD --------!>
 
@@ -17,6 +18,22 @@ class deleteOrder_view(PermissionRequiredMixin, DeleteView):
     template_name = 'cuervo/order_confirm_delete.html'
     success_url = reverse_lazy('Order')
     permission_required = 'cuervo.delete_order'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
 
 
 class updateOrder_view(PermissionRequiredMixin, UpdateView):
@@ -52,6 +69,11 @@ def createOrder_view(request):
     return render(request, "cuervo/order_create.html", {"form": form, "msg": msg})
 
 # <------ ASSIGN ORDER --------!>
+def assign_view(request):
+    requestObj = order_Exec.objects.all()
+    return render(request, "cuervo/view_order_assign.html", {'order': requestObj})
+
+@permission_required('cuervo.add_order_exec', login_url='/login/')
 def assignOrder_view(request):
     msg = None
     if request.method == "POST":
@@ -60,19 +82,39 @@ def assignOrder_view(request):
             FK_order_id = form.cleaned_data.get("FK_order_id")
             FK_line_id = form.cleaned_data.get("FK_line_id")
             try:
-                requestObj = order_Exec.objects.get(FK_line_id=FK_line_id)
-                requestObj = order_Exec.objects.get(FK_order_id=FK_order_id)
+                requestObj = order_Exec.objects.create(FK_order_id=FK_order_id, FK_line_id=FK_line_id)
+                requestObj.save()
             except:
                 requestObj = None
             if requestObj is None:
-                requestObj = order_Exec.objects.create(FK_order_id=FK_order_id, FK_line_id=FK_line_id)
-                requestObj.save()
-                return redirect("/Order/")
-            else:
                 msg = 'No se le puede Asignar varias ordenes a una Linea'
+            else:
+                return redirect("/assign/")
         else:
             msg = 'A ocurrido un error'
     else:
-        form = OrderForm()
+        form = AssignOrderForm()
 
     return render(request, "cuervo/assign_order.html", {"form": form, "msg": msg})
+
+class StopOrder_view(PermissionRequiredMixin, DeleteView):
+    model = order_Exec
+    template_name = 'cuervo/order_Exec_confirm_delete.html'
+    success_url = reverse_lazy('assign')
+    permission_required = 'cuervo.delete_order_exec'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)

@@ -6,7 +6,6 @@ from ..form import SkuTypeForm, SkuForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
-from django.contrib import messages
 
 # <------ TYPE OF SKU CRUD --------!>
 
@@ -19,6 +18,22 @@ class deleteSkuType_view(PermissionRequiredMixin, DeleteView):
     template_name = 'cuervo/sku_type_confirm_delete.html'
     success_url = reverse_lazy('skuType')
     permission_required = 'cuervo.delete_sku_type'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
 
 
 class updateSkuType_view(PermissionRequiredMixin, UpdateView):
@@ -69,12 +84,18 @@ class deleteSku_view(PermissionRequiredMixin, DeleteView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
         try:
             return self.delete(request, *args, **kwargs)
         except ProtectedError:
-            messages.error(request, "custom error message")
+            isError = True
         finally:
-            return redirect(success_url)
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
 
 
 class updateSku_view(PermissionRequiredMixin, UpdateView):

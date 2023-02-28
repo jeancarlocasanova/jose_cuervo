@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from ..form import LabelStatusForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db.models import ProtectedError
 
 def labelStatus_view(request):
     label_status = labelStatus.objects.all()
@@ -15,6 +16,22 @@ class deleteStatus_view(PermissionRequiredMixin, DeleteView):
     template_name = 'cuervo/label_status_confirm_delete.html'
     success_url = reverse_lazy('labelStatus')
     permission_required = 'cuervo.delete_labelstatus'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
 
 class updateLabelStatus_view(PermissionRequiredMixin, UpdateView):
     model = labelStatus

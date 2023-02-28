@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CoilForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from datetime import datetime
+from django.db.models import ProtectedError
 
 def coilHandling_view(request):
     return render(request, "cuervo/coilHandling.html")
@@ -20,6 +20,22 @@ class deleteCoilStatus_view(PermissionRequiredMixin, DeleteView):
     template_name = 'cuervo/coil_status_confirm_delete.html'
     success_url = reverse_lazy('coilStatus')
     permission_required = 'cuervo.delete_coilstatus'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
 
 class updateCoilStatus_view(PermissionRequiredMixin, UpdateView):
     model = coilStatus
@@ -65,6 +81,22 @@ class deleteCoilType_view(PermissionRequiredMixin, DeleteView):
     success_url = reverse_lazy('coilType')
     permission_required = 'cuervo.delete_coiltype'
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
+
 class updateCoilType_view(PermissionRequiredMixin, UpdateView):
     model = coilType
     template_name = 'cuervo/coil_type_edit.html'
@@ -108,6 +140,22 @@ class deleteCoilProvider_view(PermissionRequiredMixin, DeleteView):
     success_url = reverse_lazy('coilProvider')
     permission_required = 'cuervo.delete_coilprovider'
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
+
 class updateCoilProvider_view(PermissionRequiredMixin, UpdateView):
     model = coilProvider
     template_name = 'cuervo/coil_provider_edit.html'
@@ -150,6 +198,22 @@ class deleteCoil_view(PermissionRequiredMixin, DeleteView):
     template_name = 'cuervo/coil_confirm_delete.html'
     success_url = reverse_lazy('coil')
     permission_required = 'cuervo.delete_coil'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        tittle = "A ocurrido un error"
+        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
+        isError = False
+        try:
+            return self.delete(request, *args, **kwargs)
+        except ProtectedError:
+            isError = True
+        finally:
+            if(isError):
+                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
+            else:
+                return redirect(success_url)
 
 class updateCoil_view(PermissionRequiredMixin, UpdateView):
     model = coil

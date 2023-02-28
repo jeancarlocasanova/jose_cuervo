@@ -75,8 +75,8 @@ class order(models.Model):
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
 
 class order_Exec(models.Model):
-    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=False, help_text='Linked Order')
-    FK_line_id = models.ForeignKey(line, on_delete=models.PROTECT, null=False, help_text='Linked Line')
+    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=False, help_text='Linked Order', unique=True)
+    FK_line_id = models.ForeignKey(line, on_delete=models.PROTECT, null=False, help_text='Linked Line', unique=True)
 
 class order_Label(models.Model):
     FK_label_id = models.ForeignKey(label, on_delete=models.PROTECT, null=False, help_text="Linked Label")
