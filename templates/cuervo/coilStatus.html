@@ -6,14 +6,17 @@
 {% if user.is_authenticated %}
 <div class="container">
 	<h1 style="color: white; margin-bottom: 30px">Manejo de Estado de Bobinas</h1>
-	<a class="create" href="{% url 'coil-status-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Estado</a>
+	{% if perms.cuervo.add_coilstatus %}
+	<a class="create" href="{% url 'coil-status-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Estado</a>{% endif %}
 	<table class="table" id="myTable">
 		<thead style="background-color: #1e264e">
 			<tr>
 				<th scope="col">Estatus de la bobina</th>
 				<th scope="col">Descripción</th>
-				<th scope="col">Editar</th>
-				<th scope="col">Eliminar</th>
+				 {% if perms.cuervo.change_coilstatus %}
+				<th scope="col">Editar</th>{% endif %}
+				{% if perms.cuervo.delete_coilstatus %}
+				<th scope="col">Eliminar</th>{% endif %}
 			</tr>
 		</thead>
 		<tbody>
@@ -21,8 +24,10 @@
 			<tr>
 				<td>{{ i.name }}</td>
 				<td>{{ i.description }}</td>
-				<td><a href="{% url 'coil-status-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>
-				<td><a href="{% url 'coil-status-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>
+				 {% if perms.cuervo.change_coilstatus %}
+				<td><a href="{% url 'coil-status-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				{% if perms.cuervo.delete_coilstatus %}
+				<td><a href="{% url 'coil-status-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
 			</tr>
 		{% endfor %}
 		</tbody>

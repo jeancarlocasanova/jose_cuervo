@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Edita el Estado de Solicitud</h2>
+    {% endif %}
+
+  <div class="user-box">
+    {{ form.status }}
+      <label>Nombre del estado de solicitud</label>
+    </div>
+
+
+    <button class="button" type="submit" name="login"> Editar </button>
+  </form>
+{% endblock content %}

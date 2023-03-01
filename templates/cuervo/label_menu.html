@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}  <link href="/static/css/submenu.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <h2 class="title-menu">MARBETES</h2>
+<div class="cards-list">
+
+<div class="card 1" onclick="javascript:location.href='/'">
+  <div class="card_image"> <img src="https://es.bolzonigroup.com/imgs/industries/pulp_paper/home/warehousing_logistics.jpg" /> </div>
+  <div class="card_title title-white">
+    <p>Alta de Bobinas</p>
+  </div>
+</div>
+
+  <div class="card 2" onclick="javascript:location.href='/'">
+  <div class="card_image">
+    <img src="https://lasillarota.com/u/fotografias/m/2021/12/25/f850x638-300680_378169_5050.jpg" />
+    </div>
+  <div class="card_title title-white">
+    <p>Administración de Marbetes</p>
+  </div>
+</div>
+  </div>
+
+<div class="cards-list">
+<div class="card 3" onclick="javascript:location.href='/'">
+  <div class="card_image">
+    <img src="https://es.bolzonigroup.com/imgs/industries/pulp_paper/home/printer_converter.jpg" />
+  </div>
+  <div class="card_title title-white">
+    <p>Administración de Bobinas</p>
+  </div>
+</div>
+
+  <div class="card 4" onclick="javascript:location.href='/'">
+  <div class="card_image">
+    <img src="https://www.papeleramdsuramericana.com/wp-content/uploads/2019/03/Bobinas-PH-B-Importadas-I-300x300.jpeg" />
+    </div>
+  <div class="card_title title-white">
+    <p>Solicitud de Bobinas</p>
+  </div>
+  </div>
+</div>
+
+    <div class="cards-list">
+<div class="card 1" onclick="javascript:location.href='/'">
+  <div class="card_image">
+    <img src="https://img.freepik.com/foto-gratis/primer-plano-asesor-financiero-que-senala-lugar-firma-contrato_637285-10887.jpg?w=1060&t=st=1677092367~exp=1677092967~hmac=6ac5383e1a0a752ece4a1bed8632cd752ce912c7561f7ade9a88d1af9c652903" />
+  </div>
+  <div class="card_title title-white">
+    <p>Aprobacion de Solicitudes</p>
+  </div>
+</div>
+
+</div>
+
+
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente<a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}

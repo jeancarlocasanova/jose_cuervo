@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Crea una Orden</h2>
+    {% endif %}
+
+  <div class="user-box">
+    {{ form.uniqueid }}
+      <label>ID Unico</label>
+    </div>
+
+
+<div style="margin-top:20px;">
+      <label style="color:white;">SKU</label>
+    {{ form.FK_sku_id }}
+    </div>
+
+    <button type="submit" name="login" class="create"> Crear </button>
+  </form>
+{% endblock content %}

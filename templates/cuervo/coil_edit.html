@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Edita la Bobina</h2>
+    {% endif %}
+
+  <div class="user-box">
+    {{ form.uniqueid }}
+      <label>ID de la bobina</label>
+    </div>
+
+ <div >
+      <label style="color:white;">Estatus de la bobina</label>
+    {{ form.FK_coilStatus_id }}
+    </div>
+
+ <div style="margin-top:20px;">
+     <label style="color:white;">Tipo de bobina</label>
+    {{ form.FK_coilType_id }}
+    </div>
+
+ <div style="margin-top:20px;">
+      <label style="color:white;">Proveedor de bobinas</label>
+    {{ form.FK_coilProvider_id }}
+    </div>
+
+    <button class="button" type="submit" name="login"> Editar </button>
+  </form>
+{% endblock content %}

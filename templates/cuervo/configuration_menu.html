@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/submenu.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <h2 class="title-menu">CONFIGURACIÓN</h2>
+<div class="cards-list">
+
+<div class="card 1" onclick="javascript:location.href='/labelStatus'">
+  <div class="card_image"> <img src="https://img.freepik.com/foto-gratis/primer-plano-botellas-tequila-sobre-fondo-negro_181624-59578.jpg?w=1060&t=st=1676905581~exp=1676906181~hmac=5114eb3ec22c607ea46268d441b3c6878a5a5746f73a9889ba8587014a7f74ce" /> </div>
+  <div class="card_title title-white">
+    <p>Estatus de Marbetes</p>
+  </div>
+</div>
+
+  <div class="card 2" onclick="javascript:location.href='/coilStatus'">
+  <div class="card_image">
+    <img src="https://img.directindustry.es/images_di/photo-g/25312-4077467.webp" />
+    </div>
+  <div class="card_title title-white">
+    <p>Estatus de Bobinas</p>
+  </div>
+</div>
+  </div>
+
+<div class="cards-list">
+<div class="card 3" onclick="javascript:location.href='/inventoryLocation'">
+  <div class="card_image">
+    <img src="https://img.freepik.com/foto-gratis/hombre-casco-trabajando-almacen_23-2148923110.jpg?w=1060&t=st=1676903677~exp=1676904277~hmac=ca71e1f246c982fbc7ccbac1d38d1a830ed86f3eadc03ae0b7984c6a1d8c5d98" />
+  </div>
+  <div class="card_title title-white">
+    <p>Ubicaciones de Inventario</p>
+  </div>
+</div>
+
+  <div class="card 4" onclick="javascript:location.href='/coilType'">
+  <div class="card_image">
+    <img src="https://www.papeleramdsuramericana.com/wp-content/uploads/2019/03/Bobinas-PH-B-Importadas-I.jpeg" />
+    </div>
+  <div class="card_title title-white">
+    <p>Tipo de Bobinas</p>
+  </div>
+  </div>
+</div>
+
+    <div class="cards-list">
+<div class="card 1" onclick="javascript:location.href='/coilProvider'">
+  <div class="card_image">
+    <img src="https://vicuma.es/wp-content/uploads/2016/03/pc-kraft3.jpg" />
+  </div>
+  <div class="card_title title-white">
+    <p>Proveedores de Bobinas</p>
+  </div>
+</div>
+
+  <div class="card 2" onclick="javascript:location.href='/SKU'">
+  <div class="card_image">
+    <img src="{% static 'media/barcode.jpeg' %}" />
+    </div>
+  <div class="card_title title-white">
+    <p>SKU</p>
+  </div>
+  </div>
+</div>
+
+    <div class="cards-list">
+<div class="card 3" onclick="javascript:location.href='/skuType'">
+  <div class="card_image">
+    <img src="https://img.freepik.com/foto-gratis/primer-plano-mensajero-que-adjunta-etiqueta-direccion-paquete-mientras-trabaja-oficina_637285-6592.jpg?w=1060&t=st=1676904070~exp=1676904670~hmac=707ef5fb9baa6b27204bd67d68b9c342a1f3a3deea556030b93b80fa84e7e024" />
+  </div>
+  <div class="card_title title-white">
+    <p>Tipos de SKU</p>
+  </div>
+</div>
+
+  <div class="card 4" onclick="javascript:location.href='/Line'">
+  <div class="card_image">
+    <img src="https://img.freepik.com/fotos-premium/linea-produccion-alcohol-produccion-alcohol_220838-815.jpg?w=2000" />
+    </div>
+  <div class="card_title title-white">
+    <p>Lineas</p>
+  </div>
+  </div>
+</div>
+
+     <div class="cards-list">
+<div class="card 1" onclick="javascript:location.href='/request-status'">
+  <div class="card_image">
+    <img src="https://img.freepik.com/foto-gratis/manos-hombre-negocios-empresaria-que-discuten-acuerdo_1262-12335.jpg?w=1060&t=st=1676993069~exp=1676993669~hmac=b4af73e22bd3dd9c2db877b6aa24c04d1cbf07f7387a58b7ff6b7e6ff4350c6d" />
+  </div>
+  <div class="card_title title-white">
+    <p>Estados de Solicitudes</p>
+  </div>
+</div>
+
+</div>
+
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}

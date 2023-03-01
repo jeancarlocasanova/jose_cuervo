@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+	<h1 style="color: white; margin-bottom: 30px">Asignar Lineas</h1>
+	{% if perms.cuervo.add_order_exec %}
+	<a class="create" href="{% url 'assign-order'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Asignar Linea</a>{% endif %}
+	<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">Orden</th>
+				<th scope="col">Linea</th>
+                {% if perms.cuervo.delete_order_exec %}
+				<th scope="col">Detener</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in order %}
+			<tr>
+				<td>{{ i.FK_order_id.uniqueid }}</td>
+				<td>{{ i.FK_line_id.uniqueid }}</td>
+				{% if perms.cuervo.delete_order_exec %}
+				<td><a href="{% url 'stop-order' i.id %}"><span><img class="img" src="{% static 'media/stop.png' %}"/></span></a></td>{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock javascripts %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}
+<style>
+       body{
+               background-color: #100e17;
+               font-family: Arial, sans-serif;
+       }
+       p{
+               color: white;
+       }
+       .buttonDelete{
+  background: transparent;
+  color: #bd2020;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 35px 0;
+  padding: 10px 30px;
+  border: 2px solid #bd2020;
+    font-size: 12px;
+}
+       .buttonDelete:hover{
+  background: transparent;
+  border: 2px solid rgba(240, 240, 240, 0.68);
+    color: rgba(240, 240, 240, 0.68);
+}
+
+              .buttonEdit{
+  background: transparent;
+  color: rgba(255, 213, 0, 0.67);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 35px 0;
+  padding: 10px 30px;
+  border: 2px solid rgba(255, 213, 0, 0.67);
+    font-size: 12px;
+}
+       .buttonEdit:hover{
+  background: transparent;
+  border: 2px solid rgba(240, 240, 240, 0.68);
+    color: rgba(240, 240, 240, 0.68);
+}
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<form action="" method="post" style="margin-left: 350px">{% csrf_token %}
+        <p class="alert-danger">¿Estas seguro que quieres borrar "{{ object.name }}"?</p>
+        <i class="fas fa-trash-alt fa-2x"></i>
+        <button type="submit" class="btn buttonDelete" style="margin-right: 50px">Borrar</button>
+        <button type="button" class="btn buttonEdit" value="Cancel" onclick="javascript:location.href='/coilType'">Cancelar</button>
+</form>
+{% endblock content %}
+
+{% block javascripts %}
+{% endblock javascripts %}

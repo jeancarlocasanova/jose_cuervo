@@ -6,6 +6,9 @@ from .inventoryLocation import *
 from .labelStatus import *
 from .labelHandling import *
 from .reports import *
-from .depletionOfCoils import *
 from .usersManagement import *
 from .labelTraceability import *
+from .skuHandling import *
+from .orderHandling import *
+from .lineHandling import *
+from .requestHandling import *

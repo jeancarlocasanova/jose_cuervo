@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Crea una Linea</h2>
+    {% endif %}
+
+  <div class="user-box">
+    {{ form.uniqueid }}
+      <label>ID Unico</label>
+    </div>
+
+    <button type="submit" name="login" class="create"> Crear </button>
+  </form>
+{% endblock content %}
