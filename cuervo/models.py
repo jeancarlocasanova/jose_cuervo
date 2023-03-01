@@ -35,12 +35,12 @@ class SKU(models.Model):
 
 class coil(models.Model):
     uniqueid = models.CharField(max_length=20, null=False)
-    startingNumber = models.IntegerField(null=False, help_text='Starting Label Number', validators=[MinValueValidator(0), MaxValueValidator(999)])
-    endingNumber = models.IntegerField(null=False, help_text='Ending Label Number', validators=[MinValueValidator(0),MaxValueValidator(999)])
+    startingNumber = models.IntegerField(default=1, null=False, help_text='Starting Label Number', validators=[MinValueValidator(0), MaxValueValidator(999)])
+    endingNumber = models.IntegerField(default=1, null=False, help_text='Ending Label Number', validators=[MinValueValidator(0),MaxValueValidator(999)])
     notDelivered = models.BooleanField(default=False)
-    boxNumber = models.IntegerField(null=False)
-    purchaseOrder = models.CharField(max_length=50)
-    FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
+    boxNumber = models.CharField(null=False,default="NA",max_length=100)
+    purchaseOrder = models.CharField(default="NA",max_length=50)
+    FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=True, help_text='Linked SKU')
     FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False, help_text='Linked Coil Status')
     FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
     FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, help_text='Linked Coil Provider')
@@ -75,8 +75,8 @@ class order(models.Model):
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
 
 class order_Exec(models.Model):
-    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=False, help_text='Linked Order', unique=True)
-    FK_line_id = models.ForeignKey(line, on_delete=models.PROTECT, null=False, help_text='Linked Line', unique=True)
+    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=False, help_text='Linked Order', unique=True, default="TESTORDER")
+    FK_line_id = models.ForeignKey(line, on_delete=models.PROTECT, null=False, help_text='Linked Line', unique=True,default="TESTSKU")
 
 class order_Label(models.Model):
     FK_label_id = models.ForeignKey(label, on_delete=models.PROTECT, null=False, help_text="Linked Label")
