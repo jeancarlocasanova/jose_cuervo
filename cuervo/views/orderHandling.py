@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from ..form import OrderForm, AssignOrderForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import ProtectedError,UniqueConstraint
+from django.db.models import ProtectedError
 
 # <------ ORDER CRUD --------!>
 
