@@ -60,7 +60,6 @@ urlpatterns = [
     path('coilProviderCreate/', createCoilProvider_view, name='coil-provider-create'),
 
     path('coil/', coil_view, name='coil'),
-    path('coil/delete/<int:pk>', deleteCoil_view.as_view(), name='coil-delete'),
     path('coil/edit/<int:pk>', updateCoil_view.as_view(), name='coil-edit'),
     path('coilCreate/', createCoil_view, name='coil-create'),
 

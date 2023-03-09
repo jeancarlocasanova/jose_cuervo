@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order, line
+from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order, line, inventoryLocation, labelStatus
 
 
 class MyModelChoiceField(forms.ModelChoiceField):
@@ -33,13 +33,13 @@ class SignUpForm(UserCreationForm):
             }
         )),
     password1 = forms.CharField(
-        widget=forms.TextInput(
+        widget=forms.PasswordInput(
             attrs={
                 "class": "form-control"
             }
         ))
     password2 = forms.CharField(
-        widget=forms.TextInput(
+        widget=forms.PasswordInput(
             attrs={
                 "class": "form-control"
             }
@@ -67,15 +67,20 @@ class CoilTypeForm(forms.Form):
 class CoilProviderForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
-class CoilForm(forms.ModelForm):
-    uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+class CreateCoilForm(forms.Form):
+    startingNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    endingNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    numrollo = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    boxNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    notDelivered = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    purchaseOrder = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    FK_labelStatus_id = MyModelChoiceField(queryset=labelStatus.objects.all())
+    FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
+    FK_sku_id = ChoiceField(queryset=SKU.objects.all())
     FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
     FK_coilType_id = MyModelChoiceField(queryset=coilType.objects.all())
     FK_coilProvider_id = MyModelChoiceField(queryset=coilProvider.objects.all())
 
-    class Meta:
-        model = coil
-        fields = 'uniqueid', 'FK_coilStatus_id', 'FK_coilType_id', 'FK_coilProvider_id'
 
 class SkuTypeForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))

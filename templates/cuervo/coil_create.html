@@ -15,11 +15,51 @@
     {% endif %}
 
   <div class="user-box">
-    {{ form.uniqueid }}
-      <label>ID de la bobina</label>
+    {{ form.startingNumber }}
+      <label>Número Inicial Marbete</label>
     </div>
 
- <div >
+<div class="user-box">
+    {{ form.endingNumber }}
+      <label>Número Final Marbete</label>
+    </div>
+
+<div class="user-box">
+    {{ form.boxNumber }}
+      <label>Número de Caja</label>
+    </div>
+
+<div class="user-box">
+    {{ form.notDelivered }}
+      <label>Folios Faltantes</label>
+    </div>
+
+<div class="user-box">
+    {{ form.numrollo }}
+      <label>NO. Rollo</label>
+    </div>
+
+<div class="user-box">
+    {{ form.purchaseOrder }}
+      <label>Pedido</label>
+    </div>
+
+<div >
+      <label style="color:white;">Estatus de los Marbetes</label>
+    {{ form.FK_labelStatus_id }}
+    </div>
+
+<div style="margin-top:20px;">
+      <label style="color:white;">Ubicacion de los Marbetes</label>
+    {{ form.FK_inventoryLocation_id }}
+    </div>
+
+<div style="margin-top:20px;">
+      <label style="color:white;">SKU</label>
+    {{ form.FK_sku_id }}
+    </div>
+
+ <div style="margin-top:20px;" >
       <label style="color:white;">Estatus de la bobina</label>
     {{ form.FK_coilStatus_id }}
     </div>

@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-from ..models import coilStatus, coilType, coilProvider, coil
+from ..models import coilStatus, coilType, coilProvider, coil, label
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
-from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CoilForm
+from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CreateCoilForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
@@ -193,33 +193,12 @@ def coil_view(request):
     coilList = coil.objects.all()
     return render(request, "cuervo/coil.html", {'coilList': coilList})
 
-class deleteCoil_view(PermissionRequiredMixin, DeleteView):
-    model = coil
-    template_name = 'cuervo/coil_confirm_delete.html'
-    success_url = reverse_lazy('coil')
-    permission_required = 'cuervo.delete_coil'
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        success_url = self.get_success_url()
-        tittle = "A ocurrido un error"
-        msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
-        isError = False
-        try:
-            return self.delete(request, *args, **kwargs)
-        except ProtectedError:
-            isError = True
-        finally:
-            if(isError):
-                return render(request, "cuervo/display_error.html", {"tittle": tittle, "msg": msg, "link": success_url})
-            else:
-                return redirect(success_url)
 
 class updateCoil_view(PermissionRequiredMixin, UpdateView):
     model = coil
     template_name = 'cuervo/coil_edit.html'
     success_url = reverse_lazy('coil')
-    form_class = CoilForm
+    form_class = CreateCoilForm
     permission_required = 'cuervo.change_coil'
 
     def get_queryset(self):
@@ -231,28 +210,59 @@ class updateCoil_view(PermissionRequiredMixin, UpdateView):
 @permission_required('cuervo.add_coil', login_url='/login/')
 def createCoil_view(request):
     msg = None
+    proceso = None
+    labels = []
     if request.method == "POST":
-        form = CoilForm(request.POST)
+        form = CreateCoilForm(request.POST)
         if form.is_valid():
-            uniqueId = form.cleaned_data.get("uniqueid")
+            startingNumber = form.cleaned_data.get("startingNumber")
+            endingNumber = form.cleaned_data.get("endingNumber")
+            numrollo = form.cleaned_data.get("numrollo")
+            boxNumber = form.cleaned_data.get("boxNumber")
+            notDelivered = form.cleaned_data.get("notDelivered")
+            purchaseOrder = form.cleaned_data.get("purchaseOrder")
+            FK_labelStatus_id = form.cleaned_data.get("FK_labelStatus_id")
+            FK_inventoryLocation_id = form.cleaned_data.get("FK_inventoryLocation_id")
+            FK_sku_id = form.cleaned_data.get("FK_sku_id")
             FK_coilStatus_id = form.cleaned_data.get("FK_coilStatus_id")
             FK_coilType_id = form.cleaned_data.get("FK_coilType_id")
             FK_coilProvider_id = form.cleaned_data.get("FK_coilProvider_id")
             last_edit_user = request.user
-            try:
-                coilObj = coil.objects.get(uniqueid=uniqueId)
-            except:
-                coilObj = None
+            if startingNumber < endingNumber:
+                labels = range(startingNumber, endingNumber + 1)
+            if labels != [] and len(labels) > notDelivered + 1:
+                proceso = True
 
-            if coilObj is None:
-                coilObj = coil.objects.create(uniqueid=uniqueId, FK_coilStatus_id=FK_coilStatus_id, FK_coilType_id=FK_coilType_id, FK_coilProvider_id=FK_coilProvider_id, last_edit_user=last_edit_user)
-                coilObj.save()
-                return redirect("/coil/")
+            if proceso:
+                try:
+                    coilObj = coil.objects.get(startingNumber=startingNumber)
+                except:
+                    coilObj = None
+
+                if coilObj is None:
+                    delivered = endingNumber - startingNumber
+                    missing = delivered - notDelivered
+                    coilObj = coil.objects.create(startingNumber=startingNumber, endingNumber=endingNumber,notDelivered=notDelivered,
+                                                  numrollo=numrollo, purchaseOrder=purchaseOrder,boxNumber=boxNumber, missing=missing,
+                                                  FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id, FK_coilType_id=FK_coilType_id,
+                                                  FK_coilProvider_id=FK_coilProvider_id, last_edit_user=last_edit_user, delivered=delivered)
+                    try:
+                        for x in labels:
+                            labelObj = label.objects.create(uniqueid=x, FK_coil_id=coilObj,FK_labelStatus_id=FK_labelStatus_id, FK_inventoryLocation_id=FK_inventoryLocation_id,last_edit_user=last_edit_user)
+                            labelObj.save()
+                        coilObj.save()
+                        return redirect("/coil/")
+                    except Exception as e:
+                        coil.objects.filter(id=coilObj.id).delete()
+                        msg = "Error al generar marbetes"
+                else:
+                    msg = 'Error al generar la bobina'
             else:
-                msg = 'Este Nombre ya existe'
+                msg = 'Revisa si los numeros de folio o los folios no entregados esten bien'
         else:
             msg = 'A ocurrido un error'
+            print(form.errors)
     else:
-        form = CoilForm()
+        form = CreateCoilForm()
 
     return render(request, "cuervo/coil_create.html", {"form": form, "msg": msg})

@@ -6,36 +6,33 @@
 {% if user.is_authenticated %}
 <div class="container">
 	<h1 style="color: white; margin-bottom: 30px">Manejo de Bobinas</h1>
-	{% if perms.cuervo.add_coilstatus %}
-	<a class="create" href="{% url 'coil-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Bobina</a>{% endif %}
+
 	<table class="table" id="myTable">
 		<thead style="background-color: #1e264e">
 			<tr>
-				<th scope="col">ID</th>
-				<th scope="col">Estatus</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">Proveedor</th>
-                <th scope="col">Ultima Modificación</th>
-                <th scope="col">Usuario</th>
+				<th scope="col">Folio Inicial</th>
+				<th scope="col">Folio Final</th>
+                <th scope="col">No Rollo</th>
+                <th scope="col">Folios Utilizados</th>
+                <th scope="col">Folios Faltantes</th>
+                <th scope="col">Folios Entregados</th>
+                <th scope="col">No. de Caja</th>
 				 {% if perms.cuervo.change_coil %}
 				<th scope="col">Editar</th>{% endif %}
-				{% if perms.cuervo.delete_coil %}
-				<th scope="col">Eliminar</th>{% endif %}
 			</tr>
 		</thead>
 		<tbody>
 		{% for i in coilList %}
 			<tr>
-				<td>{{ i.uniqueid }}</td>
-				<td>{{ i.FK_coilStatus_id.name }}</td>
-                <td>{{ i.FK_coilType_id.name }}</td>
-                <td>{{ i.FK_coilProvider_id.name }}</td>
-                <td>{{ i.last_update }}</td>
-                <td>{{ i.last_edit_user }}</td>
+				<td>{{ i.FK_coilType_id.name }}{{ i.startingNumber }}</td>
+				<td>{{ i.FK_coilType_id.name }}{{ i.endingNumber }}</td>
+                <td>{{ i.numrollo }}</td>
+                <td>{{ i.delivered }}</td>
+                <td>{{ i.notDelivered }}</td>
+                <td>{{ i.missing }}</td>
+                <td>{{ i.boxNumber }}</td>
 				 {% if perms.cuervo.change_coil %}
 				<td><a href="{% url 'coil-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
-				{% if perms.cuervo.delete_coil %}
-				<td><a href="{% url 'coil-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
 			</tr>
 		{% endfor %}
 		</tbody>

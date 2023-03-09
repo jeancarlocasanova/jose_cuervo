@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
-from datetime import datetime
 
 # Create your models here.
 class inventoryLocation(models.Model):
@@ -34,12 +33,14 @@ class SKU(models.Model):
     Fk_sku_type_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False, help_text='Linked SKU Type')
 
 class coil(models.Model):
-    uniqueid = models.CharField(max_length=20, null=False)
-    startingNumber = models.IntegerField(default=1, null=False, help_text='Starting Label Number', validators=[MinValueValidator(0), MaxValueValidator(999)])
-    endingNumber = models.IntegerField(default=1, null=False, help_text='Ending Label Number', validators=[MinValueValidator(0),MaxValueValidator(999)])
-    notDelivered = models.BooleanField(default=False)
-    boxNumber = models.CharField(null=False,default="NA",max_length=100)
-    purchaseOrder = models.CharField(default="NA",max_length=50)
+    startingNumber = models.IntegerField(default=1, null=False, help_text='Starting Label Number')
+    endingNumber = models.IntegerField(default=1, null=False, help_text='Ending Label Number')
+    numrollo = models.IntegerField(default=1, null=False, help_text="Numero de Rollo")
+    notDelivered = models.IntegerField(default=0)
+    missing = models.IntegerField(null=False, default=0)
+    delivered = models.IntegerField(null=False, default=0)
+    boxNumber = models.IntegerField(null=False, default=1)
+    purchaseOrder = models.CharField(default="NA", max_length=50)
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=True, help_text='Linked SKU')
     FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False, help_text='Linked Coil Status')
     FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
@@ -75,8 +76,8 @@ class order(models.Model):
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
 
 class order_Exec(models.Model):
-    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=False, help_text='Linked Order', unique=True, default="TESTORDER")
-    FK_line_id = models.ForeignKey(line, on_delete=models.PROTECT, null=False, help_text='Linked Line', unique=True,default="TESTSKU")
+    FK_order_id = models.OneToOneField(order, on_delete=models.PROTECT, null=False, help_text='Linked Order')
+    FK_line_id = models.OneToOneField(line, on_delete=models.PROTECT, null=False, help_text='Linked Line')
 
 class order_Label(models.Model):
     FK_label_id = models.ForeignKey(label, on_delete=models.PROTECT, null=False, help_text="Linked Label")
