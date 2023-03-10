@@ -81,6 +81,16 @@ class CreateCoilForm(forms.Form):
     FK_coilType_id = MyModelChoiceField(queryset=coilType.objects.all())
     FK_coilProvider_id = MyModelChoiceField(queryset=coilProvider.objects.all())
 
+class UpdateCoilForm(forms.ModelForm):
+    numrollo = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    boxNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    purchaseOrder = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
+
+    class Meta:
+        model = coil
+        fields = 'numrollo', 'boxNumber', 'purchaseOrder', 'FK_coilStatus_id'
+
 
 class SkuTypeForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
@@ -112,3 +122,7 @@ class RequestStatusForm(forms.Form):
 class AssignOrderForm(forms.Form):
     FK_order_id = OLChoiceField(queryset=order.objects.all())
     FK_line_id = OLChoiceField(queryset=line.objects.all())
+
+class FilterCoilForm(forms.Form):
+    boxNumber = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={"class": "form"}))
+    purchaseOrder = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))

@@ -8,15 +8,16 @@
 <form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
   {% csrf_token %}
 
+
      {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Edita la Bobina</h2>
+    <h2>Introduce los filtros</h2>
     {% endif %}
 
   <div class="user-box">
-    {{ form.numrollo }}
-      <label>Número de rollo</label>
+    {{ form.boxNumber }}
+      <label>Numero de caja</label>
     </div>
 
 <div class="user-box">
@@ -24,17 +25,6 @@
       <label>Orden de compra</label>
     </div>
 
-<div class="user-box">
-    {{ form.boxNumber }}
-      <label>Número de caja</label>
-    </div>
-
-
- <div >
-      <label style="color:white;">Estatus de la bobina</label>
-    {{ form.FK_coilStatus_id }}
-    </div>
-
-    <button class="button" type="submit" name="login"> Editar </button>
+    <button type="submit" name="login" class="create"> Filtrar </button>
   </form>
 {% endblock content %}
