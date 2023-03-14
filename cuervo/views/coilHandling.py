@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect
 from ..models import coilStatus, coilType, coilProvider, coil, label
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
-from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CreateCoilForm, UpdateCoilForm, FilterCoilForm
+from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CreateCoilForm, UpdateCoilForm, FilterCoilForm,DeleteLabelForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
+from django.forms import formset_factory
 
 def coilHandling_view(request):
     return render(request, "cuervo/coilHandling.html")
@@ -247,26 +248,31 @@ def createCoil_view(request):
 
             if proceso:
                 try:
-                    coilObj = coil.objects.get(startingNumber=startingNumber)
+                    coilObj = coil.objects.get(startingNumber=startingNumber, endingNumber=endingNumber, FK_coilType_id=FK_coilType_id)
                 except:
                     coilObj = None
-
                 if coilObj is None:
                     delivered = endingNumber - startingNumber
                     missing = delivered - notDelivered
-                    coilObj = coil.objects.create(startingNumber=startingNumber, endingNumber=endingNumber,notDelivered=notDelivered,
-                                                  numrollo=numrollo, purchaseOrder=purchaseOrder,boxNumber=boxNumber, missing=missing,
+                    coilObj = coil.objects.create(startingNumber=startingNumber, endingNumber=endingNumber, notDelivered=notDelivered,
+                                                  numrollo=numrollo, purchaseOrder=purchaseOrder, boxNumber=boxNumber, missing=missing,
                                                   FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id, FK_coilType_id=FK_coilType_id,
                                                   FK_coilProvider_id=FK_coilProvider_id, last_edit_user=last_edit_user, delivered=delivered)
-                    try:
-                        for x in labels:
-                            labelObj = label.objects.create(uniqueid=x, FK_coil_id=coilObj,FK_labelStatus_id=FK_labelStatus_id, FK_inventoryLocation_id=FK_inventoryLocation_id,last_edit_user=last_edit_user)
-                            labelObj.save()
-                        coilObj.save()
-                        return redirect("/coil/")
-                    except Exception as e:
-                        coil.objects.filter(id=coilObj.id).delete()
-                        msg = "Error al generar marbetes"
+                    initial = FK_coilType_id.name + str(startingNumber)
+                    end = FK_coilType_id.name + str(endingNumber+1)
+                    data_exists = label.objects.filter(uniqueid__startswith=FK_coilType_id.name, uniqueid__range=[initial, end])
+                    if not data_exists.exists():
+                        try:
+                            for x in labels:
+                                labelObj = label.objects.create(uniqueid=coilObj.FK_coilType_id.name+str(x), FK_coil_id=coilObj, FK_labelStatus_id=FK_labelStatus_id, FK_inventoryLocation_id=FK_inventoryLocation_id,last_edit_user=last_edit_user)
+                                labelObj.save()
+                            coilObj.save()
+                            return redirect("/coil/")
+                        except Exception as e:
+                            coil.objects.filter(id=coilObj.id).delete()
+                            msg = "Error al generar marbetes"
+                    else:
+                        msg = "Algunos de estos marbetes ya existen"
                 else:
                     msg = 'Error al generar la bobina'
             else:
@@ -278,3 +284,16 @@ def createCoil_view(request):
         form = CreateCoilForm()
 
     return render(request, "cuervo/coil_create.html", {"form": form, "msg": msg})
+
+def deleteLabelsOfaCoil(request, id):
+    coilObj = coil.objects.get(id=id)
+    num_form = coilObj.notDelivered
+    DeleteFormEntry = formset_factory(DeleteLabelForm, extra=num_form)
+    if request.method == 'POST':
+        formset = DeleteFormEntry(request.POST)
+        if formset.is_valid():
+            for form in formset:
+                uniqueid = form.cleaned_data.get('uniqueid')
+                label.objects.filter(uniqueid=uniqueid).delete()
+        # process each form
+    return render(request, 'my_template.html', {'formset': formset})

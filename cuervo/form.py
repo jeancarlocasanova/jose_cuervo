@@ -126,3 +126,6 @@ class AssignOrderForm(forms.Form):
 class FilterCoilForm(forms.Form):
     boxNumber = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={"class": "form"}))
     purchaseOrder = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))
+
+class DeleteLabelForm(forms.Form):
+    uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
