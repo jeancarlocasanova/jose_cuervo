@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+    <link href="/static/css/forms.css" rel="stylesheet">
+<style>
+       body{
+               background-color: #100e17;
+               font-family: Arial, sans-serif;
+       }
+       p{
+               color: white;
+       }
+       .buttonDelete{
+  background: transparent;
+  color: #bd2020;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 35px 0;
+  padding: 10px 30px;
+  border: 2px solid #bd2020;
+    font-size: 12px;
+}
+       .buttonDelete:hover{
+  background: transparent;
+  border: 2px solid rgba(240, 240, 240, 0.68);
+    color: rgba(240, 240, 240, 0.68);
+}
+
+              .buttonEdit{
+  background: transparent;
+  color: rgba(255, 213, 0, 0.67);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 35px 0;
+  padding: 10px 30px;
+  border: 2px solid rgba(255, 213, 0, 0.67);
+    font-size: 12px;
+}
+       .buttonEdit:hover{
+  background: transparent;
+  border: 2px solid rgba(240, 240, 240, 0.68);
+    color: rgba(240, 240, 240, 0.68);
+}
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="{% url 'label-menu' %}" style="margin-left: 250px; padding-right: 190px">
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Ingresa los folios de los marbetes a eliminar</h2>
+    {% endif %}
+    {% for form in formset %}
+    <div class="user-box">
+    {{ form.uniqueid }}
+      <label>Folio a eliminar No.{{ forloop.counter }}</label>
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="btn buttonDelete" style="margin-right: 50px">Borrar</button>
+    <button type="button" class="btn buttonEdit" value="Cancel" onclick="javascript:location.href='/labelMenu'">Cancelar</button>
+  </form>
+{% endblock content %}

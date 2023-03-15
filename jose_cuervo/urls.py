@@ -62,6 +62,7 @@ urlpatterns = [
     path('coil/', coil_view, name='coil'),
     path('coil/edit/<int:pk>', updateCoil_view.as_view(), name='coil-edit'),
     path('coilCreate/', createCoil_view, name='coil-create'),
+    path('deleteLabelsfromCoil/<int:id>', deleteLabelsOfaCoil, name="deleteLabelsFromCoil"),
 
     path('SKU/', sku_view, name='SKU'),
     path('sku/delete/<int:pk>', deleteSku_view.as_view(), name='sku-delete'),

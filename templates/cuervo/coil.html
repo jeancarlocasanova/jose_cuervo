@@ -19,6 +19,8 @@
                 <th scope="col">No. de Caja</th>
 				 {% if perms.cuervo.change_coil %}
 				<th scope="col">Editar</th>{% endif %}
+                {% if perms.cuervo.delete_label %}
+				<th scope="col">Borrar Folios</th>{% endif %}
 			</tr>
 		</thead>
 		<tbody>
@@ -33,6 +35,8 @@
                 <td>{{ i.boxNumber }}</td>
 				 {% if perms.cuervo.change_coil %}
 				<td><a href="{% url 'coil-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+                {% if perms.cuervo.delete_label %}
+				<td><a href="{% url 'deleteLabelsFromCoil' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
 			</tr>
 		{% endfor %}
 		</tbody>

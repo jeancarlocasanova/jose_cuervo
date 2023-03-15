@@ -286,14 +286,19 @@ def createCoil_view(request):
     return render(request, "cuervo/coil_create.html", {"form": form, "msg": msg})
 
 def deleteLabelsOfaCoil(request, id):
+    msg = None
     coilObj = coil.objects.get(id=id)
     num_form = coilObj.notDelivered
-    DeleteFormEntry = formset_factory(DeleteLabelForm, extra=num_form)
     if request.method == 'POST':
+        DeleteFormEntry = formset_factory(DeleteLabelForm, extra=num_form)
         formset = DeleteFormEntry(request.POST)
         if formset.is_valid():
             for form in formset:
                 uniqueid = form.cleaned_data.get('uniqueid')
                 label.objects.filter(uniqueid=uniqueid).delete()
-        # process each form
-    return render(request, 'my_template.html', {'formset': formset})
+        else:
+            msg = "Error"
+    else:
+        formset = formset_factory(DeleteLabelForm, extra=num_form)()
+    return render(request, 'cuervo/deleteLabelsOfaCoil.html', {'formset': formset, "msg": msg})
+
