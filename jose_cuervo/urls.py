@@ -93,8 +93,10 @@ urlpatterns = [
     path('stopOrder/delete/<int:pk>', StopOrder_view.as_view(), name='stop-order'),
     path('assignOrder/', assignOrder_view, name='assign-order'),
 
+    path('labelHandling/', labelHandling_view, name='labelHandling'),
+    path('label/edit/<int:pk>', updateLabel_view.as_view(), name='label-edit'),
+
     path('coilHandling/', coilHandling_view, name='coilHandling'),
-    path('marbeteHandling/', labelHandling_view, name='labelHandling'),
     path('usersManagement/', usersManagement_view, name='usersManagement'),
     path('labelTraceability/', labelTraceability_view, name='labelTraceability'),
     path('reports/', reports_view, name='reports'),

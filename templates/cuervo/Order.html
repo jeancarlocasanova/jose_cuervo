@@ -11,7 +11,8 @@
 	<table class="table" id="myTable">
 		<thead style="background-color: #1e264e">
 			<tr>
-				<th scope="col">ID Unico</th>
+                <th scope="col">ID Unico</th>
+                 <th scope="col">Estatus</th>
                  <th scope="col">SKU</th>
 				 {% if perms.cuervo.change_order %}
 				<th scope="col">Editar</th>{% endif %}
@@ -23,6 +24,7 @@
 		{% for i in order %}
 			<tr>
 				<td>{{ i.uniqueid }}</td>
+            <td>{{ i.status }}</td>
             <td>{{ i.FK_sku_id.sku }}</td>
 				 {% if perms.cuervo.change_order %}
 				<td><a href="{% url 'order-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}

@@ -51,12 +51,13 @@ def createOrder_view(request):
         if form.is_valid():
             uniqueid = form.cleaned_data.get("uniqueid")
             FK_sku_id = form.cleaned_data.get("FK_sku_id")
+            status = form.cleaned_data.get("status")
             try:
                 OrderObj = order.objects.get(uniqueid=uniqueid)
             except:
                 OrderObj = None
             if OrderObj is None:
-                OrderObj = order.objects.create(uniqueid=uniqueid, FK_sku_id=FK_sku_id)
+                OrderObj = order.objects.create(uniqueid=uniqueid, FK_sku_id=FK_sku_id, status=status)
                 OrderObj.save()
                 return redirect("/Order/")
             else:

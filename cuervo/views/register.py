@@ -32,6 +32,7 @@ def register_token(request):
                 msg = 'Este Nombre de usuario ya existe'
         else:
             msg = 'A ocurrido un error'
+            print(form.errors)
     else:
         form = SignUpForm()
 

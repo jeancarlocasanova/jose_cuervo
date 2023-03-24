@@ -1,38 +1,36 @@
 {% extends "base.html" %}
-
-{% block stylesheets %}  <link href="/static/css/submenu.css" rel="stylesheet"> {% endblock stylesheets %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
 
 {% block content %}
 {% if user.is_authenticated %}
-<div class="cards-list">
-
-<div class="card 1">
-  <div class="card_image"> <img src="https://img.freepik.com/foto-gratis/primer-plano-botellas-tequila-sobre-fondo-negro_181624-59578.jpg?w=900&t=st=1673895969~exp=1673896569~hmac=d599e98f880ad27d274de15354c24107277cb4c7ddb10d5e7f70d01d94e941cf" /> </div>
-  <div class="card_title title-white">
-    <p>Alta en una ubicación y con un estado</p>
-  </div>
+<div class="container">
+	<h1 style="color: white; margin-bottom: 30px">Manejo de Marbetes</h1>
+	<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">Folio</th>
+                <th scope="col">Bobina</th>
+                <th scope="col">Estatus</th>
+                <th scope="col">Inventario</th>
+                {% if perms.cuervo.change_label %}
+				<th scope="col">Editar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in labelList %}
+			<tr>
+                <td>{{ i.uniqueid }}</td>
+                <td>{{ i.FK_coil_id.id }}</td>
+                <td>{{ i.FK_labelStatus_id.name }}</td>
+                <td>{{ i.FK_inventoryLocation_id.name }}</td>
+                {% if perms.cuervo.change_label %}
+				<td><a href="{% url 'label-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+            </tr>
+		{% endfor %}
+		</tbody>
+	</table>
 </div>
-
-  <div class="card 2">
-  <div class="card_image">
-    <img src="https://img.freepik.com/foto-gratis/cerrar-botellas-vidrio-cerveza-hielo-sobre-fondo-oscuro_1150-8903.jpg?w=1060&t=st=1673897079~exp=1673897679~hmac=c143bde84ed8892e9ab2cd16b6116ba34914499e6dfde382229af2dd125b14ff" />
-    </div>
-  <div class="card_title title-white">
-    <p>Cambiar ubicación</p>
-  </div>
-</div>
-
-<div class="card 3">
-  <div class="card_image">
- <img src="https://img.freepik.com/foto-gratis/primer-plano-botellas-vidrio-vacias-corchos-sobre-fondo-borroso_169016-20593.jpg?w=1060&t=st=1673895622~exp=1673896222~hmac=c2c9a3b2106042d2d44a87b919d9e1ea0417f645cd5dd7e2b057cd2c5874d80e" />
-  </div>
-  <div class="card_title title-white">
-    <p>Cambiar estado</p>
-  </div>
-</div>
-
-</div>
-
 {% else %}
  <div class="w3-panel w3-yellow">
             <h3 style="color: white">No has iniciado seccion!</h3>
@@ -40,3 +38,15 @@
         </div>
 {% endif %}
 {% endblock content %}
+
+{% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock javascripts %}

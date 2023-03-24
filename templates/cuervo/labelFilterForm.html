@@ -12,24 +12,19 @@
      {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Edita la Orden</h2>
+    <h2>Introduce los Filtros</h2>
     {% endif %}
 
   <div class="user-box">
     {{ form.uniqueid }}
-      <label>ID Unico de la Orden</label>
+      <label>Folio del marbete</label>
     </div>
 
-<div style="margin-top:20px;">
-      <label style="color:white;">Estatus de la orden</label>
-    {{ form.status }}
+<div style="margin-top: 20px">
+    <label style="color: white;">Estatus del marbete</label>
+    {{ form.FK_labelStatus_id }}
     </div>
 
-  <div>
-      <label style="color:white;">SKU</label>
-    {{ form.FK_sku_id }}
-    </div>
-
-    <button class="button" type="submit" name="login"> Editar </button>
+    <button type="submit" name="login" class="create"> Filtrar </button>
   </form>
 {% endblock content %}

@@ -287,6 +287,8 @@ def createCoil_view(request):
 
 def deleteLabelsOfaCoil(request, id):
     msg = None
+    tittle = "Error al Eliminar Marbetes"
+    link = "/coil"
     coilObj = coil.objects.get(id=id)
     num_form = coilObj.notDelivered
     if request.method == 'POST':
@@ -295,10 +297,16 @@ def deleteLabelsOfaCoil(request, id):
         if formset.is_valid():
             for form in formset:
                 uniqueid = form.cleaned_data.get('uniqueid')
-                label.objects.filter(uniqueid=uniqueid).delete()
+                try:
+                    label.objects.get(uniqueid=uniqueid, FK_coil_id=coilObj)
+                except label.DoesNotExist:
+                    msg = f"El marbete con el folio {uniqueid} no existe."
+                    return render(request, "cuervo/display_error.html", {'tittle': tittle, "msg": msg, "link": link})
+                label.objects.filter(uniqueid__contains=uniqueid, FK_coil_id=coilObj).delete()
+            return redirect('/labelMenu/')
         else:
             msg = "Error"
     else:
-        formset = formset_factory(DeleteLabelForm, extra=num_form)()
+        formset = formset_factory(DeleteLabelForm, extra=num_form)
     return render(request, 'cuervo/deleteLabelsOfaCoil.html', {'formset': formset, "msg": msg})
 

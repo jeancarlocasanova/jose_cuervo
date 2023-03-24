@@ -73,6 +73,7 @@ class coilTrace(models.Model):
 
 class order(models.Model):
     uniqueid = models.CharField(max_length=30)
+    status = models.CharField(max_length=30, default="abierta")
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
 
 class order_Exec(models.Model):

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order, line, inventoryLocation, labelStatus
+from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order, line, inventoryLocation, labelStatus, label
 
 
 class MyModelChoiceField(forms.ModelChoiceField):
@@ -105,8 +105,13 @@ class SkuForm(forms.ModelForm):
         model = SKU
         fields = 'sku', 'description', 'Fk_sku_type_id'
 
+CHOICES =(
+    ("abierta", "abierta"),
+    ("cerrada", "cerrada")
+)
 class OrderForm(forms.ModelForm):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    status = forms.ChoiceField(choices=CHOICES)
     FK_sku_id = ChoiceField(queryset=SKU.objects.all())
 
     class Meta:
@@ -129,3 +134,15 @@ class FilterCoilForm(forms.Form):
 
 class DeleteLabelForm(forms.Form):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+
+class FilterLabelForm(forms.Form):
+    uniqueid = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))
+    FK_labelStatus_id = MyModelChoiceField(queryset=labelStatus.objects.all(), required=False)
+
+class UpdateLabelForm(forms.ModelForm):
+    FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
+    FK_labelStatus_id = MyModelChoiceField(queryset=labelStatus.objects.all())
+
+    class Meta:
+        model = label
+        fields = 'FK_inventoryLocation_id', 'FK_labelStatus_id'
