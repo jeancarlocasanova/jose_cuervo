@@ -84,6 +84,11 @@ urlpatterns = [
     path('line/edit/<int:pk>', updateLine_view.as_view(), name='line-edit'),
     path('lineCreate/', createLine_view, name='line-create'),
 
+    path('line/api', list_lines, name='line-api'),
+    path('line/api/choice-L', choiceField_lines, name='choice-line-api'),
+    path('line/api/choice-O', choiceField_order, name='choice-order-api'),
+    path('order/api/create', create_Order, name='api-createOrder'),
+
     path('request-status/', requestStatus_view, name='request-status'),
     path('request-status/delete/<int:pk>', deleteRequestStatus_view.as_view(), name='request-status-delete'),
     path('request-status/edit/<int:pk>', updateRequestStatus_view.as_view(), name='request-status-edit'),

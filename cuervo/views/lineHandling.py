@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect
-from ..models import line
+from ..models import order_Exec, line
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
 from ..form import LineForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.response import Response
 
 # <------ LINE CRUD --------!>
 
@@ -66,3 +68,5 @@ def createLine_view(request):
         form = LineForm()
 
     return render(request, "cuervo/line_create.html", {"form": form, "msg": msg})
+
+
