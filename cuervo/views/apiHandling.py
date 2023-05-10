@@ -45,7 +45,7 @@ def create_Order(request):
     lineObj = line.objects.get(uniqueid=line_id)
     orderObj = order.objects.get(uniqueid=order_id)
 
-    # crear una instancia de order_Exec con los datos recibidos
+    # crear una instancia de order_Exec con los datos recibidos a
     try:
         order_exec = order_Exec(FK_order_id=orderObj, FK_line_id=lineObj)
         order_exec.save()
