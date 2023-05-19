@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Value
 from django.db.models.functions import Coalesce
 from jose_cuervo.serializers import OrderSerializer
+from jose_cuervo.wsgi import application
 
 @api_view(['GET'])
 @authentication_classes([])
