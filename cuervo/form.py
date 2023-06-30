@@ -68,8 +68,6 @@ class CoilProviderForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
 class CreateCoilForm(forms.Form):
-    startingNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
-    endingNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     numrollo = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     boxNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     notDelivered = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))

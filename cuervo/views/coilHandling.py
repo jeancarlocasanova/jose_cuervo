@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
 from django.forms import formset_factory
+import csv
 
 def coilHandling_view(request):
     return render(request, "cuervo/coilHandling.html")
@@ -228,8 +229,7 @@ def createCoil_view(request):
     if request.method == "POST":
         form = CreateCoilForm(request.POST)
         if form.is_valid():
-            startingNumber = form.cleaned_data.get("startingNumber")
-            endingNumber = form.cleaned_data.get("endingNumber")
+            csv_file = request.FILES['csv_file']
             numrollo = form.cleaned_data.get("numrollo")
             boxNumber = form.cleaned_data.get("boxNumber")
             notDelivered = form.cleaned_data.get("notDelivered")
@@ -241,30 +241,63 @@ def createCoil_view(request):
             FK_coilType_id = form.cleaned_data.get("FK_coilType_id")
             FK_coilProvider_id = form.cleaned_data.get("FK_coilProvider_id")
             last_edit_user = request.user
-            if startingNumber < endingNumber:
-                labels = range(startingNumber, endingNumber + 1)
-            if labels != [] and len(labels) > notDelivered + 1:
-                proceso = True
+            if not csv_file.name.endswith('.csv'):
+                # Handle error: Invalid file format
+                return render(request, 'cuervo/display_error.html', {'tittle': 'Invalid file format.','msg':'Please upload a CSV file.'})
 
+            # Obtén el archivo CSV
+            csv_file = request.FILES['csv_file']
+
+            # Columnas a excluir (ID y Registro en este caso)
+            columns_to_exclude = ['ID', 'REGISTRO']
+
+            folios = []
+            textos = []
+
+            decoded_file = csv_file.read().decode('utf-8')
+            csv_reader = csv.reader(decoded_file.splitlines(), delimiter=',')
+
+            # Obtiene los encabezados del archivo CSV
+            headers = next(csv_reader)
+
+            # Encuentra los índices de las columnas a excluir
+            exclude_indices = [headers.index(column) for column in columns_to_exclude if column in headers]
+
+            for row in csv_reader:
+                # Excluye las columnas en cada fila
+                filtered_row = [value for index, value in enumerate(row) if index not in exclude_indices]
+                # Divide los folios y los textos en arreglos separados
+                folios.extend(filtered_row[::2])  # Obtén los folios (columnas pares)
+                textos.extend(filtered_row[1::2])  # Obtén los textos (columnas impares)
+
+            folios_filtrado = [valor for valor in folios if not valor.isdigit()]
+            if (textos != [] and len(textos) > notDelivered + 1) and (folios_filtrado != [] and len(folios_filtrado) > notDelivered + 1):
+                proceso = True
             if proceso:
                 try:
-                    coilObj = coil.objects.get(startingNumber=startingNumber, endingNumber=endingNumber, FK_coilType_id=FK_coilType_id)
+                    coilObj = coil.objects.filter(numrollo__in=numrollo, FK_coilType_id__in=FK_coilType_id)
                 except:
                     coilObj = None
                 if coilObj is None:
-                    delivered = endingNumber - startingNumber
+                    delivered = len(textos)
                     missing = delivered - notDelivered
-                    coilObj = coil.objects.create(startingNumber=startingNumber, endingNumber=endingNumber, notDelivered=notDelivered,
+                    coilObj = coil.objects.create(notDelivered=notDelivered,
                                                   numrollo=numrollo, purchaseOrder=purchaseOrder, boxNumber=boxNumber, missing=missing,
-                                                  FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id, FK_coilType_id=FK_coilType_id,
+                                                 FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id, FK_coilType_id=FK_coilType_id,
                                                   FK_coilProvider_id=FK_coilProvider_id, last_edit_user=last_edit_user, delivered=delivered)
-                    initial = FK_coilType_id.name + str(startingNumber)
-                    end = FK_coilType_id.name + str(endingNumber+1)
-                    data_exists = label.objects.filter(uniqueid__startswith=FK_coilType_id.name, uniqueid__range=[initial, end])
-                    if not data_exists.exists():
+
+                    data_exists = label.objects.filter(uniqueid__in=textos, url__in=folios_filtrado)
+                    if not data_exists:
                         try:
-                            for x in labels:
-                                labelObj = label.objects.create(uniqueid=coilObj.FK_coilType_id.name+str(x), FK_coil_id=coilObj, FK_labelStatus_id=FK_labelStatus_id, FK_inventoryLocation_id=FK_inventoryLocation_id,last_edit_user=last_edit_user)
+                            for index, x in enumerate(folios_filtrado):
+                                labelObj = label.objects.create(
+                                    uniqueid=textos[index],
+                                    url=folios_filtrado[index],
+                                    FK_coil_id=coilObj,
+                                    FK_labelStatus_id=FK_labelStatus_id,
+                                    FK_inventoryLocation_id=FK_inventoryLocation_id,
+                                    last_edit_user=last_edit_user
+                                )
                                 labelObj.save()
                             coilObj.save()
                             return redirect("/coil/")

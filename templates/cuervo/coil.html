@@ -10,8 +10,6 @@
 	<table class="table" id="myTable">
 		<thead style="background-color: #1e264e">
 			<tr>
-				<th scope="col">Folio Inicial</th>
-				<th scope="col">Folio Final</th>
                 <th scope="col">No Rollo</th>
                 <th scope="col">Folios Utilizados</th>
                 <th scope="col">Folios Faltantes</th>
@@ -26,8 +24,6 @@
 		<tbody>
 		{% for i in coilList %}
 			<tr>
-				<td>{{ i.FK_coilType_id.name }}{{ i.startingNumber }}</td>
-				<td>{{ i.FK_coilType_id.name }}{{ i.endingNumber }}</td>
                 <td>{{ i.numrollo }}</td>
                 <td>{{ i.delivered }}</td>
                 <td>{{ i.notDelivered }}</td>

@@ -33,8 +33,6 @@ class SKU(models.Model):
     Fk_sku_type_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False, help_text='Linked SKU Type')
 
 class coil(models.Model):
-    startingNumber = models.IntegerField(default=1, null=False, help_text='Starting Label Number')
-    endingNumber = models.IntegerField(default=1, null=False, help_text='Ending Label Number')
     numrollo = models.IntegerField(default=1, null=False, help_text="Numero de Rollo")
     notDelivered = models.IntegerField(default=0)
     missing = models.IntegerField(null=False, default=0)
@@ -50,6 +48,7 @@ class coil(models.Model):
 
 class label(models.Model):
     uniqueid = models.CharField(max_length=20)
+    url = models.CharField(max_length=500, default='')
     FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
     FK_labelStatus_id = models.ForeignKey(labelStatus, on_delete=models.PROTECT, null=False, help_text='Linked Label Status')
     FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, help_text='Linked Inventory Location')
