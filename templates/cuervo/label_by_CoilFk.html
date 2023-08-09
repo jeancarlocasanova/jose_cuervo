@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block stylesheets %}
+    <link href="/static/css/crud.css" rel="stylesheet">
+     <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+    <h1 style="color: white; margin-bottom: 30px">Marbetes faltantes</h1>
+    <form method="post">
+        {% csrf_token %}
+        <table class="table" id="myTable" style="align-content: start!important;">
+            <thead style="background-color: #1e264e">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Faltante</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for label_obj in labels %}
+                <tr>
+                    <td>{{ label_obj.uniqueid }}</td>
+                    <td>{{ label_obj.FK_labelStatus_id.name }}</td>
+                    <td>
+                        <input type="checkbox" name="selected_labels" value="{{ label_obj.id }}"
+                            {% if label_obj.FK_labelStatus_id.status == 'Faltante' %} checked {% endif %}
+                            {% if disable_checkboxes %} disabled {% endif %}>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <button type="submit"  class="create" {% if disable_checkboxes %} disabled {% endif %}>Guardar</button>
+    </form>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+ </div>
+{% endif %}
+{% endblock content %}

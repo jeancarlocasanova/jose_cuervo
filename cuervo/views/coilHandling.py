@@ -270,8 +270,17 @@ def createCoil_view(request):
                 folios.extend(filtered_row[::2])  # Obtén los folios (columnas pares)
                 textos.extend(filtered_row[1::2])  # Obtén los textos (columnas impares)
 
+            # Verifica si hay contenido repetido en los textos
+            duplicates = []
+            seen = set()
+            for i, texto in enumerate(textos):
+                if texto in seen:
+                    duplicates.append(i)
+                else:
+                    seen.add(texto)
+
             folios_filtrado = [valor for valor in folios if not valor.isdigit()]
-            if (textos != [] and len(textos) > notDelivered + 1) and (folios_filtrado != [] and len(folios_filtrado) > notDelivered + 1):
+            if (textos != [] and len(textos) > notDelivered + 1) and (folios_filtrado != [] and len(folios_filtrado) > notDelivered + 1) and not duplicates:
                 proceso = True
             if proceso:
                 try:
@@ -309,7 +318,12 @@ def createCoil_view(request):
                 else:
                     msg = 'Error al generar la bobina'
             else:
-                msg = 'Revisa si los numeros de folio o los folios no entregados esten bien'
+                if duplicates:
+                    # Aquí puedes trabajar con los datos repetidos
+                    for index in duplicates:
+                        print(f"El texto '{textos[index]}' está repetido en el folio: {folios[index]}.")
+                else:
+                    msg = 'Revisa si los numeros de folio o los folios no entregados esten bien'
         else:
             msg = 'A ocurrido un error'
             print(form.errors)

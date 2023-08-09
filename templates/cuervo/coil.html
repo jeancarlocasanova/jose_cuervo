@@ -19,6 +19,7 @@
 				<th scope="col">Editar</th>{% endif %}
                 {% if perms.cuervo.delete_label %}
 				<th scope="col">Borrar Folios</th>{% endif %}
+                <th scope="col">Marbetes Faltantes</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -33,6 +34,7 @@
 				<td><a href="{% url 'coil-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
                 {% if perms.cuervo.delete_label %}
 				<td><a href="{% url 'deleteLabelsFromCoil' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+                <td><a href="{% url 'label-find' i.id %}"><span><img class="img" src="{% static 'media/findDelete.webp' %}"/></span></a></td>
 			</tr>
 		{% endfor %}
 		</tbody>

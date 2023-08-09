@@ -100,6 +100,7 @@ urlpatterns = [
 
     path('labelHandling/', labelHandling_view, name='labelHandling'),
     path('label/edit/<int:pk>', updateLabel_view.as_view(), name='label-edit'),
+    path('label/find/<int:pk>', searchLabelByCoilFK, name='label-find'),
 
     path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('usersManagement/', usersManagement_view, name='usersManagement'),
