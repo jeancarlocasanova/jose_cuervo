@@ -47,8 +47,8 @@ class coil(models.Model):
     last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User' )
 
 class label(models.Model):
-    uniqueid = models.CharField(max_length=20)
-    url = models.CharField(max_length=500, default='')
+    uniqueid = models.CharField(max_length=999)
+    url = models.CharField(max_length=999, default='')
     FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
     FK_labelStatus_id = models.ForeignKey(labelStatus, on_delete=models.PROTECT, null=False, help_text='Linked Label Status')
     FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, help_text='Linked Inventory Location')

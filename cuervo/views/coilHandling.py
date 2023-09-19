@@ -296,23 +296,28 @@ def createCoil_view(request):
                                                   FK_coilProvider_id=FK_coilProvider_id, last_edit_user=last_edit_user, delivered=delivered)
 
                     data_exists = label.objects.filter(uniqueid__in=textos, url__in=folios_filtrado)
+                    folios_filtrado = [valor for valor in folios_filtrado if valor.strip()]
                     if not data_exists:
                         try:
-                            for index, x in enumerate(folios_filtrado):
-                                labelObj = label.objects.create(
-                                    uniqueid=textos[index],
-                                    url=folios_filtrado[index],
-                                    FK_coil_id=coilObj,
-                                    FK_labelStatus_id=FK_labelStatus_id,
-                                    FK_inventoryLocation_id=FK_inventoryLocation_id,
-                                    last_edit_user=last_edit_user
-                                )
-                                labelObj.save()
-                            coilObj.save()
-                            return redirect("/coil/")
+                            if len(folios_filtrado) == len(textos):
+                                for index, x in enumerate(folios_filtrado):
+                                    labelObj = label.objects.create(
+                                        uniqueid=textos[index],
+                                        url=folios_filtrado[index],
+                                        FK_coil_id=coilObj,
+                                        FK_labelStatus_id=FK_labelStatus_id,
+                                        FK_inventoryLocation_id=FK_inventoryLocation_id,
+                                        last_edit_user=last_edit_user
+                                    )
+                                    labelObj.save()
+                                coilObj.save()
+                                return redirect("/coil/")
+                            else:
+                                msg = "Las listas folios_filtrado("+str(len(folios_filtrado))+") y textos("+str(len(textos))+")  no tienen la misma longitud."
                         except Exception as e:
+                            label.objects.filter(FK_coil_id=coilObj).delete()
                             coil.objects.filter(id=coilObj.id).delete()
-                            msg = "Error al generar marbetes"
+                            msg = "Error al generar marbetes" + str(e)
                     else:
                         msg = "Algunos de estos marbetes ya existen"
                 else:
