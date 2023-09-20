@@ -302,8 +302,8 @@ def createCoil_view(request):
                             if len(folios_filtrado) == len(textos):
                                 for index, x in enumerate(folios_filtrado):
                                     labelObj = label.objects.create(
-                                        uniqueid=textos[index],
-                                        url=folios_filtrado[index],
+                                        uniqueid=folios_filtrado[index],
+                                        url=textos[index],
                                         FK_coil_id=coilObj,
                                         FK_labelStatus_id=FK_labelStatus_id,
                                         FK_inventoryLocation_id=FK_inventoryLocation_id,
