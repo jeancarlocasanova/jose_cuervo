@@ -219,17 +219,16 @@ class updateCoil_view(PermissionRequiredMixin, UpdateView):
         owner = self.request.user
         return self.model.objects.filter(last_edit_user=owner)
 
-
-
 @permission_required('cuervo.add_coil', login_url='/login/')
 def createCoil_view(request):
     msg = None
     proceso = None
     labels = []
+
     if request.method == "POST":
         form = CreateCoilForm(request.POST)
         if form.is_valid():
-            csv_file = request.FILES['csv_file']
+            csv_files = request.FILES.getlist('csv_file')
             numrollo = form.cleaned_data.get("numrollo")
             boxNumber = form.cleaned_data.get("boxNumber")
             notDelivered = form.cleaned_data.get("notDelivered")
@@ -241,96 +240,98 @@ def createCoil_view(request):
             FK_coilType_id = form.cleaned_data.get("FK_coilType_id")
             FK_coilProvider_id = form.cleaned_data.get("FK_coilProvider_id")
             last_edit_user = request.user
-            if not csv_file.name.endswith('.csv'):
-                # Handle error: Invalid file format
-                return render(request, 'cuervo/display_error.html', {'tittle': 'Invalid file format.','msg':'Please upload a CSV file.'})
 
-            # Obtén el archivo CSV
-            csv_file = request.FILES['csv_file']
+            for csv_file in csv_files:
+                if not csv_file.name.endswith('.csv'):
+                    # Handle error: Invalid file format for a specific file
+                    continue  # Skip this file and move to the next one
 
-            # Columnas a excluir (ID y Registro en este caso)
-            columns_to_exclude = ['ID', 'REGISTRO']
+                # Columnas a excluir (ID y Registro en este caso)
+                columns_to_exclude = ['ID', 'REGISTRO']
 
-            folios = []
-            textos = []
+                folios = []
+                textos = []
 
-            decoded_file = csv_file.read().decode('utf-8')
-            csv_reader = csv.reader(decoded_file.splitlines(), delimiter=',')
+                decoded_file = csv_file.read().decode('utf-8')
+                csv_reader = csv.reader(decoded_file.splitlines(), delimiter=',')
 
-            # Obtiene los encabezados del archivo CSV
-            headers = next(csv_reader)
+                # Obtiene los encabezados del archivo CSV
+                headers = next(csv_reader)
 
-            # Encuentra los índices de las columnas a excluir
-            exclude_indices = [headers.index(column) for column in columns_to_exclude if column in headers]
+                # Encuentra los índices de las columnas a excluir
+                exclude_indices = [headers.index(column) for column in columns_to_exclude if column in headers]
 
-            for row in csv_reader:
-                # Excluye las columnas en cada fila
-                filtered_row = [value for index, value in enumerate(row) if index not in exclude_indices]
-                # Divide los folios y los textos en arreglos separados
-                folios.extend(filtered_row[::2])  # Obtén los folios (columnas pares)
-                textos.extend(filtered_row[1::2])  # Obtén los textos (columnas impares)
+                for row in csv_reader:
+                    # Excluye las columnas en cada fila
+                    filtered_row = [value for index, value in enumerate(row) if index not in exclude_indices]
+                    # Divide los folios y los textos en arreglos separados
+                    folios.extend(filtered_row[::2])  # Obtén los folios (columnas pares)
+                    textos.extend(filtered_row[1::2])  # Obtén los textos (columnas impares)
 
-            # Verifica si hay contenido repetido en los textos
-            duplicates = []
-            seen = set()
-            for i, texto in enumerate(textos):
-                if texto in seen:
-                    duplicates.append(i)
-                else:
-                    seen.add(texto)
-
-            folios_filtrado = [valor for valor in folios if not valor.isdigit()]
-            if (textos != [] and len(textos) > notDelivered + 1) and (folios_filtrado != [] and len(folios_filtrado) > notDelivered + 1) and not duplicates:
-                proceso = True
-            if proceso:
-                try:
-                    coilObj = coil.objects.filter(numrollo__in=numrollo, FK_coilType_id__in=FK_coilType_id)
-                except:
-                    coilObj = None
-                if coilObj is None:
-                    delivered = len(textos)
-                    missing = delivered - notDelivered
-                    coilObj = coil.objects.create(notDelivered=notDelivered,
-                                                  numrollo=numrollo, purchaseOrder=purchaseOrder, boxNumber=boxNumber, missing=missing,
-                                                 FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id, FK_coilType_id=FK_coilType_id,
-                                                  FK_coilProvider_id=FK_coilProvider_id, last_edit_user=last_edit_user, delivered=delivered)
-
-                    data_exists = label.objects.filter(uniqueid__in=textos, url__in=folios_filtrado)
-                    folios_filtrado = [valor for valor in folios_filtrado if valor.strip()]
-                    if not data_exists:
-                        try:
-                            if len(folios_filtrado) == len(textos):
-                                for index, x in enumerate(folios_filtrado):
-                                    labelObj = label.objects.create(
-                                        uniqueid=folios_filtrado[index],
-                                        url=textos[index],
-                                        FK_coil_id=coilObj,
-                                        FK_labelStatus_id=FK_labelStatus_id,
-                                        FK_inventoryLocation_id=FK_inventoryLocation_id,
-                                        last_edit_user=last_edit_user
-                                    )
-                                    labelObj.save()
-                                coilObj.save()
-                                return redirect("/coil/")
-                            else:
-                                msg = "Las listas folios_filtrado("+str(len(folios_filtrado))+") y textos("+str(len(textos))+")  no tienen la misma longitud."
-                        except Exception as e:
-                            label.objects.filter(FK_coil_id=coilObj).delete()
-                            coil.objects.filter(id=coilObj.id).delete()
-                            msg = "Error al generar marbetes" + str(e)
+                # Verifica si hay contenido repetido en los textos
+                duplicates = []
+                seen = set()
+                for i, texto in enumerate(textos):
+                    if texto in seen:
+                        duplicates.append(i)
                     else:
-                        msg = "Algunos de estos marbetes ya existen"
+                        seen.add(texto)
+
+                folios_filtrado = [valor for valor in folios if not valor.isdigit()]
+                if (textos != [] and len(textos) > notDelivered + 1) and (
+                        folios_filtrado != [] and len(folios_filtrado) > notDelivered + 1) and not duplicates:
+                    proceso = True
+                if proceso:
+                    try:
+                        coilObj = coil.objects.filter(numrollo__in=numrollo, FK_coilType_id__in=FK_coilType_id)
+                    except:
+                        coilObj = None
+                    if coilObj is None:
+                        delivered = len(textos)
+                        missing = delivered - notDelivered
+                        coilObj = coil.objects.create(notDelivered=notDelivered,
+                                                      numrollo=numrollo, purchaseOrder=purchaseOrder,
+                                                      boxNumber=boxNumber, missing=missing,
+                                                      FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id,
+                                                      FK_coilType_id=FK_coilType_id,
+                                                      FK_coilProvider_id=FK_coilProvider_id,
+                                                      last_edit_user=last_edit_user, delivered=delivered)
+
+                        data_exists = label.objects.filter(uniqueid__in=textos, url__in=folios_filtrado)
+                        folios_filtrado = [valor for valor in folios_filtrado if valor.strip()]
+                        if not data_exists:
+                            try:
+                                if len(folios_filtrado) == len(textos):
+                                    for index, x in enumerate(folios_filtrado):
+                                        labelObj = label.objects.create(
+                                            uniqueid=folios_filtrado[index],
+                                            url=textos[index],
+                                            FK_coil_id=coilObj,
+                                            FK_labelStatus_id=FK_labelStatus_id,
+                                            FK_inventoryLocation_id=FK_inventoryLocation_id,
+                                            last_edit_user=last_edit_user
+                                        )
+                                        labelObj.save()
+                                    coilObj.save()
+                            except Exception as e:
+                                label.objects.filter(FK_coil_id=coilObj).delete()
+                                coil.objects.filter(id=coilObj.id).delete()
+                                msg = "Error al generar marbetes" + str(e)
+                            else:
+                                return redirect("/coil/")
+                        else:
+                            msg = "Algunos de estos marbetes ya existen"
+                    else:
+                        msg = 'Error al generar la bobina'
                 else:
-                    msg = 'Error al generar la bobina'
-            else:
-                if duplicates:
-                    # Aquí puedes trabajar con los datos repetidos
-                    for index in duplicates:
-                        print(f"El texto '{textos[index]}' está repetido en el folio: {folios[index]}.")
-                else:
-                    msg = 'Revisa si los numeros de folio o los folios no entregados esten bien'
+                    if duplicates:
+                        # Aquí puedes trabajar con los datos repetidos
+                        for index in duplicates:
+                            print(f"El texto '{textos[index]}' está repetido en el folio: {folios[index]}.")
+                    else:
+                        msg = 'Revisa si los números de folio o los folios no entregados estén bien'
         else:
-            msg = 'A ocurrido un error'
+            msg = 'Ha ocurrido un error'
             print(form.errors)
     else:
         form = CreateCoilForm()
