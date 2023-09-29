@@ -222,13 +222,13 @@ class updateCoil_view(PermissionRequiredMixin, UpdateView):
 @permission_required('cuervo.add_coil', login_url='/login/')
 def createCoil_view(request):
     msg = None
-    proceso = None
     labels = []
 
     if request.method == "POST":
         form = CreateCoilForm(request.POST)
         if form.is_valid():
             csv_files = request.FILES.getlist('csv_file')
+
             numrollo = form.cleaned_data.get("numrollo")
             boxNumber = form.cleaned_data.get("boxNumber")
             notDelivered = form.cleaned_data.get("notDelivered")
@@ -280,8 +280,7 @@ def createCoil_view(request):
                 folios_filtrado = [valor for valor in folios if not valor.isdigit()]
                 if (textos != [] and len(textos) > notDelivered + 1) and (
                         folios_filtrado != [] and len(folios_filtrado) > notDelivered + 1) and not duplicates:
-                    proceso = True
-                if proceso:
+
                     try:
                         coilObj = coil.objects.filter(numrollo__in=numrollo, FK_coilType_id__in=FK_coilType_id)
                     except:
@@ -317,8 +316,6 @@ def createCoil_view(request):
                                 label.objects.filter(FK_coil_id=coilObj).delete()
                                 coil.objects.filter(id=coilObj.id).delete()
                                 msg = "Error al generar marbetes" + str(e)
-                            else:
-                                return redirect("/coil/")
                         else:
                             msg = "Algunos de estos marbetes ya existen"
                     else:
@@ -337,6 +334,7 @@ def createCoil_view(request):
         form = CreateCoilForm()
 
     return render(request, "cuervo/coil_create.html", {"form": form, "msg": msg})
+
 
 def deleteLabelsOfaCoil(request, id):
     msg = None
