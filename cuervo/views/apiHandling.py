@@ -1,4 +1,4 @@
-from ..models import order_Exec, line, order
+from ..models import order_Exec, line, order, labelStatus
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.db.models import Value
@@ -54,3 +54,11 @@ def create_Order(request):
         return Response({'message': 'Error al asignar orden'})
 
     return Response({'message': 'Orden asignada correctamente'})
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def list_status(request):
+    status = labelStatus.objects.all()
+    data = [{'uniqueid': s['name']} for s in status]
+    return Response(data)

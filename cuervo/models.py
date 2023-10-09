@@ -95,3 +95,6 @@ class coil_request(models.Model):
     Fk_source_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, related_name='source', help_text="Linked Source Inventory Location")
     Fk_destination_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False,related_name='destination', help_text="Linked Destination Inventory Location")
     FK_coil_request_status_id = models.ForeignKey(coil_request_status, on_delete=models.PROTECT, null=False, help_text="Linked Coil Request Status")
+
+class test(models.Model):
+    url = models.CharField(null=True, max_length=900)

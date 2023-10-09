@@ -106,6 +106,8 @@ urlpatterns = [
     path('usersManagement/', usersManagement_view, name='usersManagement'),
     path('labelTraceability/', labelTraceability_view, name='labelTraceability'),
     path('reports/', reports_view, name='reports'),
+
+    path('test/', test_view, name='test'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
