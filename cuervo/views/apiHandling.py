@@ -60,7 +60,7 @@ def create_Order(request):
 @permission_classes([])
 def list_status(request):
     status = labelStatus.objects.all()
-    data = [{'uniqueid': s['name']} for s in status]
+    data = [{'name': s['name']} for s in status]
     return Response(data)
 
 @api_view(['POST'])
