@@ -107,6 +107,9 @@ urlpatterns = [
     path('labelTraceability/', labelTraceability_view, name='labelTraceability'),
     path('reports/', reports_view, name='reports'),
 
+    path('label/api', update_label, name='label-api'),
+    path('labelstatus/api', list_status, name='status-api'),
+
     path('test/', test_view, name='test'),
 ]
 
