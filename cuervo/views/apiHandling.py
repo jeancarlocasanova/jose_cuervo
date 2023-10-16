@@ -1,4 +1,4 @@
-from ..models import order_Exec, line, order, labelStatus
+from ..models import order_Exec, line, order, labelStatus, label
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.db.models import Value
@@ -62,3 +62,23 @@ def list_status(request):
     status = labelStatus.objects.all()
     data = [{'uniqueid': s['name']} for s in status]
     return Response(data)
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+def update_label(request):
+    url_label_data = request.data # obtener el objeto JSON del request
+    url = url_label_data.get('url')
+    statusLabel = url_label_data.get('status')
+    print(url)
+    try:
+        labelObj = label.objects.filter(url=url).first()
+        statusObj = labelStatus.objects.filter(name=statusLabel).first()
+        # crear una instancia de order_Exec con los datos recibidos a
+
+        labelObj.FK_labelStatus_id = statusObj
+        labelObj.save()
+    except:
+        return Response({'message': 'Error al asignar status'})
+
+    return Response({'message': 'Status asignado correctamente'})
