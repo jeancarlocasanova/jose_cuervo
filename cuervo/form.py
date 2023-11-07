@@ -97,11 +97,14 @@ class SkuTypeForm(forms.Form):
 class SkuForm(forms.ModelForm):
     sku = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     description = forms.CharField(required=True, widget=forms.Textarea(attrs={"class": "form"}))
+    bts = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    cap = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    percentage_Alcohol = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     Fk_sku_type_id = MyModelChoiceField(queryset=sku_Type.objects.all())
 
     class Meta:
         model = SKU
-        fields = 'sku', 'description', 'Fk_sku_type_id'
+        fields = 'sku', 'description', 'Fk_sku_type_id', 'bts', 'cap', 'percentage_Alcohol'
 
 CHOICES =(
     ("abierta", "abierta"),
@@ -109,12 +112,18 @@ CHOICES =(
 )
 class OrderForm(forms.ModelForm):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    lot = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    finish_date = forms.DateTimeField(help_text='End Date Time', required=False)
+    finish_date.widget.attrs.update({
+        'class': 'datetimepicker',
+        'size': 14,
+    })
     status = forms.ChoiceField(choices=CHOICES)
     FK_sku_id = ChoiceField(queryset=SKU.objects.all())
 
     class Meta:
         model = order
-        fields = 'uniqueid', 'FK_sku_id'
+        fields = ('uniqueid', 'FK_sku_id', 'status', 'lot', 'finish_date')
 
 class LineForm(forms.Form):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
@@ -144,3 +153,6 @@ class UpdateLabelForm(forms.ModelForm):
     class Meta:
         model = label
         fields = 'FK_inventoryLocation_id', 'FK_labelStatus_id'
+
+class LabelInitForm(forms.Form):
+    brand = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))

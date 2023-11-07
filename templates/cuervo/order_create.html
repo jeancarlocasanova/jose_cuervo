@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load static %}
 {% block stylesheets %}
  <link href="/static/css/forms.css" rel="stylesheet">
+ <link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}" type="text/css"/>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -19,6 +21,10 @@
     {{ form.uniqueid }}
       <label>ID Unico</label>
     </div>
+ <div class="user-box">
+    {{ form.lot }}
+      <label>Lote</label>
+    </div>
 
 <div style="margin-top:20px;">
       <label style="color:white;">Estatus de la orden</label>
@@ -33,3 +39,16 @@
     <button type="submit" name="login" class="create"> Crear </button>
   </form>
 {% endblock content %}
+
+{% block javascripts %}
+<script type="text/javascript" src="{% static 'js/jquery.datetimepicker.full.min.js' %}"></script>
+ <script>
+        $(function () {
+            $(".datetimepicker").datetimepicker(
+                {format: 'm/d/Y H:i'});
+            $(".timepicker").datetimepicker(
+                {datepicker: false, format: 'H:i',step: 30}
+            );
+        });
+    </script>
+{% endblock javascripts %}

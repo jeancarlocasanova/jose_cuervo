@@ -60,7 +60,7 @@ def create_Order(request):
 @permission_classes([])
 def list_status(request):
     status = labelStatus.objects.all()
-    data = [{'name': s['name']} for s in status]
+    data = [{'name': s.name, 'description': s.description} for s in status]
     return Response(data)
 
 @api_view(['POST'])
@@ -69,16 +69,15 @@ def list_status(request):
 def update_label(request):
     url_label_data = request.data # obtener el objeto JSON del request
     url = url_label_data.get('url')
-    statusLabel = url_label_data.get('status')
-    print(url)
+    statusID = url_label_data.get('status')
     try:
         labelObj = label.objects.filter(url=url).first()
-        statusObj = labelStatus.objects.filter(name=statusLabel).first()
+        statusObj = labelStatus.objects.get(name__exact=statusID)
         # crear una instancia de order_Exec con los datos recibidos a
 
         labelObj.FK_labelStatus_id = statusObj
         labelObj.save()
-    except:
-        return Response({'message': 'Error al asignar status'})
+    except Exception as e:
+        return Response({'message': str(e)})
 
     return Response({'message': 'Status asignado correctamente'})

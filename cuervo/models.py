@@ -30,6 +30,9 @@ class coilProvider(models.Model):
 class SKU(models.Model):
     sku = models.CharField(max_length=50)
     description = models.CharField(max_length=200)
+    bts = models.CharField(max_length=12, default='')
+    cap = models.CharField(max_length=10, default='')
+    percentage_Alcohol = models.CharField(max_length=10, default='')
     Fk_sku_type_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False, help_text='Linked SKU Type')
 
 class coil(models.Model):
@@ -73,6 +76,9 @@ class coilTrace(models.Model):
 class order(models.Model):
     uniqueid = models.CharField(max_length=30)
     status = models.CharField(max_length=30, default="abierta")
+    lot = models.CharField(max_length=30, default='')
+    init_date = models.DateTimeField(auto_now=True, null=False)  # Set editable to False
+    finish_date = models.DateTimeField(null=True)
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
 
 class order_Exec(models.Model):
@@ -96,5 +102,9 @@ class coil_request(models.Model):
     Fk_destination_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False,related_name='destination', help_text="Linked Destination Inventory Location")
     FK_coil_request_status_id = models.ForeignKey(coil_request_status, on_delete=models.PROTECT, null=False, help_text="Linked Coil Request Status")
 
-class test(models.Model):
-    url = models.CharField(null=True, max_length=900)
+class init_label(models.Model):
+    uniqueid = models.CharField(max_length=999)
+    url = models.CharField(max_length=999, default='')
+    brand = models.CharField(default='', max_length=50)
+    file_name = models.CharField(default='', max_length=200)
+

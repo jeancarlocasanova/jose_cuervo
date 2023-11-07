@@ -30,7 +30,7 @@ box-shadow: 5px 5px 30px 7px rgba(255, 213, 0, 0.09), -5px -5px 30px 7px rgba(25
 .card .card_image img {
   width: inherit;
   height: inherit;
-  border-radius: 40px;
+  border-radius: 40px 40px 20px 20px;
   object-fit: cover;
 }
 
@@ -48,6 +48,14 @@ box-shadow: 5px 5px 30px 7px rgba(255, 213, 0, 0.09), -5px -5px 30px 7px rgba(25
   transform: scale(0.9, 0.9);
   box-shadow: 5px 5px 30px 15px rgba(255, 213, 0, 0.16),
     -5px -5px 30px 15px rgba(255, 213, 0, 0.16);
+}
+
+.card_text{
+  background-color: black;
+  opacity: 0.77;
+  margin-top: 75px;
+  border-radius: 0px 0px 25px 25px;
+  width: 180px;
 }
 
 .title-white {

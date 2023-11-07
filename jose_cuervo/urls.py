@@ -44,6 +44,8 @@ urlpatterns = [
     path('labelStatus/edit/<int:pk>', updateLabelStatus_view.as_view(), name='status-edit'),
     path('labelStatusCreate/', createStatus_view, name='status-create'),
 
+    path('labelinit/', init_label_information, name='init-create'),
+
     path('coilStatus/', coilStatus_view, name='coilStatus'),
     path('coilStatus/delete/<int:pk>', deleteCoilStatus_view.as_view(), name='coil-status-delete'),
     path('coilStatus/edit/<int:pk>', updateCoilStatus_view.as_view(), name='coil-status-edit'),
@@ -109,8 +111,6 @@ urlpatterns = [
 
     path('label/api', update_label, name='label-api'),
     path('labelstatus/api', list_status, name='status-api'),
-
-    path('test/', test_view, name='test'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

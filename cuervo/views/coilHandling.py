@@ -216,8 +216,14 @@ class updateCoil_view(PermissionRequiredMixin, UpdateView):
     permission_required = 'cuervo.change_coil'
 
     def get_queryset(self):
-        owner = self.request.user
-        return self.model.objects.filter(last_edit_user=owner)
+        # Check if the user has the change_coil permission
+        if self.request.user.has_perm('cuervo.change_coil'):
+            # User has permission to edit any coil, so return all coils
+            return self.model.objects.all()
+        else:
+            # User doesn't have the permission, filter by last_edit_user
+            owner = self.request.user
+            return self.model.objects.filter(last_edit_user=owner)
 
 @permission_required('cuervo.add_coil', login_url='/login/')
 def createCoil_view(request):
