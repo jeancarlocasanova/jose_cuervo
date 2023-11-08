@@ -42,7 +42,7 @@
 
 {% block javascripts %}
 <script type="text/javascript" src="{% static 'js/jquery.datetimepicker.full.min.js' %}"></script>
- <script>
+<script>
         $(function () {
             $(".datetimepicker").datetimepicker(
                 {format: 'm/d/Y H:i'});
@@ -50,5 +50,5 @@
                 {datepicker: false, format: 'H:i',step: 30}
             );
         });
-    </script>
+</script>
 {% endblock javascripts %}

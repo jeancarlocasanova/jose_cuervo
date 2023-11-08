@@ -14,6 +14,9 @@
                 <th scope="col">ID Unico</th>
                  <th scope="col">Estatus</th>
                  <th scope="col">SKU</th>
+                 <th scope="col">Lote</th>
+                 <th scope="col">Fecha Inicial</th>
+                 <th scope="col">Fecha Final</th>
 				 {% if perms.cuervo.change_order %}
 				<th scope="col">Editar</th>{% endif %}
 				{% if perms.cuervo.delete_order %}
@@ -26,6 +29,9 @@
 				<td>{{ i.uniqueid }}</td>
             <td>{{ i.status }}</td>
             <td>{{ i.FK_sku_id.sku }}</td>
+            <td>{{ i.lot}}</td>
+            <td>{{ i.init_date|date:"M. d, H:i" }}</td>
+            <td>{{ i.finish_date|date:"M. d, H:i" }}</td>
 				 {% if perms.cuervo.change_order %}
 				<td><a href="{% url 'order-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
 				{% if perms.cuervo.delete_order %}
