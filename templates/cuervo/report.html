@@ -1,46 +1,68 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block stylesheets %}  <link href="/static/css/submenu.css" rel="stylesheet"> {% endblock stylesheets %}
 
 {% block content %}
 {% if user.is_authenticated %}
 <div class="cards-list">
 
-<div class="card 1">
-  <div class="card_image"> <img src="https://img.freepik.com/foto-gratis/primer-plano-botellas-vidrio-vacias-corchos-sobre-fondo-borroso_169016-20593.jpg?w=1060&t=st=1673895622~exp=1673896222~hmac=c2c9a3b2106042d2d44a87b919d9e1ea0417f645cd5dd7e2b057cd2c5874d80e" /> </div>
+<div class="card 1" onclick="javascript:location.href='/'">
+  <div class="card_image"> <img src="{% static 'media/report-image.webp' %}" /> </div>
   <div class="card_title title-white">
-    <p>Disponibilidad de marbetes</p>
+    <p class="card_text">Reporte de Bobinas</p>
   </div>
 </div>
 
-  <div class="card 2">
+  <div class="card 2" onclick="javascript:location.href='/'">
   <div class="card_image">
-    <img src="https://img.freepik.com/foto-gratis/cerrar-botellas-vidrio-cerveza-hielo-sobre-fondo-oscuro_1150-8903.jpg?w=1060&t=st=1673897079~exp=1673897679~hmac=c143bde84ed8892e9ab2cd16b6116ba34914499e6dfde382229af2dd125b14ff" />
+    <img src="{% static 'media/report-image1.webp' %}" />
     </div>
   <div class="card_title title-white">
-    <p>Conciliación de marbetes</p>
+    <p class="card_text">Reporte Control Marbete</p>
   </div>
 </div>
-  </div>
 
-<div class="cards-list">
-<div class="card 2">
+<div class="card 3" onclick="javascript:location.href='/'">
   <div class="card_image">
-    <img src="https://img.freepik.com/foto-gratis/primer-plano-botellas-tequila-sobre-fondo-negro_181624-59578.jpg?w=900&t=st=1673895969~exp=1673896569~hmac=d599e98f880ad27d274de15354c24107277cb4c7ddb10d5e7f70d01d94e941cf" />
+    <img src="{% static 'media/administracion.jpeg' %}" />
   </div>
   <div class="card_title title-white">
-    <p>Trazabilidad de marbete</p>
+    <p class="card_text">Reporte Control Marbete Envasado</p>
   </div>
 </div>
 
-  <div class="card 3">
+
+</div>
+
+    <div class="cards-list">
+
+      <div class="card 1" onclick="javascript:location.href='/'">
   <div class="card_image">
-    <img src="https://img.freepik.com/foto-gratis/proceso-trabajo-fabrica-acero_140725-7628.jpg?w=1060&t=st=1673894763~exp=1673895363~hmac=2d5f053f912c604369f0dee339bf299ebc27448f9b18e866e426233ffb2f8924" />
+    <img src="{% static 'media/aprobacion-solicitudes.jpeg' %}" />
     </div>
   <div class="card_title title-white">
-    <p>Trazabilidad de bobina</p>
+    <p class="card_text">Reporte Devolución</p>
   </div>
   </div>
+
+<div class="card 2" onclick="javascript:location.href='/'">
+  <div class="card_image">
+    <img src="{% static 'media/Aprobacion.png' %}" />
+  </div>
+  <div class="card_title title-white">
+    <p class="card_text">Reporte Marbete Dañado</p>
+  </div>
+</div>
+
+<div class="card 3" onclick="javascript:location.href='/'">
+  <div class="card_image">
+    <img src="{% static 'media/report-image2.webp' %}" />
+  </div>
+  <div class="card_title title-white">
+    <p class="card_text">Reporte Solicitud</p>
+  </div>
+</div>
+
 </div>
 
 {% else %}
