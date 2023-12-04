@@ -36,6 +36,8 @@ class SKU(models.Model):
     Fk_sku_type_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False, help_text='Linked SKU Type')
 
 class coil(models.Model):
+    initNumber = models.IntegerField(default=0, null=False, help_text="Folio Inicial")
+    finishNumber = models.IntegerField(default=0, null=False, help_text="Folio final")
     numrollo = models.IntegerField(default=1, null=False, help_text="Numero de Rollo")
     notDelivered = models.IntegerField(default=0)
     missing = models.IntegerField(null=False, default=0)
@@ -106,6 +108,6 @@ class coil_request(models.Model):
 class init_label(models.Model):
     uniqueid = models.CharField(max_length=999)
     url = models.CharField(max_length=999, default='')
-    brand = models.CharField(default='', max_length=50)
+    brand = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False,related_name='destination', help_text="Marca", default=1)
     file_name = models.CharField(default='', max_length=200)
 

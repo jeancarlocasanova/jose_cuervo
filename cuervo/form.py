@@ -15,6 +15,10 @@ class OLChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.uniqueid
 
+class SkuChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.description
+
 
 class LoginForm(forms.Form):
     password = forms.CharField(
@@ -68,6 +72,8 @@ class CoilProviderForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
 class CreateCoilForm(forms.Form):
+    initNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    finishNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     numrollo = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     boxNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     notDelivered = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
@@ -75,7 +81,7 @@ class CreateCoilForm(forms.Form):
     unit = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     FK_labelStatus_id = MyModelChoiceField(queryset=labelStatus.objects.all())
     FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
-    FK_sku_id = ChoiceField(queryset=SKU.objects.all())
+    FK_sku_id = SkuChoiceField(queryset=SKU.objects.all())
     FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
     FK_coilType_id = MyModelChoiceField(queryset=coilType.objects.all())
     FK_coilProvider_id = MyModelChoiceField(queryset=coilProvider.objects.all())
@@ -85,11 +91,12 @@ class UpdateCoilForm(forms.ModelForm):
     boxNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     purchaseOrder = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     unit = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    FK_sku_id = SkuChoiceField(queryset=SKU.objects.all())
     FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
 
     class Meta:
         model = coil
-        fields = 'numrollo', 'boxNumber', 'purchaseOrder', 'FK_coilStatus_id', 'unit'
+        fields = 'numrollo', 'boxNumber', 'purchaseOrder', 'FK_coilStatus_id', 'unit', 'FK_sku_id'
 
 
 class SkuTypeForm(forms.Form):
@@ -121,7 +128,7 @@ class OrderForm(forms.ModelForm):
         'size': 14,
     })
     status = forms.ChoiceField(choices=CHOICES)
-    FK_sku_id = ChoiceField(queryset=SKU.objects.all())
+    FK_sku_id = SkuChoiceField(queryset=SKU.objects.all())
 
     class Meta:
         model = order
@@ -160,4 +167,4 @@ class UpdateLabelForm(forms.ModelForm):
         fields = 'FK_inventoryLocation_id', 'FK_labelStatus_id'
 
 class LabelInitForm(forms.Form):
-    brand = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    brand = MyModelChoiceField(queryset=sku_Type.objects.all())

@@ -19,11 +19,10 @@
    <input type="file" name="csv_file" accept=".csv" multiple>
  </div>
 
-        <div class="user-box">
-          {{ form.brand }}
-          <label>Marca</label>
-        </div>
-
+<div style="margin-top:10px;">
+    <label style="color:white;">Marca</label>
+    {{ form.brand }}
+</div>
    <button type="submit" name="login" class="create"> Crear </button>
   </form>
 {% endblock content %}

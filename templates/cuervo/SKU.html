@@ -29,6 +29,9 @@
 				<td>{{ i.sku }}</td>
             <td>{{ i.description }}</td>
             <td>{{ i.Fk_sku_type_id.name }}</td>
+            <td>{{ i.bts }}</td>
+            <td>{{ i.cap }}</td>
+            <td>{{ i.percentage_Alcohol }}</td>
 				 {% if perms.cuervo.change_sku %}
 				<td><a href="{% url 'sku-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
 				{% if perms.cuervo.delete_sku %}
