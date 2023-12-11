@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Crea un Pedido de Bobina</h2>
+    {% endif %}
+
+    <div>
+      <label style="color:white;">Bobina</label>
+        {{ form.FK_coil_id }}
+    </div>
+
+    <div style="margin-top:20px;">
+      <label style="color:white;">Orden</label>
+        {{ form.FK_order_id }}
+    </div>
+
+    <div style="margin-top:20px;">
+      <label style="color:white;">Origen inventario</label>
+        {{ form.Fk_source_invLocation_id }}
+    </div>
+
+    <div style="margin-top:20px;">
+      <label style="color:white;">Destino inventario</label>
+        {{ form.Fk_destination_invLocation_id }}
+    </div>
+
+    <div style="margin-top:20px;">
+      <label style="color:white;">Estatus de la petición</label>
+        {{ form.FK_coil_request_status_id }}
+    </div>
+
+    <button type="submit" name="login" class="create"> Crear </button>
+  </form>
+{% endblock content %}

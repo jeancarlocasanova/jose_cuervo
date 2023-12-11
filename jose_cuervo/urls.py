@@ -66,6 +66,16 @@ urlpatterns = [
     path('coilCreate/', createCoil_view, name='coil-create'),
     path('deleteLabelsfromCoil/<int:id>', deleteLabelsOfaCoil, name="deleteLabelsFromCoil"),
 
+    path('coil-request/', coilRequest_view, name='coil-request'),
+    path('coil-request-create/', createCoilRequest, name='coil-request-create'),
+    path('coil-request/edit/<int:pk>', updateCoilRequest_view.as_view(), name='coil-request-edit'),
+    path('coil-request/delete/<int:pk>', deleteCoilType_view.as_view(), name='coil-type-delete'),
+
+    path('coil-request-status/', coilRequestStatus_view, name='coil-request-status'),
+    path('coil-request-status-create/', createCoilRequestStatus_view.as_view(), name='coil-request-status-create'),
+    path('coil-request-status/edit/<int:pk>', updateCoilRequestStatus_view.as_view(), name='coil-request-status-edit'),
+    path('coil-request-status/delete/<int:pk>', deleteCoilRequestStatus_view.as_view(), name='coil-request-status-delete'),
+
     path('SKU/', sku_view, name='SKU'),
     path('sku/delete/<int:pk>', deleteSku_view.as_view(), name='sku-delete'),
     path('sku/edit/<int:pk>', updateSku_view.as_view(), name='sku-edit'),

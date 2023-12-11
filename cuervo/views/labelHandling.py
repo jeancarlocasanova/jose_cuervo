@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from ..models import label, coil, labelStatus, init_label
-from django.views.generic import DeleteView, UpdateView
+from django.views.generic import UpdateView
 from django.urls import reverse_lazy
 from ..form import FilterLabelForm, UpdateLabelForm, LabelInitForm
 from django.contrib.auth.decorators import permission_required
@@ -13,11 +13,8 @@ def labelHandling_view(request):
         form = FilterLabelForm(request.POST)
         if form.is_valid():
             uniqueid = form.cleaned_data['uniqueid']
-            FK_labelStatus_id = form.cleaned_data['FK_labelStatus_id']
             if uniqueid and len(uniqueid) >= 0:
                 labelList = labelList.filter(uniqueid__contains=uniqueid)
-            if FK_labelStatus_id:
-                labelList = labelList.filter(FK_labelStatus_id=FK_labelStatus_id)
             return render(request, "cuervo/labelHandling.html", {'labelList': labelList})
     else:
         form = FilterLabelForm()
@@ -73,6 +70,7 @@ def searchLabelByCoilFK(request, pk):
 @permission_required('cuervo.add_labelstatus', login_url='/login/')
 def init_label_information(request):
         msg = None
+        issaved = None
         if request.method == "POST":
             form = LabelInitForm(request.POST)
             if form.is_valid():
@@ -140,10 +138,13 @@ def init_label_information(request):
                                 print(f"El texto '{textos[index]}' está repetido en el folio: {folios[index]}.")
                         else:
                             msg = 'Revisa si los números de folio o los folios no entregados estén bien'
+                issaved = True
             else:
                 msg = 'Ha ocurrido un error'
                 print(form.errors)
         else:
             form = LabelInitForm()
+        if issaved:
+            return redirect('/labelMenu/')
 
         return render(request, "cuervo/label_init_create.html", {"form": form, "msg": msg})

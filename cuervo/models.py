@@ -97,8 +97,8 @@ class coil_request_status(models.Model):
 
 class coil_request(models.Model):
     FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
-    startingNumber = models.IntegerField(null=False, help_text='Starting Label Number', validators=[MinValueValidator(0), MaxValueValidator(999)])
-    endingNumber = models.IntegerField(null=False, help_text='Ending Label Number', validators=[MinValueValidator(0), MaxValueValidator(999)])
+    startingNumber = models.IntegerField(null=False, help_text='Starting Label Number', validators=[MinValueValidator(0)])
+    endingNumber = models.IntegerField(null=False, help_text='Ending Label Number', validators=[MinValueValidator(0)])
     request_date = models.DateTimeField(auto_now=True, null=False)
     FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=False, help_text="Linked Order")
     Fk_source_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, related_name='source', help_text="Linked Source Inventory Location")

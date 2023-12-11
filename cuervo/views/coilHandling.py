@@ -341,3 +341,5 @@ def deleteLabelsOfaCoil(request, id):
         formset = formset_factory(DeleteLabelForm, extra=num_form)
     return render(request, 'cuervo/deleteLabelsOfaCoil.html', {'formset': formset, "msg": msg})
 
+
+

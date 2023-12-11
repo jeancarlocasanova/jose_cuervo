@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+	<h1 style="color: white; margin-bottom: 30px">Manejo de Solicitudes de Bobinas</h1>
+	{% if perms.cuervo.add_coil_request%}
+	<a class="create" href="{% url 'coil-request-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Solicitud</a>{% endif %}
+	<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">Bobina</th>
+                <th scope="col">Folio Inicial</th>
+                <th scope="col">Folio Final</th>
+                <th scope="col">Fecha pedido</th>
+                 <th scope="col">Orden</th>
+                 <th scope="col">Lugar Origen</th>
+                 <th scope="col">Lugar Destino</th>
+                <th scope="col">Estatus</th>
+				 {% if perms.cuervo.change_coilprovider %}
+				<th scope="col">Editar</th>{% endif %}
+				{% if perms.cuervo.delete_coilprovider %}
+				<th scope="col">Eliminar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in coil_request %}
+			<tr>
+				<td>No. Caja: {{ i.FK_coil_id.boxNumber }}</td>
+                <td>{{ i.startingNumber }}</td>
+                <td>{{ i.endingNumber }}</td>
+                <td>{{ i.request_date | date:"M. d, Y" }}</td>
+                <td>{{ i.FK_order_id.uniqueid }}</td>
+                <td>{{ i.Fk_source_invLocation_id.name }}</td>
+                <td>{{ i.Fk_destination_invLocation_id.name }}</td>
+                <td>{{ i.FK_coil_request_status_id.status }}</td>
+				 {% if perms.cuervo.change_coil_request %}
+				<td><a href="{% url 'coil-request-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				{% if perms.cuervo.delete_coil_request %}
+				<td><a href="{% url 'coil-request-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+ </div>
+{% endif %}
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock javascripts %}

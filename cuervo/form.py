@@ -1,12 +1,17 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order, line, inventoryLocation, labelStatus, label
+from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order, line, inventoryLocation, labelStatus, label, coil_request, coil_request_status
 
 
 class MyModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.name
+
+class StatusChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.status
+
 class ChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.sku
@@ -18,6 +23,10 @@ class OLChoiceField(forms.ModelChoiceField):
 class SkuChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.description
+
+class CoilChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f"No. Caja: {obj.boxNumber} - Marca: {obj.FK_sku_id.Fk_sku_type_id.name}"
 
 
 class LoginForm(forms.Form):
@@ -155,8 +164,7 @@ class DeleteLabelForm(forms.Form):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
 class FilterLabelForm(forms.Form):
-    uniqueid = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))
-    FK_labelStatus_id = MyModelChoiceField(queryset=labelStatus.objects.all(), required=False)
+    uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
 class UpdateLabelForm(forms.ModelForm):
     FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
@@ -168,3 +176,15 @@ class UpdateLabelForm(forms.ModelForm):
 
 class LabelInitForm(forms.Form):
     brand = MyModelChoiceField(queryset=sku_Type.objects.all())
+
+
+class CoilRequestForm(forms.ModelForm):
+    FK_coil_id = CoilChoiceField(queryset=coil.objects.all())
+    FK_order_id = OLChoiceField(queryset=order.objects.all())
+    Fk_source_invLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
+    Fk_destination_invLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
+    FK_coil_request_status_id = StatusChoiceField(queryset=coil_request_status.objects.all())
+
+    class Meta:
+        model = coil_request
+        fields = 'FK_coil_id', 'FK_order_id', 'Fk_source_invLocation_id', 'Fk_destination_invLocation_id', 'FK_coil_request_status_id'
