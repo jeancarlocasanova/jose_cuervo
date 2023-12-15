@@ -95,22 +95,10 @@
 
 </div>
 
-    <div class="cards-list">
-
-    <div class="card 1" onclick="javascript:location.href='/coil-request-status'">
-  <div class="card_image">
-    <img src="{% static 'media/request-status.webp' %}" />
-    </div>
-  <div class="card_title title-white">
-    <p class="card_text">Estatus de Pedido</p>
-  </div>
-    </div>
-    </div>
-
 {% else %}
  <div class="w3-panel w3-yellow">
             <h3 style="color: white">No has iniciado seccion!</h3>
             <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
-        </div>
+ </div>
 {% endif %}
 {% endblock content %}

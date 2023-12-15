@@ -241,6 +241,7 @@ def createCoil_view(request):
             notDelivered = form.cleaned_data.get("notDelivered")
             purchaseOrder = form.cleaned_data.get("purchaseOrder")
             FK_labelStatus_id = form.cleaned_data.get("FK_labelStatus_id")
+            orderUniqueid = form.cleaned_data.get("orderUniqueid")
             FK_inventoryLocation_id = form.cleaned_data.get("FK_inventoryLocation_id")
             FK_sku_id = form.cleaned_data.get("FK_sku_id")
             FK_coilStatus_id = form.cleaned_data.get("FK_coilStatus_id")
@@ -281,7 +282,8 @@ def createCoil_view(request):
                                                   FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id,
                                                   FK_coilType_id=FK_coilType_id,
                                                   FK_coilProvider_id=FK_coilProvider_id,
-                                                  last_edit_user=last_edit_user, delivered=delivered)
+                                                  last_edit_user=last_edit_user, delivered=delivered,
+                                                  orderUniqueid=orderUniqueid)
                     for index, result in enumerate(resultados):
                         data_exists = label.objects.filter(uniqueid=result['uniqueid'], url=result['url'])
                     if not data_exists:

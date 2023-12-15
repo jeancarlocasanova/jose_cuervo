@@ -69,7 +69,7 @@ urlpatterns = [
     path('coil-request/', coilRequest_view, name='coil-request'),
     path('coil-request-create/', createCoilRequest, name='coil-request-create'),
     path('coil-request/edit/<int:pk>', updateCoilRequest_view.as_view(), name='coil-request-edit'),
-    path('coil-request/delete/<int:pk>', deleteCoilType_view.as_view(), name='coil-type-delete'),
+    path('coil-request/delete/<int:pk>', deleteCoilType_view.as_view(), name='coil-request-delete'),
 
     path('coil-request-status/', coilRequestStatus_view, name='coil-request-status'),
     path('coil-request-status-create/', createCoilRequestStatus_view.as_view(), name='coil-request-status-create'),

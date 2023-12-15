@@ -45,6 +45,7 @@ class coil(models.Model):
     boxNumber = models.IntegerField(null=False, default=1)
     purchaseOrder = models.CharField(default="NA", max_length=50)
     unit = models.CharField(default="P2", max_length=50)
+    orderUniqueid = models.CharField(max_length=10, help_text="Orden", null=False, default="")
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=True, help_text='Linked SKU')
     FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False, help_text='Linked Coil Status')
     FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
@@ -82,6 +83,7 @@ class order(models.Model):
     lot = models.CharField(max_length=30, default='')
     init_date = models.DateTimeField(auto_now=True, null=False)  # Set editable to False
     finish_date = models.DateTimeField(null=True)
+    coils = models.CharField(max_length=100, null=True)
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
 
 class order_Exec(models.Model):

@@ -2,13 +2,8 @@ from django.shortcuts import render, redirect
 from ..models import coil_request, coil_request_status, label
 from django.views.generic import DeleteView, UpdateView, CreateView
 from django.urls import reverse_lazy
-from ..form import CoilRequestForm, CoilProviderForm, CoilTypeForm, CreateCoilForm, UpdateCoilForm, FilterCoilForm,DeleteLabelForm
-from django.contrib.auth.decorators import permission_required
+from ..form import CoilRequestForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import ProtectedError, IntegerField, Value
-from django.forms import formset_factory
-from django.db.models import Max, CharField, Value
-from django.db.models.functions import Cast
 import re
 
 def coilRequest_view(request):

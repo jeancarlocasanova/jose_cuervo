@@ -88,6 +88,7 @@ class CreateCoilForm(forms.Form):
     notDelivered = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     purchaseOrder = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     unit = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    orderUniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     FK_labelStatus_id = MyModelChoiceField(queryset=labelStatus.objects.all())
     FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
     FK_sku_id = SkuChoiceField(queryset=SKU.objects.all())
@@ -100,12 +101,13 @@ class UpdateCoilForm(forms.ModelForm):
     boxNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
     purchaseOrder = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     unit = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    orderUniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     FK_sku_id = SkuChoiceField(queryset=SKU.objects.all())
     FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
 
     class Meta:
         model = coil
-        fields = 'numrollo', 'boxNumber', 'purchaseOrder', 'FK_coilStatus_id', 'unit', 'FK_sku_id'
+        fields = 'numrollo', 'boxNumber', 'purchaseOrder', 'FK_coilStatus_id', 'unit', 'FK_sku_id','orderUniqueid'
 
 
 class SkuTypeForm(forms.Form):
