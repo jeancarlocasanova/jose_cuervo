@@ -46,7 +46,7 @@ class coil(models.Model):
     purchaseOrder = models.CharField(default="NA", max_length=50)
     unit = models.CharField(default="P2", max_length=50)
     orderUniqueid = models.CharField(max_length=10, help_text="Orden", null=False, default="")
-    FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=True, help_text='Linked SKU')
+    FK_sku_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=True, help_text='Linked brand')
     FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False, help_text='Linked Coil Status')
     FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
     FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, help_text='Linked Coil Provider')

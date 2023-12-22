@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from ..models import order, order_Exec
+from ..models import order, order_Exec, coil, order_Label, label
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
 from ..form import OrderForm, AssignOrderForm
@@ -46,28 +46,67 @@ class updateOrder_view(PermissionRequiredMixin, UpdateView):
 @permission_required('cuervo.add_order', login_url='/login/')
 def createOrder_view(request):
     msg = None
+    objCoils = None
+    ids_str = ""  # Initialize ids_str
     if request.method == "POST":
         form = OrderForm(request.POST)
         if form.is_valid():
             uniqueid = form.cleaned_data.get("uniqueid")
             FK_sku_id = form.cleaned_data.get("FK_sku_id")
             status = form.cleaned_data.get("status")
+            lote = form.cleaned_data.get("lot")
             try:
                 OrderObj = order.objects.get(uniqueid=uniqueid)
-            except:
+            except order.DoesNotExist:
                 OrderObj = None
+
             if OrderObj is None:
-                OrderObj = order.objects.create(uniqueid=uniqueid, FK_sku_id=FK_sku_id, status=status)
-                OrderObj.save()
-                return redirect("/Order/")
+                try:
+                    # Get all coils related to the order
+                    objCoils = coil.objects.filter(orderUniqueid=uniqueid)
+                    for a in objCoils:
+                        ids_str += str(a.id) + ", "
+                    # Remove the trailing comma and space
+                    ids_str = ids_str[:-2]
+
+                    # Retrieve labels for coils with status 'Disponible'
+                    available_labels = label.objects.filter(
+                        FK_coil_id__in=objCoils,
+                        FK_labelStatus_id__name='Disponible'
+                    )
+
+                    # Create order and associate coils
+                    OrderObj = order.objects.create(
+                        uniqueid=uniqueid,
+                        FK_sku_id=FK_sku_id,
+                        status=status,
+                        lot=lote,
+                        coils=ids_str
+                    )
+                    OrderObj.save()
+
+                    # Create order_Label instances for each label and order pair
+                    for label_obj in available_labels:
+                        order_label = order_Label.objects.create(
+                            FK_label_id=label_obj,
+                            FK_order_id=OrderObj
+                        )
+                        order_label.save()
+
+                    return redirect("/Order/")
+                except Exception as e:
+                    print(str(e))
+                    msg = 'Ha ocurrido un error al crear la orden'
             else:
-                msg = 'Este Nombre ya existe'
+                msg = 'Esta Orden ya existe'
         else:
-            msg = 'A ocurrido un error'
+            msg = 'Ha ocurrido un error'
     else:
         form = OrderForm()
 
     return render(request, "cuervo/order_create.html", {"form": form, "msg": msg})
+
+
 
 # <------ ASSIGN ORDER --------!>
 def assign_view(request):

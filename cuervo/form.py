@@ -91,7 +91,7 @@ class CreateCoilForm(forms.Form):
     orderUniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     FK_labelStatus_id = MyModelChoiceField(queryset=labelStatus.objects.all())
     FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
-    FK_sku_id = SkuChoiceField(queryset=SKU.objects.all())
+    FK_sku_id = SkuChoiceField(queryset=sku_Type.objects.all())
     FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
     FK_coilType_id = MyModelChoiceField(queryset=coilType.objects.all())
     FK_coilProvider_id = MyModelChoiceField(queryset=coilProvider.objects.all())
@@ -159,8 +159,8 @@ class AssignOrderForm(forms.Form):
     FK_line_id = OLChoiceField(queryset=line.objects.all())
 
 class FilterCoilForm(forms.Form):
-    boxNumber = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={"class": "form"}))
-    purchaseOrder = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))
+    boxNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    purchaseOrder = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
 class DeleteLabelForm(forms.Form):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
