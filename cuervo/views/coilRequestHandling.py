@@ -126,6 +126,7 @@ def AcceptCoilRequest(request, pk):
     status = coil_request_status.objects.filter(status='Aceptada').first()
     ObjCoilRequest= coil_request.objects.filter(id=pk).first()
     ObjCoilRequest.FK_coil_request_status_id = status
+    ObjCoilRequest.last_edit_user = request.user
     ObjCoilRequest.save()
     return redirect('coilRequestHandling')
 
@@ -134,6 +135,7 @@ def DeclineCoilRequest(request, pk):
     status = coil_request_status.objects.filter(status='Declinada').first()
     ObjCoilRequest = coil_request.objects.filter(id=pk).first()
     ObjCoilRequest.FK_coil_request_status_id = status
+    ObjCoilRequest.last_edit_user = request.user
     ObjCoilRequest.save()
     return redirect('coilRequestHandling')
 
