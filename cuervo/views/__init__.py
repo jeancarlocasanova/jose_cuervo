@@ -14,3 +14,4 @@ from .lineHandling import *
 from .requestHandling import *
 from .apiHandling import *
 from .coilRequestHandling import *
+from .CoilTraceHandling import *

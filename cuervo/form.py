@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import coilStatus, coilType, coilProvider, coil, sku_Type, SKU, order, line, inventoryLocation, labelStatus, label, coil_request, coil_request_status
+from .models import *
+
 
 
 class MyModelChoiceField(forms.ModelChoiceField):
@@ -26,7 +27,7 @@ class SkuChoiceField(forms.ModelChoiceField):
 
 class CoilChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return f"No. Caja: {obj.boxNumber} - Marca: {obj.FK_sku_id.Fk_sku_type_id.name}"
+        return f"No. Caja: {obj.boxNumber} - Marca: {obj.FK_sku_id.name}"
 
 
 class LoginForm(forms.Form):
@@ -190,3 +191,36 @@ class CoilRequestForm(forms.ModelForm):
     class Meta:
         model = coil_request
         fields = 'FK_coil_id', 'FK_order_id', 'Fk_source_invLocation_id', 'Fk_destination_invLocation_id', 'FK_coil_request_status_id'
+
+class CoilRequestFilter(forms.Form):
+    Fk_coil_request_status = StatusChoiceField(queryset=coil_request_status.objects.all())
+
+CHOICESBOOLEAN =(
+    (True, "SI"),
+    (False, "NO")
+)
+
+class CoilTraceForm(forms.ModelForm):
+    FK_coil_id = CoilChoiceField(queryset=coil.objects.all())
+    FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
+    FK_coilType_id = MyModelChoiceField(queryset=coilType.objects.all())
+    FK_coilProvider_id = MyModelChoiceField(queryset=coilProvider.objects.all())
+    FK_order_id = OLChoiceField(queryset=order.objects.all())
+    FK_inventory_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
+    initLabel = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    IsUsed = forms.ChoiceField(choices=CHOICESBOOLEAN)
+
+    class Meta:
+        model = coilTrace
+        fields = 'FK_coil_id', 'FK_coilStatus_id', 'FK_coilType_id', 'FK_coilProvider_id', 'FK_order_id', 'FK_inventory_id', 'initLabel', 'IsUsed'
+
+
+class UpdateCoilTraceForm(forms.ModelForm):
+    FK_coil_id = CoilChoiceField(queryset=coil.objects.all())
+    FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
+    FK_coilType_id = MyModelChoiceField(queryset=coilType.objects.all())
+    FK_order_id = OLChoiceField(queryset=order.objects.all())
+
+    class Meta:
+        model = coilTrace
+        fields = 'FK_coil_id', 'FK_coilStatus_id', 'FK_coilType_id', 'FK_order_id'

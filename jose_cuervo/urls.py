@@ -114,6 +114,15 @@ urlpatterns = [
     path('label/edit/<int:pk>', updateLabel_view.as_view(), name='label-edit'),
     path('label/find/<int:pk>', searchLabelByCoilFK, name='label-find'),
 
+    path('coilRequestHandling/', CoilRequestHandling_view, name='coilRequestHandling'),
+    path('coilRequest/accept/<int:pk>', AcceptCoilRequest, name='accept-coilrequest'),
+    path('coilRequest/decline/<int:pk>', DeclineCoilRequest, name='decline-coilrequest'),
+
+    path('coilreturn/', returnOfCoils, name='return-coil'),
+    path('coil-return-create/', createReturnOfCoil, name='coil-return-create'),
+    path('coil-return-edit/<int:pk>', updateCoilTrace_view.as_view(), name='coil-return-edit'),
+    path('coil-return-delete/<int:pk>', deleteCoilTrace_view.as_view(), name='coil-return-delete'),
+
     path('coilHandling/', coilHandling_view, name='coilHandling'),
     path('usersManagement/', usersManagement_view, name='usersManagement'),
     path('labelTraceability/', labelTraceability_view, name='labelTraceability'),

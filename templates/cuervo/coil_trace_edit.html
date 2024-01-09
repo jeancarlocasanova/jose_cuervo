@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Edita la Devolución de Bobinas</h2>
+    {% endif %}
+
+    <div style="margin-top:15px;">
+    <label style="color:white;">Bobina</label>
+    {{ form.FK_coil_id }}
+</div>
+
+<div style="margin-top:15px;">
+    <label style="color:white;">Estatus de la bobina</label>
+    {{ form.FK_coilStatus_id }}
+</div>
+
+<div style="margin-top:15px;">
+    <label style="color:white;">Tipo de bobina</label>
+    {{ form.FK_coilType_id }}
+</div>
+
+<div style="margin-top:15px;">
+    <label style="color:white;">Orden</label>
+    {{ form.FK_order_id }}
+</div>
+
+
+    <button class="button" type="submit" name="login"> Editar </button>
+  </form>
+{% endblock content %}

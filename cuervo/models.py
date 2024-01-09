@@ -69,13 +69,6 @@ class labelTrace(models.Model):
     FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, help_text='Linked Inventory Location')
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User')
 
-class coilTrace(models.Model):
-    timestamp = models.DateTimeField(auto_now=True, null=False)
-    FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
-    FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False, help_text='Linked Coil Status')
-    FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
-    FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, help_text='Linked Coil Provider')
-    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User')
 
 class order(models.Model):
     uniqueid = models.CharField(max_length=30)
@@ -85,6 +78,20 @@ class order(models.Model):
     finish_date = models.DateTimeField(null=True)
     coils = models.CharField(max_length=100, null=True)
     FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
+
+class coilTrace(models.Model):
+    timestamp = models.DateTimeField(auto_now=True, null=False)
+    FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
+    FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False, help_text='Linked Coil Status')
+    FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
+    FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, help_text='Linked Coil Provider')
+    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User')
+    FK_order_id = models.ForeignKey(order, null=False, on_delete=models.PROTECT, default=0)
+    FK_inventory_id = models.ForeignKey(inventoryLocation, null=False, on_delete=models.PROTECT, default=0)
+    initLabel = models.IntegerField(null=False, default=0)
+    lastLabel = models.IntegerField(null=False, default=0)
+    IsReturned = models.BooleanField(null=False, default=False)
+    IsUsed = models.BooleanField(null=False, default=False)
 
 class order_Exec(models.Model):
     FK_order_id = models.OneToOneField(order, on_delete=models.PROTECT, null=False, help_text='Linked Order')
@@ -106,6 +113,8 @@ class coil_request(models.Model):
     Fk_source_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, related_name='source', help_text="Linked Source Inventory Location")
     Fk_destination_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False,related_name='destination', help_text="Linked Destination Inventory Location")
     FK_coil_request_status_id = models.ForeignKey(coil_request_status, on_delete=models.PROTECT, null=False, help_text="Linked Coil Request Status")
+    last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True,
+                                       help_text='Linked User')
 
 class init_label(models.Model):
     uniqueid = models.CharField(max_length=999)

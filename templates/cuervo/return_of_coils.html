@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+	<h1 style="color: white; margin-bottom: 30px">Devolución de bobinas</h1>
+	{% if perms.cuervo.add_coiltrace %}
+	<a class="create" href="{% url 'coil-return-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Registrar Devolución</a>{% endif %}
+	<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">Bobina</th>
+                <th scope="col">Estatus de Bobina</th>
+                <th scope="col">Tipo de Bobina</th>
+                <th scope="col">Proveedor</th>
+                <th scope="col">Orden</th>
+                <th scope="col">Inventario</th>
+                <th scope="col">Folio Inicial</th>
+                <th scope="col">Folio Final</th>
+                <th scope="col">Usado?</th>
+				 {% if perms.cuervo.change_coiltrace %}
+				<th scope="col">Editar</th>{% endif %}
+				{% if perms.cuervo.delete_coiltrace %}
+				<th scope="col">Eliminar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in coilList %}
+			<tr>
+			<td>No. Caja: {{ i.FK_coil_id.boxNumber }}</td>
+            <td>{{ i.FK_coilStatus_id.name }}</td>
+            <td>{{ i.FK_coilType_id.name }}</td>
+            <td>{{ i.FK_coilProvider_id.name }}</td>
+            <td>{{ i.FK_order_id.uniqueid }}</td>
+            <td>{{ i.FK_inventory_id.name }}</td>
+            <td>{{ i.initLabel }}</td>
+            <td>{{ i.lastLabel }}</td>
+            {% if i.IsUsed %}
+                <td>SI</td>
+            {% else %}
+                <td>NO</td>
+            {% endif %}
+				 {% if perms.cuervo.change_coiltrace %}
+				<td><a href="{% url 'coil-return-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				{% if perms.cuervo.delete_coiltrace %}
+				<td><a href="{% url 'coil-return-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock javascripts %}

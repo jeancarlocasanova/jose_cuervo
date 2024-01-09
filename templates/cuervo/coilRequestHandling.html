@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet">
+<style>
+    .invisible2 {
+    background: transparent;
+    border: none !important;
+    font-size:0;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+	<h1 style="color: white; margin-bottom: 30px">Aprovación/Rechazo de Solicitudes</h1>
+	<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">Bobina</th>
+                <th scope="col">Folio Inicial</th>
+                <th scope="col">Folio Final</th>
+                <th scope="col">Fecha pedido</th>
+                 <th scope="col">Orden</th>
+                 <th scope="col">Lugar Origen</th>
+                 <th scope="col">Lugar Destino</th>
+                <th scope="col">Estatus</th>
+                {% if perms.cuervo.change_label %}
+				<th scope="col">Aceptar</th>
+                <th scope="col">Declinar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in statusList %}
+			<tr>
+                <td>No. Caja: {{ i.FK_coil_id.boxNumber }}</td>
+                <td>{{ i.FK_coilStatus_id.name }}</td>
+                <td>{{ i.endingNumber }}</td>
+                <td>{{ i.request_date | date:"M. d, Y" }}</td>
+                <td>{{ i.FK_order_id.uniqueid }}</td>
+                <td>{{ i.Fk_source_invLocation_id.name }}</td>
+                <td>{{ i.Fk_destination_invLocation_id.name }}</td>
+                <td>{{ i.FK_coil_request_status_id.status }}</td>
+				 {% if perms.cuervo.change_coil_request %}
+                <form role="form" method="post" action="{% url 'accept-coilrequest' i.id %}">
+                    {% csrf_token %}
+                    <td><button type="submit" class="invisible2"><a><span><img class="img" src="{% static 'media/check.webp' %}"/></span></a></button></td>
+                </form>
+                 <form role="form" method="post" action="{% url 'decline-coilrequest' i.id %}">
+                    {% csrf_token %}
+				    <td><button type="submit" class="invisible2"><a><span><img class="img" src="{% static 'media/equis.webp' %}"/></span></a></button></td>
+                 </form>{% endif %}
+            </tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+            <h3 style="color: white">No has iniciado seccion!</h3>
+            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
+        </div>
+{% endif %}
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock javascripts %}

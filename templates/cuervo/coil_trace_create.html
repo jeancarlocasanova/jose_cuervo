@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px">
+  {% csrf_token %}
+
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Crea una Devolución de Marbetes</h2>
+    {% endif %}
+
+    <div>
+    <label style="color:white;">Bobina</label>
+    {{ form.FK_coil_id }}
+    </div>
+
+    <div style="margin-top:10px;">
+    <label style="color:white;">Estatus de la bobina</label>
+    {{ form.FK_coilStatus_id }}
+    </div>
+
+    <div style="margin-top:10px;">
+    <label style="color:white;">Tipo de bobina</label>
+    {{ form.FK_coilType_id }}
+    </div>
+
+    <div style="margin-top:10px;">
+    <label style="color:white;">Proveedor de la bobina</label>
+    {{ form.FK_coilProvider_id }}
+    </div>
+
+    <div style="margin-top:10px;">
+    <label style="color:white;">Orden</label>
+    {{ form.FK_order_id }}
+    </div>
+
+    <div style="margin-top:10px;margin-bottom: 15px;">
+    <label style="color:white;">Inventario</label>
+    {{ form.FK_inventory_id }}
+    </div>
+
+    <div class="user-box">
+    {{ form.initLabel }}
+    <label>Folio Inicial</label>
+    </div>
+
+    <div>
+    <label style="color:white;">Los marbetes han sido usados?</label>
+    {{ form.IsUsed }}
+    </div>
+
+    <button type="submit" name="login" class="create"> Crear </button>
+  </form>
+{% endblock content %}

@@ -2,13 +2,23 @@ from django.shortcuts import render, redirect
 from ..models import coil_request, coil_request_status, label
 from django.views.generic import DeleteView, UpdateView, CreateView
 from django.urls import reverse_lazy
-from ..form import CoilRequestForm
+from ..form import CoilRequestForm, CoilRequestFilter
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.views.decorators.http import require_http_methods
 import re
 
 def coilRequest_view(request):
     requestCoil = coil_request.objects.all()
-    return render(request, "cuervo/coilRequest.html", {'coil_request': requestCoil})
+    if request.method == 'POST':
+        form = CoilRequestFilter(request.POST)
+        if form.is_valid():
+            statusID = form.cleaned_data['Fk_coil_request_status']
+            if statusID:
+                requestCoil = requestCoil.filter(FK_coil_request_status_id=statusID)
+            return render(request, "cuervo/coilRequest.html", {'coil_request': requestCoil})
+    else:
+        form = CoilRequestFilter()
+    return render(request, 'cuervo/coilRequestFilterForm.html', {'form': form})
 
 class updateCoilRequest_view(PermissionRequiredMixin, UpdateView):
     model = coil_request
@@ -105,3 +115,25 @@ class deleteCoilRequestStatus_view(PermissionRequiredMixin, DeleteView):
     template_name = 'cuervo/coil_request_status_confirm_delete.html'
     success_url = reverse_lazy('coil-request-status')
     permission_required = 'cuervo.delete_coil_request_status'
+
+# ----------------- Coil acept request -----------------
+def CoilRequestHandling_view(request):
+    statusList = coil_request.objects.all()
+    statusList = statusList.filter(FK_coil_request_status_id__id=10003)
+    return render(request, "cuervo/coilRequestHandling.html", {'statusList': statusList})
+@require_http_methods(['POST'])
+def AcceptCoilRequest(request, pk):
+    status = coil_request_status.objects.filter(status='Aceptada').first()
+    ObjCoilRequest= coil_request.objects.filter(id=pk).first()
+    ObjCoilRequest.FK_coil_request_status_id = status
+    ObjCoilRequest.save()
+    return redirect('coilRequestHandling')
+
+@require_http_methods(['POST'])
+def DeclineCoilRequest(request, pk):
+    status = coil_request_status.objects.filter(status='Declinada').first()
+    ObjCoilRequest = coil_request.objects.filter(id=pk).first()
+    ObjCoilRequest.FK_coil_request_status_id = status
+    ObjCoilRequest.save()
+    return redirect('coilRequestHandling')
+
