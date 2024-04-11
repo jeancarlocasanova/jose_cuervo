@@ -179,6 +179,8 @@ class UpdateLabelForm(forms.ModelForm):
 
 class LabelInitForm(forms.Form):
     brand = MyModelChoiceField(queryset=sku_Type.objects.all())
+    ministrationNumber = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    supplier = MyModelChoiceField(queryset=coilProvider.objects.all())
 
 
 class CoilRequestForm(forms.ModelForm):
@@ -207,7 +209,7 @@ class CoilTraceForm(forms.ModelForm):
     FK_coilProvider_id = MyModelChoiceField(queryset=coilProvider.objects.all())
     FK_order_id = OLChoiceField(queryset=order.objects.all())
     FK_inventory_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
-    initLabel = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
+    initLabel = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     IsUsed = forms.ChoiceField(choices=CHOICESBOOLEAN)
 
     class Meta:

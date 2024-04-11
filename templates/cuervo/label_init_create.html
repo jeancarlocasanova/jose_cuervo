@@ -19,10 +19,21 @@
    <input type="file" name="csv_file" accept=".csv" multiple>
  </div>
 
-<div style="margin-top:10px;">
-    <label style="color:white;">Marca</label>
+<div style="margin-top:10px; margin-bottom: 15px;">
+    <label style="color:white;">Submarca</label>
     {{ form.brand }}
 </div>
+
+  <div class="user-box">
+    {{ form.ministrationNumber }}
+      <label>Número de Ministración</label>
+    </div>
+
+  <div>
+    <label style="color:white;">Proveedor</label>
+    {{ form.supplier }}
+</div>
+
    <button type="submit" name="login" class="create"> Crear </button>
   </form>
 {% endblock content %}

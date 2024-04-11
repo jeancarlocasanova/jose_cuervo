@@ -6,6 +6,7 @@ from ..form import FilterLabelForm, UpdateLabelForm, LabelInitForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 import csv
+from datetime import datetime
 
 def labelHandling_view(request):
     labelList = label.objects.all()
@@ -76,6 +77,21 @@ def init_label_information(request):
             if form.is_valid():
                 csv_files = request.FILES.getlist('csv_file')
                 brand = form.cleaned_data.get('brand')
+                supplier = form.cleaned_data.get('supplier')
+                # Obtener la fecha actual
+                fecha_actual = datetime.now()
+
+                # Sumar nueve meses a la fecha actual
+                anno = fecha_actual.year + (fecha_actual.month + 9) // 12
+                mes = (fecha_actual.month + 9) % 12
+                if mes == 0:
+                    mes = 12
+                dia = min(fecha_actual.day, [31,
+                                             29 if anno % 4 == 0 and (anno % 100 != 0 or anno % 400 == 0) else 28,
+                                             31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mes - 1])
+
+                fecha_nueve_meses_despues = datetime(anno, mes, dia)
+                ministrationNumber = form.cleaned_data.get('ministrationNumber')
                 for csv_file in csv_files:
                     if not csv_file.name.endswith('.csv'):
                         # Handle error: Invalid file format for a specific file
@@ -124,7 +140,10 @@ def init_label_information(request):
                                             uniqueid=folios_filtrado[index],
                                             url=textos[index],
                                             file_name=str(csv_file.name),
-                                            brand=brand
+                                            brand=brand,
+                                            ministrationNumber=ministrationNumber,
+                                            supplier=supplier,
+                                            expiration=fecha_nueve_meses_despues
                                          ).save()
                             except Exception as e:
                                 #label.objects.filter(FK_coil_id=coilObj).delete()

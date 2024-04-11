@@ -11,6 +11,7 @@ class line(models.Model):
     uniqueid = models.CharField(max_length=30)
 class sku_Type(models.Model):
     name = models.CharField(max_length=50)
+    subbrand = models.CharField(max_length=100, null=True)
     description = models.CharField(max_length=200)
 
 class labelStatus(models.Model):
@@ -36,8 +37,8 @@ class SKU(models.Model):
     Fk_sku_type_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False, help_text='Linked SKU Type')
 
 class coil(models.Model):
-    initNumber = models.IntegerField(default=0, null=False, help_text="Folio Inicial")
-    finishNumber = models.IntegerField(default=0, null=False, help_text="Folio final")
+    initNumber = models.CharField(max_length=200, null=False)
+    finishNumber = models.CharField(max_length=200, null=False, help_text="Folio final")
     numrollo = models.IntegerField(default=1, null=False, help_text="Numero de Rollo")
     notDelivered = models.IntegerField(default=0)
     missing = models.IntegerField(null=False, default=0)
@@ -60,7 +61,9 @@ class label(models.Model):
     FK_labelStatus_id = models.ForeignKey(labelStatus, on_delete=models.PROTECT, null=False, help_text='Linked Label Status')
     FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, help_text='Linked Inventory Location')
     last_update = models.DateTimeField(auto_now=True, null=False)
-    last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT, null=False, help_text='Linked User')
+    last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User')
+    expiration = models.DateTimeField(auto_now=False, null=True)
+    comment = models.CharField(max_length=999, null=True)
 
 class labelTrace(models.Model):
     timestamp = models.DateTimeField(auto_now=True, null=False)
@@ -88,8 +91,8 @@ class coilTrace(models.Model):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User')
     FK_order_id = models.ForeignKey(order, null=False, on_delete=models.PROTECT, default=0)
     FK_inventory_id = models.ForeignKey(inventoryLocation, null=False, on_delete=models.PROTECT, default=0)
-    initLabel = models.IntegerField(null=False, default=0)
-    lastLabel = models.IntegerField(null=False, default=0)
+    initLabel = models.CharField(max_length=200, null=False)
+    lastLabel = models.CharField(max_length=200, null=False)
     IsReturned = models.BooleanField(null=False, default=False)
     IsUsed = models.BooleanField(null=False, default=False)
 
@@ -106,8 +109,8 @@ class coil_request_status(models.Model):
 
 class coil_request(models.Model):
     FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
-    startingNumber = models.IntegerField(null=False, help_text='Starting Label Number', validators=[MinValueValidator(0)])
-    endingNumber = models.IntegerField(null=False, help_text='Ending Label Number', validators=[MinValueValidator(0)])
+    startingNumber = models.CharField(max_length=200, null=False)
+    endingNumber = models.CharField(max_length=200, null=False)
     request_date = models.DateTimeField(auto_now=True, null=False)
     FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=False, help_text="Linked Order")
     Fk_source_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, related_name='source', help_text="Linked Source Inventory Location")
@@ -117,8 +120,34 @@ class coil_request(models.Model):
                                        help_text='Linked User')
 
 class init_label(models.Model):
-    uniqueid = models.CharField(max_length=999)
+    uniqueid = models.CharField(max_length=999, unique=True)
     url = models.CharField(max_length=999, default='')
-    brand = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False,related_name='destination', help_text="Marca", default=1)
+    brand = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False, related_name='destination', help_text="SubMarca", default=1)
     file_name = models.CharField(default='', max_length=200)
+    ministrationNumber = models.CharField(max_length=100, null=False, default='')
+    supplier = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, default=1)
+    update_date = models.DateTimeField(auto_now=True, null=False)
+    expiration = models.DateTimeField(auto_now=False, null=True)
+
+class coilsInInventory(models.Model):
+    initNumber = models.IntegerField(default=0, null=False, help_text="Folio Inicial")
+    finishNumber = models.IntegerField(default=0, null=False, help_text="Folio final")
+    numrollo = models.IntegerField(default=1, null=False, help_text="Numero de Rollo")
+    notDelivered = models.IntegerField(default=0)
+    missing = models.IntegerField(null=False, default=0)
+    delivered = models.IntegerField(null=False, default=0)
+    boxNumber = models.IntegerField(null=False, default=1)
+    purchaseOrder = models.CharField(default="NA", max_length=50)
+    unit = models.CharField(default="P2", max_length=50)
+    orderUniqueid = models.CharField(max_length=10, help_text="Orden", null=False, default="")
+    FK_sku_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=True, help_text='Linked brand')
+    FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False,
+                                         help_text='Linked Coil Status')
+    FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
+    FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False,
+                                           help_text='Linked Coil Provider')
+    last_update = models.DateTimeField(auto_now=True, null=False)
+    last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False,
+                                       help_text='Linked User')
+    FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
 

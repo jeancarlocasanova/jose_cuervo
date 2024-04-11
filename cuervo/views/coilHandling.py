@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from ..models import coilStatus, coilType, coilProvider, coil, label, init_label
+from ..models import coilStatus, coilType, coilProvider, coil, label, init_label, coilsInInventory
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
 from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CreateCoilForm, UpdateCoilForm, FilterCoilForm,DeleteLabelForm
@@ -9,6 +9,7 @@ from django.db.models import ProtectedError, IntegerField, Value
 from django.forms import formset_factory
 from django.db.models.functions import Cast
 from django.db.models.expressions import RawSQL
+from datetime import datetime, timedelta
 
 def coilHandling_view(request):
     return render(request, "cuervo/coilHandling.html")
@@ -231,6 +232,7 @@ def createCoil_view(request):
     msg = None
     data_exists = None
     issaved = None
+    fecha_despues_9_meses = None
     if request.method == "POST":
         form = CreateCoilForm(request.POST)
         if form.is_valid():
@@ -276,7 +278,7 @@ def createCoil_view(request):
                 missing = delivered - notDelivered
                 try:
                     coilObj = coil.objects.create(notDelivered=notDelivered,
-                                                  finishNumber= finishNumber, initNumber=initNumber,
+                                                  finishNumber=finishNumber, initNumber=initNumber,
                                                   numrollo=numrollo, purchaseOrder=purchaseOrder,
                                                   boxNumber=boxNumber, missing=missing,
                                                   FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id,
@@ -286,6 +288,9 @@ def createCoil_view(request):
                                                   orderUniqueid=orderUniqueid)
                     for index, result in enumerate(resultados):
                         data_exists = label.objects.filter(uniqueid=result['uniqueid'], url=result['url'])
+                        fecha_actual = datetime.now()
+                        # Calcula la fecha después de 9 meses
+                        fecha_despues_9_meses = fecha_actual + timedelta(days=9 * 30)
                     if not data_exists:
                         for result in resultados:
                             labelObj = label.objects.create(
@@ -294,9 +299,19 @@ def createCoil_view(request):
                                 FK_coil_id=coilObj,
                                 FK_labelStatus_id=FK_labelStatus_id,
                                 FK_inventoryLocation_id=FK_inventoryLocation_id,
-                                last_edit_user=last_edit_user
+                                last_edit_user=last_edit_user,
+                                expiration=fecha_despues_9_meses
                             )
                         coilObj.save()
+                        coilInventory = coilsInInventory.objects.create(notDelivered=notDelivered,
+                                                  finishNumber=finishNumber, initNumber=initNumber,
+                                                  numrollo=numrollo, purchaseOrder=purchaseOrder,
+                                                  boxNumber=boxNumber, missing=missing,
+                                                  FK_sku_id=FK_sku_id, FK_coilStatus_id=FK_coilStatus_id,
+                                                  FK_coilType_id=FK_coilType_id,
+                                                  FK_coilProvider_id=FK_coilProvider_id,
+                                                  last_edit_user=last_edit_user, delivered=delivered,
+                                                  orderUniqueid=orderUniqueid, FK_coil_id=coilObj)
                         issaved = True
                     else:
                         coil.objects.filter(id=coilObj.id).delete()
