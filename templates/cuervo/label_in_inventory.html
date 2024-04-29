@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
+  {% csrf_token %}
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Alta de Folios Almacén</h2>
+    {% endif %}
+
+ <div style="margin-top:20px;">
+   <label style="color:white;">Archivo Excel</label>
+   <input type="file" name="csv_file" accept=".xlsx" multiple>
+ </div>
+
+   <button type="submit" name="login" class="create"> Crear </button>
+  </form>
+{% endblock content %}

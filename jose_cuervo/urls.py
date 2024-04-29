@@ -46,6 +46,10 @@ urlpatterns = [
 
     path('labelinit/', init_label_information, name='init-create'),
 
+    path('labeluploadinventory/', init_label_in_inventory, name='label-inventory'),
+
+    path('labeluploadcanceled/', init_label_canceled, name='label-canceled'),
+
     path('coilStatus/', coilStatus_view, name='coilStatus'),
     path('coilStatus/delete/<int:pk>', deleteCoilStatus_view.as_view(), name='coil-status-delete'),
     path('coilStatus/edit/<int:pk>', updateCoilStatus_view.as_view(), name='coil-status-edit'),
