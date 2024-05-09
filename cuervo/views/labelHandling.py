@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 import csv
 from datetime import datetime
+from django.contrib import messages
 
 def labelHandling_view(request):
     labelList = label.objects.all()
@@ -261,6 +262,64 @@ def init_label_canceled(request):
             return redirect('/labelMenu/')
 
         return render(request, "cuervo/label_canceled.html", {"form": form, "msg": msg})
+
+codigos_escaneados = []
+@permission_required('cuervo.add_labelstatus', login_url='/login/')
+def init_label_damaged(request):
+    return render(request, "cuervo/label_damaged.html", {'codigos': codigos_escaneados})
+
+@permission_required('cuervo.add_labelstatus', login_url='/login/')
+def agregar_codigo(request):
+    if request.method == 'POST':
+        codigo = request.POST['codigo']
+        codigos_escaneados.append(codigo)  # Agregar el código a la lista interna
+    return redirect('label-damaged')
+
+@permission_required('cuervo.add_labelstatus', login_url='/login/')
+def confirmar_listado(request):
+    codigos_input = request.POST.get('codigos', '')  # Obtener los códigos del campo oculto
+    codigos_escaneados.extend(codigos_input.split(','))  # Agregar los códigos a la lista interna
+    codigos_bd = label.objects.values_list('uniqueid', flat=True)
+
+    codigos_no_cambiados = []  # Lista para almacenar los códigos que no se cambiaron de estado
+
+    for codigo in codigos_escaneados:
+        if codigo in codigos_bd:
+            # Verificar si el código ya está registrado como dañado
+            if not label.objects.filter(uniqueid=codigo, FK_labelStatus_id__name="dañado").exists():
+                # Actualizar el estado a "dañado" en la base de datos
+                codigo_obj = label.objects.get(uniqueid=codigo)
+                labelStatus_obj = labelStatus.objects.get(name="dañado")
+                codigo_obj.FK_labelStatus_id = labelStatus_obj
+                codigo_obj.save()
+            else:
+                codigos_no_cambiados.append(codigo)  # Agregar el código a la lista de no cambiados
+        else:
+            codigos_no_cambiados.append(codigo)  # Agregar el código a la lista de no cambiados
+
+    # Limpiar la lista de códigos escaneados
+    codigos_escaneados.clear()
+
+    # Mensaje de alerta para los códigos no cambiados
+    if codigos_no_cambiados:
+        messages.warning(request, f"Los siguientes códigos no se cambiaron de estado: {', '.join(codigos_no_cambiados)}")
+
+    return redirect('label-damaged')
+
+@permission_required('cuervo.add_labelstatus', login_url='/login/')
+def quitar_codigo(request, codigo):
+    if codigo in codigos_escaneados:
+        codigos_escaneados.remove(codigo)  # Remover el código de la lista interna
+    return redirect('label-damaged')
+
+
+
+
+@permission_required('cuervo.add_labelstatus', login_url='/login/')
+def init_coil_create(request):
+    return render(request, "cuervo/coil_createv2.html")
+
+
 
 @permission_required('cuervo.add_labelstatus', login_url='/login/')
 def init_label_in_inventory(request):

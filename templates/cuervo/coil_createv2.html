@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
+    <div class="orden-produccion-container">
+    <h2>Orden de Producción</h2>
+        <div class="input-row">
+            <div class="input-group">
+            <label for="input7">Título 1:</label>
+            <input type="text" id="input2" name="input1" class="input-coil" style="width: 100px;">
+        </div>
+        <div class="input-group">
+            <label for="select2">Título Select:</label>
+            <select id="select2" name="select1" class="select-coil" style="width: 120px;">
+                <option value="1">Opción 1</option>
+                <option value="2">Opción 2</option>
+                <!-- Agrega las opciones que necesites -->
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="select2">Título Select:</label>
+            <select id="select3" name="select1" class="select-coil" style="width: 120px;">
+                <option value="1">Opción 1</option>
+                <option value="2">Opción 2</option>
+                <!-- Agrega las opciones que necesites -->
+            </select>
+        </div>
+
+
+
+
+        <!-- Agrega los otros selects aquí -->
+    </div>
+        <div class="input-row">
+            <div class="input-group">
+            <label for="input2">Título 1:</label>
+            <input type="text" id="input4" name="input1" class="input-coil" style="width: 100px;">
+        </div>
+        <div class="input-group">
+            <label for="select2">Título Select:</label>
+            <select id="select4" name="select1" class="select-coil" style="width: 120px;">
+                <option value="1">Opción 1</option>
+                <option value="2">Opción 2</option>
+                <!-- Agrega las opciones que necesites -->
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="input3">Título 1:</label>
+            <input type="text" id="input3" name="input1" class="input-coil" style="width: 100px;">
+        </div>
+
+
+
+
+        <!-- Agrega los otros selects aquí -->
+    </div>
+        <div class="input-row">
+        <div class="input-group">
+            <label for="input4">Título 1:</label>
+            <input type="text" id="input5" name="input1" class="input-coil" style="width: 100px;">
+        </div>
+
+            <div class="input-group">
+            <label for="input5">Título 1:</label>
+            <input type="text" id="input6" name="input1" class="input-coil" style="width: 100px;">
+        </div>
+            <div class="input-group">
+            <label for="input6">Título 1:</label>
+            <input type="text" id="input7" name="input1" class="input-coil" style="width: 100px;">
+        </div>
+
+
+        <!-- Agrega los otros selects aquí -->
+    </div>
+</div>
+
+    <div>
+
+    </div>
+
+    <div>
+        <h2>Tabla Dinámica</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Encabezado 1</th>
+                    <th>Encabezado 2</th>
+                    <!-- Más encabezados si es necesario -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Filas de la tabla generadas dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+    <button type="submit">Guardar</button>
+    </form>
+{% endblock content %}

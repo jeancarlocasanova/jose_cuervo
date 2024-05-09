@@ -99,3 +99,31 @@ option{
 }
 
 
+
+.orden-produccion-container {
+    border: 2px solid white;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.input-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.input-group {
+    width: calc(33.33% - 20px);
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.input-group:nth-child(3n) {
+    margin-right: 0;
+}
+
+.input-coil, .select-coil {
+    width: 100%;
+}
+
+

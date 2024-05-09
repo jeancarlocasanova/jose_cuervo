@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+    <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+    <form role="form" method="post" action="{% url 'confirmar_listado' %}" id="codigo-form" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Folios Dañados</h2>
+    {% endif %}
+
+        <!-- Agregar alerta para los códigos no cambiados -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-warning" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div style="margin-top:20px;">
+        <label style="color: white" for="codigo">Marbetes:</label>
+        <input type="text" name="codigo" id="codigo" placeholder="Click para empezar a escanear">
+        <button type="button" class="button" onclick="agregarCodigo()">Agregar</button>
+    </div>
+
+    <ul style="color: white" id="codigo-list">
+        <!-- Aquí se mostrarán los códigos escaneados -->
+    </ul>
+
+    <input type="hidden" name="codigos" id="codigos-input">
+    <button type="submit" class="create">Confirmar Listado</button>
+</form>
+
+
+     <script>
+        var codigosEscaneados = [];
+
+        function agregarCodigo() {
+            var codigoInput = document.getElementById("codigo");
+            var codigo = codigoInput.value.trim();
+
+            if (codigo !== "") {
+                codigosEscaneados.push(codigo);
+                actualizarLista();
+                codigoInput.value = "";
+            }
+        }
+
+        function quitarCodigo(index) {
+            codigosEscaneados.splice(index, 1);
+            actualizarLista();
+        }
+
+        function actualizarLista() {
+            var lista = document.getElementById("codigo-list");
+            lista.innerHTML = "";
+
+            for (var i = 0; i < codigosEscaneados.length; i++) {
+                var li = document.createElement("li");
+                li.textContent = codigosEscaneados[i];
+
+                var quitarLink = document.createElement("a");
+                quitarLink.textContent = "(Quitar)";
+                quitarLink.href = "#";
+                quitarLink.onclick = (function(index) {
+                    return function() {
+                        quitarCodigo(index);
+                    };
+                })(i);
+
+                li.appendChild(quitarLink);
+                lista.appendChild(li);
+            }
+
+            var codigosInput = document.getElementById("codigos-input");
+            codigosInput.value = codigosEscaneados.join(",");
+        }
+
+        // Evento que detecta cuando se presiona una tecla en el campo de entrada
+        document.getElementById("codigo").addEventListener("keydown", function(event) {
+            // Si se presiona Enter (código 13), agregar el código
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                agregarCodigo();
+            }
+        });
+    </script>
+{% endblock content %}

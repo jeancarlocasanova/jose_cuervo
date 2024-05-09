@@ -50,6 +50,13 @@ urlpatterns = [
 
     path('labeluploadcanceled/', init_label_canceled, name='label-canceled'),
 
+    path('labeldamaged/', init_label_damaged, name='label-damaged'),
+    path('agregar_codigo/', agregar_codigo, name='agregar_codigo'),
+    path('quitar_codigo/', quitar_codigo, name='quitar_codigo'),
+    path('confirmar_listado/', confirmar_listado, name='confirmar_listado'),
+
+    path('coilcreate/', init_coil_create, name='coil-create'),
+
     path('coilStatus/', coilStatus_view, name='coilStatus'),
     path('coilStatus/delete/<int:pk>', deleteCoilStatus_view.as_view(), name='coil-status-delete'),
     path('coilStatus/edit/<int:pk>', updateCoilStatus_view.as_view(), name='coil-status-edit'),
