@@ -1,16 +1,80 @@
-from django.shortcuts import render, redirect
-from ..models import coilTrace, coil_request_status, label
-from django.views.generic import DeleteView, UpdateView, CreateView
+from django.shortcuts import render, redirect, get_object_or_404
+from ..models import coilTrace, order, coil, lot, coilStatus
+from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
-from ..form import CoilTraceForm, UpdateCoilTraceForm
+from ..form import CoilTraceForm, UpdateCoilTraceForm, orderForm2, LotSelectionForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.decorators import permission_required
+from django.contrib import messages
 
 
-def returnOfCoils(request):
-    coilList = coilTrace.objects.filter(IsReturned=True)
-    return render(request, "cuervo/return_of_coils.html", {'coilList': coilList})
+def returnOfCoilsFilter(request):
+    form = orderForm2()
+    lot_form = None
+    coil_form = None
+    msg = None
+    if request.method == "POST":
+        if 'order_form' in request.POST:
+            form = orderForm2(request.POST)
+            if form.is_valid():
+                uniqueid = form.cleaned_data.get("uniqueid")
+                try:
+                    devolution = order.objects.get(uniqueid=uniqueid)
+                    orderLots = lot.objects.filter(FK_order_id=devolution)
+                    lot_form = LotSelectionForm(queryset=orderLots)
+                    return render(request, "cuervo/return_of_coils_lot.html", {
+                        "form": form,
+                        "lot_form": lot_form,
+                        "devolution": devolution,
+                        "orderLots": orderLots
+                    })
+                except order.DoesNotExist:
+                    msg = 'No se ha encontrado ninguna orden de producción con el ID proporcionado.'
+            else:
+                msg = 'El formulario no es válido. Por favor, revise los datos ingresados.'
+        elif 'lot_form' in request.POST:
+            lot_value = request.POST.get("lote")
+            lot_obj = lot.objects.get(id=lot_value)
+            id_order =lot_obj.FK_order_id.id
+            return redirect(f"/coilreturn/{lot_value}/{id_order}")
+    else:
+        form = orderForm2()
 
+    return render(request, 'cuervo/return_of_coils_filter.html', {'form': form, "msg": msg})
+
+def returnOfCoils(request, lot_id, order_id):
+    lot_obj = get_object_or_404(lot, id=lot_id)
+    order_obj = get_object_or_404(order, id=order_id)
+
+    coilsWithComa = lot_obj.coils
+    coilsWithComaList = coilsWithComa.split(',') if coilsWithComa else []
+    coil_list = coil.objects.filter(id__in=coilsWithComaList)
+
+    if request.method == "POST":
+        selected_coils_ids = [key.split('selected_coils')[1] for key in request.POST.keys() if 'selected_coils' in key]
+        selected_coils = coil.objects.filter(id__in=selected_coils_ids)
+
+        if not selected_coils.exists():
+            messages.error(request, 'No se seleccionaron bobinas para devolver.')
+            return redirect(request.path_info)
+
+        try:
+            devolved_status = get_object_or_404(coilStatus, name='Devuelta')
+            for selected_coil in selected_coils:
+                selected_coil.FK_coilStatus_id = devolved_status
+                selected_coil.save()
+
+            updated_coils = [str(coil_id) for coil_id in coilsWithComaList if str(coil_id) not in selected_coils_ids]
+            lot_obj.coils = ','.join(updated_coils)
+            lot_obj.save()
+
+            messages.success(request, 'Las bobinas seleccionadas han sido devueltas exitosamente.')
+        except Exception as e:
+            messages.error(request, f'Hubo un error al devolver las bobinas: {str(e)}')
+
+        return redirect(request.path_info)
+
+    return render(request, "cuervo/return_of_coils.html", {"lot": lot_obj, "coils": coil_list, "order": order_obj})
 
 @permission_required('cuervo.add_coiltrace', login_url='/login/')
 def createReturnOfCoil(request):

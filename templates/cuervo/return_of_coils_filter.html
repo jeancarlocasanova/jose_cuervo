@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+    <style>
+        .buttonEdit {
+            background: transparent;
+            color: rgba(255, 213, 0, 0.67);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 35px 0;
+            padding: 10px 30px;
+            border: 2px solid rgba(255, 213, 0, 0.67);
+            font-size: 12px;
+        }
+
+        .buttonEdit:hover {
+            background: transparent;
+            border: 2px solid rgba(240, 240, 240, 0.68);
+            color: rgba(240, 240, 240, 0.68);
+        }
+
+        form.uniqueid input {
+            font-size: 16px;
+            color: #ffd500;
+            margin-bottom: 15px;
+            border: none;
+            border-bottom: 1px solid #fff;
+            outline: none;
+            background: transparent;
+        }
+    </style>
+{% endblock stylesheets %}
+{% block content %}
+    <div class="container" style="margin-left: 250px;">
+        <h1 style="color: white; margin-bottom: 30px">Devolución de bobinas</h1>
+        {% if msg %}
+            <span class="text-danger user-name" style="margin-bottom: 50px">{{ msg | safe }}</span>
+        {% endif %}
+        <form role="form" method="post" action="">
+            {% csrf_token %}
+            <div class="user-box">
+                {{ form.uniqueid }}
+                <label>Orden de Producción</label>
+            </div>
+            <button type="submit" name="order_form" class="btn buttonEdit" value="Buscar">Buscar</button>
+        </form>
+    </div>
+{% endblock content %}

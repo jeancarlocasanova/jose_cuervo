@@ -103,7 +103,7 @@ class UpdateCoilForm(forms.ModelForm):
     purchaseOrder = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     unit = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     orderUniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
-    FK_sku_id = SkuChoiceField(queryset=SKU.objects.all())
+    FK_sku_id = SkuChoiceField(queryset=sku_Type.objects.all())
     FK_coilStatus_id = MyModelChoiceField(queryset=coilStatus.objects.all())
 
     class Meta:
@@ -182,6 +182,16 @@ class LabelInitForm(forms.Form):
     ministrationNumber = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
     supplier = MyModelChoiceField(queryset=coilProvider.objects.all())
 
+class ZipForm(forms.ModelForm):
+    brand_name = MyModelChoiceField(queryset=sku_Type.objects.all())
+    class Meta:
+        model = zip_file_parent
+        fields = ['password', 'ministration_number', 'brand_name', 'route']
+        widgets = {
+            'ministration_number': forms.TextInput(attrs={"class": "form"}),
+            'password': forms.TextInput(attrs={"class": "form"}),
+            'route': forms.FileInput(attrs={"accept": ".zip"})
+        }
 
 class CoilRequestForm(forms.ModelForm):
     FK_coil_id = CoilChoiceField(queryset=coil.objects.all())
@@ -226,3 +236,21 @@ class UpdateCoilTraceForm(forms.ModelForm):
     class Meta:
         model = coilTrace
         fields = 'FK_coil_id', 'FK_coilStatus_id', 'FK_coilType_id', 'FK_order_id'
+
+class orderForm2(forms.Form):
+    uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+
+
+class LotSelectionForm(forms.Form):
+    lote = forms.ModelChoiceField(queryset=lot.objects.none(), empty_label="Seleccione un lote")
+    order_id = forms.IntegerField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        queryset = kwargs.pop('queryset', None)
+        super(LotSelectionForm, self).__init__(*args, **kwargs)
+        if queryset is not None:
+            self.fields['lote'].queryset = queryset
+            self.fields['lote'].choices = [(x.id, x.lot) for x in queryset]
+
+class CoilSelectionForm(forms.Form):
+    selected_coils = forms.ModelMultipleChoiceField(queryset=coil.objects.all(), widget=forms.CheckboxSelectMultiple)

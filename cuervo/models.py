@@ -47,23 +47,25 @@ class coil(models.Model):
     purchaseOrder = models.CharField(default="NA", max_length=50)
     unit = models.CharField(default="P2", max_length=50)
     orderUniqueid = models.CharField(max_length=10, help_text="Orden", null=False, default="")
-    FK_sku_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=True, help_text='Linked brand')
+    sku = models.CharField(max_length=200, null=True, help_text='Linked brand')
     FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False, help_text='Linked Coil Status')
     FK_coilType_id = models.ForeignKey(coilType, on_delete=models.PROTECT, null=False, help_text='Linked Coil Type')
-    FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, help_text='Linked Coil Provider')
+    FK_coilProvider_id = models.CharField(max_length=200, null=True, help_text='Linked Coil Provider')
     last_update = models.DateTimeField(auto_now=True, null=False)
     last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User' )
 
 class label(models.Model):
     uniqueid = models.CharField(max_length=999)
     url = models.CharField(max_length=999, default='')
+    brand = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=True, help_text="SubMarca")
+    ministrationNumber = models.CharField(max_length=100, null=True, default='')
+    supplier = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, default=1)
     FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
     FK_labelStatus_id = models.ForeignKey(labelStatus, on_delete=models.PROTECT, null=False, help_text='Linked Label Status')
-    FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, help_text='Linked Inventory Location')
+    FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=True, help_text='Linked Inventory Location')
     last_update = models.DateTimeField(auto_now=True, null=False)
     last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User')
     expiration = models.DateTimeField(auto_now=False, null=True)
-    comment = models.CharField(max_length=999, null=True)
 
 class labelTrace(models.Model):
     timestamp = models.DateTimeField(auto_now=True, null=False)
@@ -74,13 +76,25 @@ class labelTrace(models.Model):
 
 
 class order(models.Model):
-    uniqueid = models.CharField(max_length=30)
-    status = models.CharField(max_length=30, default="abierta")
-    lot = models.CharField(max_length=30, default='')
-    init_date = models.DateTimeField(auto_now=True, null=False)  # Set editable to False
+    uniqueid = models.CharField(max_length=30, null=True)
+    FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=True, help_text='Linked SKU')
+    status = models.CharField(max_length=30, null=True)
+    init_date = models.DateTimeField(auto_now=True, null=True)  # Set editable to False
     finish_date = models.DateTimeField(null=True)
+    granel_lot = models.CharField(max_length=50, null=True)
+    FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=True, help_text='Linked Inventory Location')
+
+
+class lot(models.Model):
+    lot = models.CharField(max_length=50, null=True)
+    label_type = models.CharField(max_length=50, null=True)
+    store = models.CharField(max_length=50, null=True)
+    material = models.CharField(max_length=50, null=True)
+    invoice_number = models.CharField(max_length=100, null=True)
+    pieces_number = models.FloatField(max_length=100, null=True)
+    FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=True, help_text='Linked Coil Provider')
+    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=True, help_text='Linked order')
     coils = models.CharField(max_length=100, null=True)
-    FK_sku_id = models.ForeignKey(SKU, on_delete=models.PROTECT, null=False, help_text='Linked SKU')
 
 class coilTrace(models.Model):
     timestamp = models.DateTimeField(auto_now=True, null=False)
@@ -108,16 +122,14 @@ class coil_request_status(models.Model):
     status = models.CharField(max_length=50, null=False)
 
 class coil_request(models.Model):
-    FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
-    startingNumber = models.CharField(max_length=200, null=False)
-    endingNumber = models.CharField(max_length=200, null=False)
-    request_date = models.DateTimeField(auto_now=True, null=False)
-    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=False, help_text="Linked Order")
-    Fk_source_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False, related_name='source', help_text="Linked Source Inventory Location")
-    Fk_destination_invLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=False,related_name='destination', help_text="Linked Destination Inventory Location")
-    FK_coil_request_status_id = models.ForeignKey(coil_request_status, on_delete=models.PROTECT, null=False, help_text="Linked Coil Request Status")
-    last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True,
-                                       help_text='Linked User')
+    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=True, help_text="Linked Order")
+    FK_lot_id = models.ForeignKey(lot, on_delete=models.PROTECT, null=True, help_text="Linked Lot")
+    requested_coils = models.CharField(max_length=100, null=True)
+    request_date = models.DateTimeField(auto_now=True, null=True)
+    FK_coil_request_status_id = models.ForeignKey(coil_request_status, on_delete=models.PROTECT, null=True, help_text="Linked Coil Request Status")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, related_name='created_requests', help_text='Created By User')
+    accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, related_name='accepted_requests', help_text='Accepted By User')
+    total_number = models.IntegerField(null=True)
 
 class init_label(models.Model):
     uniqueid = models.CharField(max_length=999, unique=True)
@@ -151,3 +163,19 @@ class coilsInInventory(models.Model):
                                        help_text='Linked User')
     FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
 
+
+class zip_file_parent(models.Model):
+    file_name = models.CharField(max_length=100)
+    route = models.FileField(upload_to='zipfiles', null=False)
+    ministration_number = models.CharField(max_length=100, null=False, default='')
+    brand_name = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False, default=1)
+    password = models.CharField(max_length=200, null=False, default='')
+    update_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.file_name
+
+class zip_file_child(models.Model):
+    file_name = models.CharField(max_length=200)
+    processed = models.IntegerField(null=False, default=0)
+    zip_parent = models.ForeignKey(zip_file_parent, on_delete=models.PROTECT, null=False)

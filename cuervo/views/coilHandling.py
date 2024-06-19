@@ -147,7 +147,7 @@ class deleteCoilProvider_view(PermissionRequiredMixin, DeleteView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         success_url = self.get_success_url()
-        tittle = "A ocurrido un error"
+        tittle = "Ha ocurrido un error"
         msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
         isError = False
         try:
@@ -195,15 +195,14 @@ def createCoilProvider_view(request):
 # <------ COIL CRUD --------!>
 def coil_view(request):
     coilList = coil.objects.all()
+    print(coilList)
     if request.method == 'POST':
         form = FilterCoilForm(request.POST)
         if form.is_valid():
             boxNumber = form.cleaned_data['boxNumber']
             purchaseOrder = form.cleaned_data['purchaseOrder']
-            if boxNumber and boxNumber >= 0:
-                coilList = coilList.filter(boxNumber=boxNumber)
-            if purchaseOrder:
-                coilList = coilList.filter(purchaseOrder=purchaseOrder)
+            if boxNumber and purchaseOrder:
+                coilList = coilList.filter(boxNumber=boxNumber, purchaseOrder=purchaseOrder)
             return render(request, "cuervo/coil.html", {'coilList': coilList})
     else:
         form = FilterCoilForm()

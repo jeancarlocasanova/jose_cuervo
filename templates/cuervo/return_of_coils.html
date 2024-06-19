@@ -1,70 +1,178 @@
 {% extends "base.html" %}
 {% load static %}
-{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
+
+{% block stylesheets %}
+    <link href="/static/css/crud.css" rel="stylesheet">
+    <style>
+        .user-box {
+            position: relative;
+        }
+
+        .user-box .form {
+            width: 100%;
+            padding: 10px 0;
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 30px;
+            border: none;
+            border-bottom: 1px solid #fff;
+            outline: none;
+            background: transparent;
+        }
+
+        .user-box label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 10px 0;
+            font-size: 16px;
+            color: #fff;
+            pointer-events: none;
+            transition: .5s;
+        }
+
+        .user-box .form:focus ~ label,
+        .user-box .form:valid ~ label {
+            top: -20px;
+            left: 0;
+            color: #ffd500;
+            font-size: 12px;
+        }
+
+        .buttonEdit {
+            background: transparent;
+            color: rgba(255, 213, 0, 0.67);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 35px 0;
+            padding: 10px 30px;
+            border: 2px solid rgba(255, 213, 0, 0.67);
+            font-size: 12px;
+        }
+
+        .buttonEdit:hover {
+            background: transparent;
+            border: 2px solid rgba(240, 240, 240, 0.68);
+            color: rgba(240, 240, 240, 0.68);
+        }
+
+        form.uniqueid input {
+            font-size: 16px;
+            color: #ffd500;
+            margin-bottom: 15px;
+            border: none;
+            border-bottom: 1px solid #fff;
+            outline: none;
+            background: transparent;
+        }
+    </style>
+{% endblock stylesheets %}
 
 {% block content %}
 {% if user.is_authenticated %}
-<div class="container">
-	<h1 style="color: white; margin-bottom: 30px">Devolución de bobinas</h1>
-	{% if perms.cuervo.add_coiltrace %}
-	<a class="create" href="{% url 'coil-return-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Registrar Devolución</a>{% endif %}
-	<table class="table" id="myTable">
-		<thead style="background-color: #1e264e">
-			<tr>
-				<th scope="col">Bobina</th>
-                <th scope="col">Estatus de Bobina</th>
-                <th scope="col">Tipo de Bobina</th>
-                <th scope="col">Proveedor</th>
-                <th scope="col">Orden</th>
-                <th scope="col">Inventario</th>
-                <th scope="col">Folio Inicial</th>
-                <th scope="col">Folio Final</th>
-                <th scope="col">Usado?</th>
-				 {% if perms.cuervo.change_coiltrace %}
-				<th scope="col">Editar</th>{% endif %}
-				{% if perms.cuervo.delete_coiltrace %}
-				<th scope="col">Eliminar</th>{% endif %}
-			</tr>
-		</thead>
-		<tbody>
-		{% for i in coilList %}
-			<tr>
-			<td>No. Caja: {{ i.FK_coil_id.boxNumber }}</td>
-            <td>{{ i.FK_coilStatus_id.name }}</td>
-            <td>{{ i.FK_coilType_id.name }}</td>
-            <td>{{ i.FK_coilProvider_id.name }}</td>
-            <td>{{ i.FK_order_id.uniqueid }}</td>
-            <td>{{ i.FK_inventory_id.name }}</td>
-            <td>{{ i.initLabel }}</td>
-            <td>{{ i.lastLabel }}</td>
-            {% if i.IsUsed %}
-                <td>SI</td>
-            {% else %}
-                <td>NO</td>
+      <div class="container" style="margin-left: 250px;">
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
             {% endif %}
-				 {% if perms.cuervo.change_coiltrace %}
-				<td><a href="{% url 'coil-return-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
-				{% if perms.cuervo.delete_coiltrace %}
-				<td><a href="{% url 'coil-return-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
-			</tr>
-		{% endfor %}
-		</tbody>
-	</table>
-</div>
+
+      <h3 style="color: white; margin-bottom: 30px">Información de la Orden</h3>
+      <table class="table" id="">
+                <thead style="background-color: #1e264e">
+                    <tr>
+                        <th scope="col">Orden</th>
+                        <th scope="col">SKU</th>
+                        <th scope="col">Estatus</th>
+                        <th scope="col">Fecha Inicio</th>
+                        <th scope="col">Fecha Final</th>
+                        <th scope="col">Lote Granel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td>{{ order.uniqueid }}</td>
+                            <td>{{ order.FK_sku_id.sku }}</td>
+                            <td>{{ order.status }}</td>
+                            <td>{{ order.init_date }}</td>
+                            <td>{{ order.finish_date }}</td>
+                            <td>{{ order.granel_lot }}</td>
+                        </tr>
+                </tbody>
+            </table>
+
+      <h3 style="color: white; margin-bottom: 30px">Información del Lote</h3>
+      <table class="table" id="">
+                <thead style="background-color: #1e264e">
+                    <tr>
+                        <th scope="col">Lote</th>
+                        <th scope="col">Tipo Marbete</th>
+                        <th scope="col">Material</th>
+                        <th scope="col">No. Piezas</th>
+                        <th scope="col">No. Factura</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td>{{ lot.lot }}</td>
+                            <td>{{ lot.label_type }}</td>
+                            <td>{{ lot.material }}</td>
+                            <td>{{ lot.pieces_number }}</td>
+                            <td>{{ lot.invoice_number }}</td>
+                        </tr>
+                </tbody>
+            </table>
+
+      <h3 style="color: white; margin-bottom: 30px; margin-top: 30px">Bobinas asignadas a la Orden</h3>
+
+        <form role="form" method="post" action="">
+            {% csrf_token %}
+            <table class="table" id="myTable">
+                <thead style="background-color: #1e264e">
+                    <tr>
+                        <th scope="col">Devolver?</th>
+                        <th scope="col">No Rollo</th>
+                        <th scope="col">Folios Utilizados</th>
+                        <th scope="col">Folios Faltantes</th>
+                        <th scope="col">Folios Entregados</th>
+                        <th scope="col">No. de Caja</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coil in coils %}
+                        <tr>
+                            <td><input type="checkbox" name="selected_coils{{ coil.id }}" value="{{ coil.id }}"/></td>
+                            <td>{{ coil.numrollo }}</td>
+                            <td>{{ coil.delivered }}</td>
+                            <td>{{ coil.notDelivered }}</td>
+                            <td>{{ coil.missing }}</td>
+                            <td>{{ coil.boxNumber }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" name="coil_form" class="btn buttonEdit" value="Devolver">Devolver</button>
+        </form>
+
+    </div>
 {% else %}
- <div class="w3-panel w3-yellow">
-            <h3 style="color: white">No has iniciado seccion!</h3>
-            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
-        </div>
+    <div class="w3-panel w3-yellow">
+        <h3 style="color: white">No has iniciado sesión!</h3>
+        <p style="color: white">Por favor, acceda al siguiente <a href="{% url 'login' %}" class="create">link</a> para iniciar sesión.</p>
+    </div>
 {% endif %}
 {% endblock content %}
 
 {% block javascripts %}
-<script>
+    <script>
         $(document).ready(function () {
             var table = $('#myTable').DataTable({
                 "pageLength": 5,
-                "lengthMenu": [5, 10]
+                "lengthMenu": [5,10, 15]
             });
             generateBarcodes();
         });
