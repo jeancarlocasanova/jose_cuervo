@@ -347,10 +347,10 @@ def init_label_in_inventory(request):
     msg = None
     if request.method == "POST":
         csv_files = request.FILES.getlist('csv_file')
-        obj_status = coilStatus.objects.all().first()
+        obj_status = coilStatus.objects.get(name='Disponible').first()
         obj_type = coilType.objects.all().first()
-        obj_label_status = labelStatus.objects.all().first()
-        obj_inventory = inventoryLocation.objects.all().first()
+        obj_label_status = labelStatus.objects.get(name='Asignado').first()
+        obj_inventory = inventoryLocation.objects.get(name='Almacen').first()
         try:
             for file in csv_files:
                 sheet_name = 'OT'

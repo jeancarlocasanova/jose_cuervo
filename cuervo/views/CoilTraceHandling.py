@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from ..models import coilTrace, order, coil, lot, coilStatus
+from ..models import coilTrace, order, coil, lot, coilStatus,label, labelStatus
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
 from ..form import CoilTraceForm, UpdateCoilTraceForm, orderForm2, LotSelectionForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.decorators import permission_required
 from django.contrib import messages
-
+from django.db.models import Q
 
 def returnOfCoilsFilter(request):
     form = orderForm2()
@@ -42,6 +42,7 @@ def returnOfCoilsFilter(request):
 
     return render(request, 'cuervo/return_of_coils_filter.html', {'form': form, "msg": msg})
 
+@permission_required('cuervo.add_labelstatus', login_url='/login/')
 def returnOfCoils(request, lot_id, order_id):
     lot_obj = get_object_or_404(lot, id=lot_id)
     order_obj = get_object_or_404(order, id=order_id)
@@ -60,9 +61,30 @@ def returnOfCoils(request, lot_id, order_id):
 
         try:
             devolved_status = get_object_or_404(coilStatus, name='Devuelta')
+            assigned_status = get_object_or_404(labelStatus, name='Asignado')
+            available_status = get_object_or_404(labelStatus, name='Disponible')
+
             for selected_coil in selected_coils:
+                # Actualiza el estado de la bobina
                 selected_coil.FK_coilStatus_id = devolved_status
                 selected_coil.save()
+
+                # Verifica y actualiza el folio inicial si es necesario
+                labels = label.objects.filter(FK_coil_id=selected_coil).order_by('uniqueid')
+                for l in labels:
+                    folio_inicial_num = int(selected_coil.initNumber.split('-')[-1])
+                    folio_final_num = int(selected_coil.finishNumber.split('-')[-1])
+
+                    # Filtra las etiquetas que tienen un estado diferente a Asignado o Disponible
+                    labels_to_check = labels.filter(uniqueid__gte=f'NE-{folio_inicial_num:010}', uniqueid__lte=f'NE-{folio_final_num:010}')
+                    labels_with_different_status = labels_to_check.exclude(Q(FK_labelStatus_id=assigned_status) | Q(FK_labelStatus_id=available_status))
+
+                    if labels_with_different_status.exists():
+                        # Encuentra el primer folio que no tiene el estado diferente
+                        new_folio_inicial = labels_with_different_status.last().uniqueid.split('-')[-1]
+                        selected_coil.initNumber = f'NE-{int(new_folio_inicial) + 1:010}'
+                        selected_coil.save()
+                        break
 
             updated_coils = [str(coil_id) for coil_id in coilsWithComaList if str(coil_id) not in selected_coils_ids]
             lot_obj.coils = ','.join(updated_coils)
