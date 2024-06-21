@@ -345,7 +345,7 @@ def init_coil_create(request):
 
                 for bobina_id in bobinas_a_desasignar:
                     bobina = coil.objects.get(id=bobina_id)
-                    bobina.FK_coilStatus_id = coilStatus.objects.get(name='Sin asignar')
+                    bobina.FK_coilStatus_id = coilStatus.objects.get(name='Disponible')
                     bobina.save()
 
                 for bobina_id in bobinas_a_asignar:

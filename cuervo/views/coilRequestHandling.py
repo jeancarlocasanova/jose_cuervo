@@ -73,7 +73,6 @@ def createCoilRequest(request):
                 selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
 
                 bobinas = coil.objects.filter(
-                    id__in=selected_order_coils,
                     FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
                 )
 
@@ -87,14 +86,20 @@ def createCoilRequest(request):
                 for bobina in bobinas:
                     bobina.selected = bobina.id in selected_bobinas_ids
 
+                marbetes_totales = total_marbetes  # Calculamos la cantidad total seleccionada
+
             except order.DoesNotExist:
                 msg = 'Orden de producción no encontrada'
             except lot.DoesNotExist:
                 msg = 'Lote granel no encontrado'
 
         elif 'crear' in request.POST and form.is_valid():
-            bobinas_seleccionadas_str = request.POST.get('selected_bobinas', '').split(',')
-            bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str if id.isdigit()]
+
+            bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
+            bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
+
+            print(bobinas_seleccionadas_str)
+            print(bobinas_seleccionadas)
 
             ordenproduccion = form.cleaned_data.get("ordenproduccion")
 
@@ -102,32 +107,35 @@ def createCoilRequest(request):
                 msg = 'Debe seleccionar al menos una bobina para generar la solicitud.'
             else:
                 orden = order.objects.get(uniqueid=ordenproduccion)
-                granel_lote = granel_lot.objects.get(FK_order_id=orden)
+                if not orden:
+                    msg = 'Orden de producción no seleccionada.'
+                else:
+                    granel_lote = granel_lot.objects.get(FK_order_id=orden)
 
-                total_quantity = sum(int(coil.numrollo) for coil in coil.objects.filter(id__in=bobinas_seleccionadas))
+                    total_quantity = int(request.POST.get('total_quantity_hidden', 0))
 
-                nueva_solicitud = coil_request.objects.create(
-                    FK_order_id=orden,
-                    FK_lot_id=granel_lote,
-                    requested_coils=','.join(bobinas_seleccionadas_str),
-                    request_date=timezone.now(),
-                    FK_coil_request_status_id=coil_request_status.objects.get(status='Pendiente'),
-                    created_by=request.user,
-                    total_number=total_quantity
-                )
+                    nueva_solicitud = coil_request.objects.create(
+                        FK_order_id=orden,
+                        FK_lot_id=granel_lote,
+                        requested_coils=bobinas_seleccionadas_str,
+                        request_date=timezone.now(),
+                        FK_coil_request_status_id=coil_request_status.objects.get(status='Pendiente'),
+                        created_by=request.user,
+                        total_number=total_quantity
+                    )
 
-                # Actualizar el estado de las bobinas seleccionadas a "Solicitada" (ID 10002)
-                coil_status_solicitada = coilStatus.objects.get(id=10002)
-                coil.objects.filter(id__in=bobinas_seleccionadas).update(
-                    FK_coilStatus_id=coil_status_solicitada
-                )
+                    # Actualizar el estado de las bobinas seleccionadas a "Solicitada" (ID 10002)
+                    coil_status_solicitada = coilStatus.objects.get(id=10002)
+                    coil.objects.filter(id__in=bobinas_seleccionadas).update(
+                        FK_coilStatus_id=coil_status_solicitada
+                    )
 
-                return HttpResponse("""
-                                    <script>
-                                        alert('La solicitud se ha actualizado correctamente.');
-                                        window.location.href = '/coil-request/';
-                                    </script>
-                                """)
+                    return HttpResponse("""
+                                        <script>
+                                            alert('La solicitud se ha actualizado correctamente.');
+                                            window.location.href = '/coil-request/';
+                                        </script>
+                                    """)
 
     else:
         form = CreateCoilFormv2()
@@ -142,7 +150,6 @@ def createCoilRequest(request):
         "selected_order_coils": selected_order_coils,
         "marbetes_necesarios": marbetes_necesarios
     })
-
 
 
 #----------------- Coil Request Status -----------------

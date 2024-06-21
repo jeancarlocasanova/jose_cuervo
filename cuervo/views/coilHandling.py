@@ -240,6 +240,9 @@ def init_coil_create(request):
     bobinas_disponibles = []
     bobinas = []
     selected_order_coils = []
+    bobinas_solicitadas = set()
+    solicitada_status = 4
+
 
     if request.method == "POST":
         form = CreateCoilFormv2(request.POST)
@@ -253,13 +256,36 @@ def init_coil_create(request):
 
                 selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
 
-                bobinas = coil.objects.filter(
+                bobinas_asignadas = coil.objects.filter(
+                    id__in=selected_order_coils,
+                    FK_coilStatus_id__name='Asignada'
+                )
+
+                print(selected_order_coils)
+
+                bobinas_disponibles = coil.objects.filter(
                     sku=orden.FK_sku_id.description
                 ).exclude(
-                    FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
-                ) | coil.objects.filter(
-                    id__in=[int(id) for id in selected_order_coils]
+                    FK_coilStatus_id__in=[solicitada_status] if solicitada_status else []
                 )
+
+                bobinas = bobinas_disponibles | bobinas_asignadas
+
+                bobinas_asignadastotales = coil.objects.filter(
+                    id__in=selected_order_coils
+                )
+
+
+                print(bobinas_asignadastotales)
+
+                # Obtener bobinas solicitadas de las asignadas
+                bobinas_solicitadas = set(
+                    bobina.id for bobina in bobinas_asignadastotales.filter(
+                        FK_coilStatus_id__name='Solicitada'
+                    )
+                )
+
+                print(bobinas_solicitadas)
 
             except order.DoesNotExist:
                 msg = 'Orden de producción no encontrada'
@@ -276,20 +302,28 @@ def init_coil_create(request):
             if not orden:
                 msg = 'Orden de producción no seleccionada.'
             else:
+                # Recuperar bobinas_solicitadas del contexto y procesarlas como enteros
+                bobinas_solicitadas_str = request.POST.get('bobinas_solicitadas', '')
+                bobinas_solicitadas = [int(id) for id in bobinas_solicitadas_str.split(',') if id.isdigit()]
+
                 bobinas_a_desasignar = list(set(initial_bobinas) - set(bobinas_seleccionadas))
                 bobinas_a_asignar = list(set(bobinas_seleccionadas) - set(initial_bobinas))
 
+
+                print(bobinas_solicitadas)
+
                 for bobina_id in bobinas_a_desasignar:
-                    bobina = coil.objects.get(id=bobina_id)
-                    bobina.FK_coilStatus_id = coilStatus.objects.get(name='Sin asignar')
-                    bobina.save()
+                    if bobina_id not in bobinas_solicitadas:
+                        bobina = coil.objects.get(id=bobina_id)
+                        bobina.FK_coilStatus_id = coilStatus.objects.get(name='Disponible')
+                        bobina.save()
 
                 for bobina_id in bobinas_a_asignar:
                     bobina = coil.objects.get(id=bobina_id)
                     bobina.FK_coilStatus_id = coilStatus.objects.get(name='Asignada')
                     bobina.save()
 
-                bobinas_actualizadas = sorted(bobinas_seleccionadas)
+                bobinas_actualizadas = sorted(bobinas_seleccionadas + bobinas_solicitadas)
                 orden.coils = ','.join(map(str, bobinas_actualizadas))
                 orden.save()
                 msg = 'Bobinas actualizadas con éxito en la orden.'
@@ -306,13 +340,33 @@ def init_coil_create(request):
 
                         selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
 
-                        bobinas = coil.objects.filter(
+                        bobinas_asignadas = coil.objects.filter(
+                            id__in=selected_order_coils,
+                            FK_coilStatus_id__name='Asignada'
+                        )
+
+                        bobinas_disponibles = coil.objects.filter(
                             sku=orden.FK_sku_id.description
                         ).exclude(
-                            FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
-                        ) | coil.objects.filter(
-                            id__in=[int(id) for id in selected_order_coils]
+                            FK_coilStatus_id__in=[solicitada_status] if solicitada_status else []
                         )
+
+                        bobinas = bobinas_disponibles | bobinas_asignadas
+
+                        bobinas_asignadastotales = coil.objects.filter(
+                            id__in=selected_order_coils
+                        )
+
+                        print(bobinas_asignadastotales)
+
+                        # Obtener bobinas solicitadas de las asignadas
+                        bobinas_solicitadas = set(
+                            bobina.id for bobina in bobinas_asignadastotales.filter(
+                                FK_coilStatus_id__name='Solicitada'
+                            )
+                        )
+
+                        print(bobinas_solicitadas)
 
                 except lot.DoesNotExist:
                     selected_lote = None
@@ -332,6 +386,7 @@ def init_coil_create(request):
         "selected_granel_lote": selected_granel_lote,
         "selected_granel_lote_id": selected_granel_lote_id,
         "selected_order_coils": selected_order_coils,
+        "bobinas_solicitadas": bobinas_solicitadas,
     })
 
 

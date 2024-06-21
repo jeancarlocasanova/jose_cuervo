@@ -146,6 +146,7 @@
     <input type="hidden" name="selected_bobinasft" id="selected_bobinasft" value="">
     <input type="hidden" name="initial_bobinas" value="{{ orden.coils }}">
     <input type="hidden" id="current_bobinas" name="current_bobinas" value="{{ orden.coils }}">
+    <input type="hidden" name="bobinas_solicitadas" value='{{ bobinas_solicitadas|join:"," }}'>
     <!-- Botón de crear dentro del formulario -->
     <button type="submit" name="crear" class="create"> Crear </button>
 </form>

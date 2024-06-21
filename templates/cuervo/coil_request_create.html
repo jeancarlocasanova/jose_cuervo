@@ -92,10 +92,11 @@
     </div>
 
     <div>
-            <h3 style="color: white">CANTIDAD TOTAL DE MARBETES SOLICITADOS:</h3>
-            <h4 style="color: red" id="total_quantity">0</h4>
-            <input type="hidden" name="total_quantity_hidden" id="total_quantity_hidden" value="0">
-    </div>
+    <h3 style="color: white">CANTIDAD TOTAL DE MARBETES SOLICITADOS:</h3>
+    <h4 style="color: red" id="total_quantity">{{ marbetes_totales }}</h4> <!-- Usar la variable `marbetes_totales` -->
+    <input type="hidden" name="total_quantity_hidden" id="total_quantity_hidden" value="{{ marbetes_totales }}">
+    <input type="hidden" id="current_bobinas" name="current_bobinas" value="{{ orden.coils }}">
+</div>
 
     <!-- Botón de crear dentro del formulario -->
     <button type="submit" name="crear" class="create">Crear</button>
@@ -110,10 +111,9 @@ $(document).ready(function () {
         "lengthMenu": [5, 10]
     });
 
-    // Variable para almacenar las bobinas seleccionadas
     var selectedBobinas = {};
+    var checkedBobinas = [];
 
-    // Función para actualizar la cantidad total de marbetes solicitados
     function updateTotalQuantity() {
         var totalQuantity = 0;
         Object.keys(selectedBobinas).forEach(function (key) {
@@ -123,30 +123,66 @@ $(document).ready(function () {
         $('#total_quantity_hidden').val(totalQuantity);
     }
 
-    // Manejar el cambio de selección de checkbox
     $('body').on('change', 'input[type="checkbox"][name="selected_bobinas"]', function () {
         var bobinaId = $(this).val();
         var numrollo = parseInt($(this).data('numrollo'));
 
         if ($(this).is(':checked')) {
             selectedBobinas[bobinaId] = numrollo;
+            if (!checkedBobinas.includes(bobinaId)) {
+                checkedBobinas.push(bobinaId);
+            }
         } else {
             delete selectedBobinas[bobinaId];
+            checkedBobinas = checkedBobinas.filter(id => id !== bobinaId);
         }
 
         updateTotalQuantity();
+        $('#current_bobinas').val(checkedBobinas.join(','));
     });
 
     // Inicializar la cantidad total al cargar la página
     updateTotalQuantity();
 
+    // Función para manejar la selección de bobinas
+    function selectBobinas() {
+        var marbetesNecesarios = parseInt($('#marbetes_necesarios').val());
+        var totalMarbetes = 0;
+
+        // Resetear selección
+        selectedBobinas = {};
+        checkedBobinas = [];
+
+        // Seleccionar bobinas automáticamente
+        $('#myTable tbody tr').each(function () {
+            var checkbox = $(this).find('input[type="checkbox"][name="selected_bobinas"]');
+            var bobinaId = checkbox.val();
+            var numrollo = parseInt(checkbox.data('numrollo'));
+
+            if (totalMarbetes < marbetesNecesarios) {
+                totalMarbetes += numrollo;
+                selectedBobinas[bobinaId] = numrollo;
+                checkedBobinas.push(bobinaId);
+                checkbox.prop('checked', true);
+            } else {
+                checkbox.prop('checked', false);
+            }
+        });
+
+        updateTotalQuantity();
+        $('#current_bobinas').val(checkedBobinas.join(','));
+    }
+
+    // Manejar el clic en el botón "Seleccionar Bobinas"
+    $('button[name="seleccionar"]').on('click', function (event) {
+        event.preventDefault();
+        selectBobinas();
+    });
+
+    // Antes de enviar el formulario, asegurarse de que current_bobinas contenga todas las selecciones
     $('form').submit(function() {
-        // Asegurarse de que todas las selecciones se envíen al backend
-        $('<input>').attr({
-            type: 'hidden',
-            name: 'selected_bobinas',
-            value: selectedBobinas.join(',')
-        }).appendTo('form');
+        $('#current_bobinas').val(checkedBobinas.join(','));
+        updateTotalQuantity();  // Asegurarse de que el total se actualiza antes de enviar el formulario
     });
 });
 </script>

@@ -34,8 +34,8 @@
                 <td>{{ i.FK_lot_id.granel_lot }}</td>
                 <td>{{ i.request_date }}</td>
                 <td>{{ i.total_number }}</td>
-                <td></td>
-                <td></td>
+                <td>{{ i.created_by }}</td>
+                <td>Pendiente...</td>
 				<form role="form" method="post" action="{% url 'view-coils' i.id %}">
                     {% csrf_token %}
                     <td><button type="submit"><a>VER BOBINAS</a></button></td>
