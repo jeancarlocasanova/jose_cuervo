@@ -46,7 +46,7 @@ def returnOfCoilsFilter(request):
 def returnOfCoils(request, lot_id, order_id):
     lot_obj = get_object_or_404(lot, id=lot_id)
     order_obj = get_object_or_404(order, id=order_id)
-    granel_obj = get_object_or_404(granel_lot, FK_order_id__id=order_id)
+    granel_obj = granel_lot.objects.filter(FK_order_id__id=order_id)
 
     coilsWithComa = order_obj.coils
     coilsWithComaList = coilsWithComa.split(',') if coilsWithComa else []

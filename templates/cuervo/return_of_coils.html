@@ -87,40 +87,56 @@
                     <tr>
                         <th scope="col">Orden</th>
                         <th scope="col">SKU</th>
+                        <th scope="col">Descripción SKU</th>
                         <th scope="col">Estatus</th>
-                        <th scope="col">Fecha Inicio</th>
-                        <th scope="col">Fecha Final</th>
-                        <th scope="col">Lote Granel</th>
                     </tr>
                 </thead>
                 <tbody>
                         <tr>
                             <td>{{ order.uniqueid }}</td>
                             <td>{{ order.FK_sku_id.sku }}</td>
+                            <td>{{ order.FK_sku_id.description }}</td>
                             <td>{{ order.status }}</td>
-                            <td>{{ order.init_date }}</td>
-                            <td>{{ order.finish_date }}</td>
-                            <td>{{ order.granel_lot }}</td>
                         </tr>
                 </tbody>
             </table>
+
+       <h3 style="color: white">Lotes Granel</h3>
+        <table class="table" style="color: white">
+            <thead style="background-color: #1e264e; color: white">
+                <tr>
+                    <th scope="col">Lote Granel</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for granel_lote in granel %}
+                <tr>
+                    <td>{{ granel_lote.granel_lot }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
       <h3 style="color: white; margin-bottom: 30px">Información del Lote</h3>
       <table class="table" id="">
                 <thead style="background-color: #1e264e">
                     <tr>
-                        <th scope="col">Lote</th>
-                        <th scope="col">Tipo Marbete</th>
-                        <th scope="col">Material</th>
-                        <th scope="col">No. Piezas</th>
-                        <th scope="col">No. Factura</th>
+                            <th scope="col">Lote</th>
+                            <th scope="col">Proveedor</th>
+                            <th scope="col">Tipo Marbete</th>
+                            <th scope="col">Material</th>
+                            <th scope="col">Almacén</th>
+                            <th scope="col">Número de piezas</th>
+                            <th scope="col">Número de factura</th>
                     </tr>
                 </thead>
                 <tbody>
                         <tr>
                             <td>{{ lot.lot }}</td>
+                            <td>{{ lot.FK_coilProvider_id.name }}</td>
                             <td>{{ lot.label_type }}</td>
                             <td>{{ lot.material }}</td>
+                            <td>{{ lot.store }}</td>
                             <td>{{ lot.pieces_number }}</td>
                             <td>{{ lot.invoice_number }}</td>
                         </tr>
@@ -135,22 +151,28 @@
                 <thead style="background-color: #1e264e">
                     <tr>
                         <th scope="col">Devolver?</th>
-                        <th scope="col">No Rollo</th>
-                        <th scope="col">Folios Utilizados</th>
-                        <th scope="col">Folios Faltantes</th>
-                        <th scope="col">Folios Entregados</th>
-                        <th scope="col">No. de Caja</th>
+                    <th scope="col">Bobina</th>
+                    <th scope="col">SKU</th>
+                    <th scope="col">Folio Inicial</th>
+                    <th scope="col">Folio Final</th>
+                    <th scope="col">Total Rollo</th>
+                    <th scope="col">Merma</th>
+                    <th scope="col">No caja</th>
+                    <th scope="col">Total por caja</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for coil in coils %}
                         <tr>
                             <td><input type="checkbox" name="selected_coils{{ coil.id }}" value="{{ coil.id }}"/></td>
+                            <td>{{ coil.id }}</td>
+                            <td>{{ coil.sku }}</td>
+                            <td>{{ coil.initNumber }}</td>
+                            <td>{{ coil.finishNumber }}</td>
                             <td>{{ coil.numrollo }}</td>
-                            <td>{{ coil.delivered }}</td>
-                            <td>{{ coil.notDelivered }}</td>
                             <td>{{ coil.missing }}</td>
                             <td>{{ coil.boxNumber }}</td>
+                            <td>{{ coil.delivered }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
