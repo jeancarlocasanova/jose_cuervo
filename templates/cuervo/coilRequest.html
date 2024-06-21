@@ -11,14 +11,15 @@
 	<table class="table" id="myTable">
 		<thead style="background-color: #1e264e">
 			<tr>
-				<th scope="col">Bobina</th>
-                <th scope="col">Folio Inicial</th>
-                <th scope="col">Folio Final</th>
-                <th scope="col">Fecha pedido</th>
-                 <th scope="col">Orden</th>
-                 <th scope="col">Lugar Origen</th>
-                 <th scope="col">Lugar Destino</th>
+				<th scope="col">No. Solicitud</th>
+				<th scope="col">Orden</th>
+                <th scope="col">Lote</th>
+                <th scope="col">Fecha de emisión</th>
+                <th scope="col">Cantidad</th>
+                 <th scope="col">Creada por</th>
+                 <th scope="col">Aceptada por</th>
                 <th scope="col">Estatus</th>
+				<th scope="col">Bobinas</th>
 				 {% if perms.cuervo.change_coilprovider %}
 				<th scope="col">Editar</th>{% endif %}
 				{% if perms.cuervo.delete_coilprovider %}
@@ -28,18 +29,22 @@
 		<tbody>
 		{% for i in coil_request %}
 			<tr>
-				<td>No. Caja: {{ i.FK_coil_id.boxNumber }}</td>
-                <td>{{ i.startingNumber }}</td>
-                <td>{{ i.endingNumber }}</td>
-                <td>{{ i.request_date | date:"M. d, Y" }}</td>
-                <td>{{ i.FK_order_id.uniqueid }}</td>
-                <td>{{ i.Fk_source_invLocation_id.name }}</td>
-                <td>{{ i.Fk_destination_invLocation_id.name }}</td>
+                <td>{{ i.id }}</td>
+				<td>{{ i.FK_order_id.uniqueid }}</td>
+                <td>{{ i.FK_lot_id.granel_lot }}</td>
+                <td>{{ i.request_date }}</td>
+                <td>{{ i.total_number }}</td>
+                <td></td>
+                <td></td>
+				<form role="form" method="post" action="{% url 'view-coils' i.id %}">
+                    {% csrf_token %}
+                    <td><button type="submit"><a>VER BOBINAS</a></button></td>
+                </form>
                 <td>{{ i.FK_coil_request_status_id.status }}</td>
 				 {% if perms.cuervo.change_coil_request %}
 				<td><a href="{% url 'coil-request-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
 				{% if perms.cuervo.delete_coil_request %}
-				<td><a href="{% url 'coil-request-delete' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+				<td><a href="{% url 'coil-request-delete-id' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
 			</tr>
 		{% endfor %}
 		</tbody>

@@ -50,6 +50,15 @@ urlpatterns = [
 
     path('labeluploadcanceled/', init_label_canceled, name='label-canceled'),
 
+    path('solicitudmarbete/', solicitudmarbete_request, name='solicitudmarbete'),
+
+    path('labeldamaged/', init_label_damaged, name='label-damaged'),
+    path('agregar_codigo/', agregar_codigo, name='agregar_codigo'),
+    path('quitar_codigo/', quitar_codigo, name='quitar_codigo'),
+    path('confirmar_listado/', confirmar_listado, name='confirmar_listado'),
+
+    path('coilcreate/', init_coil_create, name='coil-create'),
+
     path('labeldamaged/', init_label_damaged, name='label-damaged'),
     path('agregar_codigo/', agregar_codigo, name='agregar_codigo'),
     path('quitar_codigo/', quitar_codigo, name='quitar_codigo'),
@@ -79,8 +88,12 @@ urlpatterns = [
 
     path('coil-request/', coilRequest_view, name='coil-request'),
     path('coil-request-create/', createCoilRequest, name='coil-request-create'),
-    path('coil-request/edit/<int:pk>', updateCoilRequest_view.as_view(), name='coil-request-edit'),
+    path('coil-request/edit/<int:pk>', solicitudmarbete_request, name='coil-request-edit'),
     path('coil-request/delete/<int:pk>', deleteCoilType_view.as_view(), name='coil-request-delete'),
+
+    path('coil-request-delete/<int:pk>/', delete_coil_request, name='coil-request-delete-id'),
+
+    path('solicitud/<int:pk>/bobinas/', view_coils, name='view-coils'),
 
     path('coil-request-status/', coilRequestStatus_view, name='coil-request-status'),
     path('coil-request-status-create/', createCoilRequestStatus_view.as_view(), name='coil-request-status-create'),

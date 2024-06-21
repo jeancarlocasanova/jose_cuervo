@@ -1,0 +1,64 @@
+
+
+
+
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data" id="coilForm">
+    {% csrf_token %}
+
+
+    <h3 style="color: white">Bobinas asociadas a la solicitud {{ solicitud.id }}</h3>
+        <table class="table" id="myTable">
+            <thead style="background-color: #1e264e; color: white">
+                <tr>
+                    <th scope="col">Bobina</th>
+                    <th scope="col">Sku</th>
+                    <th scope="col">Folio Inicial</th>
+                    <th scope="col">Folio Final</th>
+                    <th scope="col">Total Rollo</th>
+                    <th scope="col">Lugar Destino</th>
+                    <th scope="col">Merma</th>
+                    <th scope="col">No caja</th>
+                    <th scope="col">Total por caja</th>
+                </tr>
+            </thead>
+            <tbody style="color: white">
+                {% for bobina in bobinas %}
+                <tr>
+                    <td>{{ bobina.id }}</td>
+                    <td>{{ bobina.sku }}</td>
+                    <td>{{ bobina.initNumber }}</td>
+                    <td>{{ bobina.finishNumber }}</td>
+                    <td>{{ bobina.numrollo }}</td>
+                    <td>{{ bobina.unit }}</td>
+                    <td>{{ bobina.missing }}</td>
+                    <td>{{ bobina.boxNumber }}</td>
+                    <td>{{ bobina.delivered }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+</form>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function () {
+    var table = $('#myTable').DataTable({
+        "pageLength": 5,
+        "lengthMenu": [5, 10]
+    });
+
+    </script>
+{% endblock javascripts %}

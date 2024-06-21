@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-from ..models import coilStatus, coilType, coilProvider, coil, label, init_label, coilsInInventory
+from ..models import coilStatus, coilType, coilProvider, coil, label, init_label, coilsInInventory, order, lot, granel_lot
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
-from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CreateCoilForm, UpdateCoilForm, FilterCoilForm,DeleteLabelForm
+from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CreateCoilForm, CreateCoilFormv2, UpdateCoilForm, FilterCoilForm,DeleteLabelForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError, IntegerField, Value
@@ -10,6 +10,7 @@ from django.forms import formset_factory
 from django.db.models.functions import Cast
 from django.db.models.expressions import RawSQL
 from datetime import datetime, timedelta
+from django.core.paginator import Paginator
 
 def coilHandling_view(request):
     return render(request, "cuervo/coilHandling.html")
@@ -225,6 +226,114 @@ class updateCoil_view(PermissionRequiredMixin, UpdateView):
             # User doesn't have the permission, filter by last_edit_user
             owner = self.request.user
             return self.model.objects.filter(last_edit_user=owner)
+
+@permission_required('cuervo.add_labelstatus', login_url='/login/')
+def init_coil_create(request):
+    msg = None
+    orden = None
+    selected_lote = None
+    selected_lote_id = None
+    selected_granel_lote = None
+    selected_granel_lote_id = None
+    lotes = []
+    granel_lotes = []
+    bobinas_disponibles = []
+    bobinas = []
+    selected_order_coils = []
+
+    if request.method == "POST":
+        form = CreateCoilFormv2(request.POST)
+
+        if 'buscar' in request.POST and form.is_valid():
+            ordenproduccion = form.cleaned_data.get("ordenproduccion")
+            try:
+                orden = order.objects.get(uniqueid=ordenproduccion)
+                lotes = lot.objects.filter(FK_order_id=orden)
+                granel_lotes = granel_lot.objects.filter(FK_order_id=orden)
+
+                selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+
+                bobinas = coil.objects.filter(
+                    sku=orden.FK_sku_id.description
+                ).exclude(
+                    FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
+                ) | coil.objects.filter(
+                    id__in=[int(id) for id in selected_order_coils]
+                )
+
+            except order.DoesNotExist:
+                msg = 'Orden de producción no encontrada'
+
+        elif 'crear' in request.POST and form.is_valid():
+            bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
+            bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
+
+            initial_bobinas_str = request.POST.get('initial_bobinas', '')
+            initial_bobinas = [int(id) for id in initial_bobinas_str.split(',') if id.isdigit()]
+
+            ordenproduccion = form.cleaned_data.get("ordenproduccion")
+            orden = order.objects.get(uniqueid=ordenproduccion)
+            if not orden:
+                msg = 'Orden de producción no seleccionada.'
+            else:
+                bobinas_a_desasignar = list(set(initial_bobinas) - set(bobinas_seleccionadas))
+                bobinas_a_asignar = list(set(bobinas_seleccionadas) - set(initial_bobinas))
+
+                for bobina_id in bobinas_a_desasignar:
+                    bobina = coil.objects.get(id=bobina_id)
+                    bobina.FK_coilStatus_id = coilStatus.objects.get(name='Sin asignar')
+                    bobina.save()
+
+                for bobina_id in bobinas_a_asignar:
+                    bobina = coil.objects.get(id=bobina_id)
+                    bobina.FK_coilStatus_id = coilStatus.objects.get(name='Asignada')
+                    bobina.save()
+
+                bobinas_actualizadas = sorted(bobinas_seleccionadas)
+                orden.coils = ','.join(map(str, bobinas_actualizadas))
+                orden.save()
+                msg = 'Bobinas actualizadas con éxito en la orden.'
+
+        elif 'selected_lote' in request.POST:
+            selected_lote_id = request.POST.get('selected_lote')
+            if selected_lote_id:
+                try:
+                    selected_lote = lot.objects.get(id=selected_lote_id)
+                    if not orden:
+                        orden = selected_lote.FK_order_id
+                        lotes = lot.objects.filter(FK_order_id=orden)
+                        granel_lotes = granel_lot.objects.filter(FK_order_id=orden)
+
+                        selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+
+                        bobinas = coil.objects.filter(
+                            sku=orden.FK_sku_id.description
+                        ).exclude(
+                            FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
+                        ) | coil.objects.filter(
+                            id__in=[int(id) for id in selected_order_coils]
+                        )
+
+                except lot.DoesNotExist:
+                    selected_lote = None
+
+    else:
+        form = CreateCoilFormv2()
+
+    return render(request, "cuervo/coil_createv2.html", {
+        "form": form,
+        "msg": msg,
+        "bobinas": bobinas,
+        "orden": orden,
+        "lotes": lotes if orden else [],
+        "granel_lotes": granel_lotes if orden else [],
+        "selected_lote": selected_lote,
+        "selected_lote_id": selected_lote_id,
+        "selected_granel_lote": selected_granel_lote,
+        "selected_granel_lote_id": selected_granel_lote_id,
+        "selected_order_coils": selected_order_coils,
+    })
+
 
 @permission_required('cuervo.add_coil', login_url='/login/')
 def createCoil_view(request):

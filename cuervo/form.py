@@ -27,7 +27,11 @@ class SkuChoiceField(forms.ModelChoiceField):
 
 class CoilChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return f"No. Caja: {obj.boxNumber} - Marca: {obj.FK_sku_id.name}"
+        return f"No. Caja: {obj.boxNumber} - SKU: {obj.sku}"
+
+class CoilChoiceFieldFilter(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f"No. Caja: {obj.boxNumber} - SKU: {obj.sku} Rango: {obj.initNumber} - {obj.finishNumber}"
 
 
 class LoginForm(forms.Form):
@@ -167,7 +171,8 @@ class DeleteLabelForm(forms.Form):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
 class FilterLabelForm(forms.Form):
-    uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    uniqueid = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))
+    coil = CoilChoiceFieldFilter(queryset=coil.objects.all(), required=False)
 
 class UpdateLabelForm(forms.ModelForm):
     FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
@@ -254,3 +259,6 @@ class LotSelectionForm(forms.Form):
 
 class CoilSelectionForm(forms.Form):
     selected_coils = forms.ModelMultipleChoiceField(queryset=coil.objects.all(), widget=forms.CheckboxSelectMultiple)
+
+class CreateCoilFormv2(forms.Form):
+    ordenproduccion = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))

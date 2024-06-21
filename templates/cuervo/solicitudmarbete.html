@@ -4,22 +4,19 @@
 {% endblock stylesheets %}
 
 {% block content %}
-<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data" id="coilForm">
     {% csrf_token %}
 
     {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Crear Solicitud de Bobinas</h2>
+    <h2>Solicitud: {{ coil_request_instance.id }}</h2>
     {% endif %}
     <div class="container">
-        <!-- Formulario de búsqueda -->
         <div class="user-box">
             {{ form.ordenproduccion }}
             <label>Orden de producción</label>
         </div>
-
-        <button type="submit" name="buscar" class="button">BUSCAR</button>
 
         {% if orden %}
         <h3 style="color: white">DATOS DE LA ORDEN</h3>
@@ -47,11 +44,12 @@
             <label>Cantidad de marbetes necesarios</label>
         </div>
 
+
         <button type="submit" name="seleccionar" class="button">Seleccionar Bobinas</button>
-        <br>
         {% endif %}
     </div>
-    <br>
+
+    <br><br><br>
     <div class="container">
         <h3 style="color: white">BOBINAS</h3>
         <table class="table" id="myTable">
@@ -63,6 +61,7 @@
                     <th scope="col">Folio Inicial</th>
                     <th scope="col">Folio Final</th>
                     <th scope="col">Total Rollo</th>
+                    <th scope="col">Lugar Destino</th>
                     <th scope="col">Merma</th>
                     <th scope="col">No caja</th>
                     <th scope="col">Total por caja</th>
@@ -72,16 +71,15 @@
                 {% for bobina in bobinas %}
                 <tr>
                     <td>
-                        <!--<input type="checkbox" name="selected_bobinas" value="{{ bobina.id }}"data-numrollo="{{ bobina.numrollo }}"{% if bobina.id in selected_order_coils %}checked{% endif %}>    ESTO ES PARA QUE SE MARQUEB LAS QUE ESTAN ASIGNADAS-->
                         <input type="checkbox" name="selected_bobinas" value="{{ bobina.id }}"
-                            data-numrollo="{{ bobina.numrollo }}"
-                            {% if bobina.selected %}checked{% endif %}>
+                        {% if bobina.id in selected_lote_coils %} checked {% endif %}>
                     </td>
                     <td>{{ bobina.id }}</td>
                     <td>{{ bobina.sku }}</td>
                     <td>{{ bobina.initNumber }}</td>
                     <td>{{ bobina.finishNumber }}</td>
                     <td>{{ bobina.numrollo }}</td>
+                    <td>{{ bobina.unit }}</td>
                     <td>{{ bobina.missing }}</td>
                     <td>{{ bobina.boxNumber }}</td>
                     <td>{{ bobina.delivered }}</td>
@@ -92,13 +90,13 @@
     </div>
 
     <div>
-            <h3 style="color: white">CANTIDAD TOTAL DE MARBETES SOLICITADOS:</h3>
-            <h4 style="color: red" id="total_quantity">0</h4>
-            <input type="hidden" name="total_quantity_hidden" id="total_quantity_hidden" value="0">
+        <h3 style="color: white">CANTIDAD TOTAL DE MARBETES SOLICITADOS:</h3>
+        <h4 style="color: red" id="total_quantity">0</h4>
+        <input type="hidden" name="total_quantity_hidden" id="total_quantity_hidden" value="0">
     </div>
 
-    <!-- Botón de crear dentro del formulario -->
-    <button type="submit" name="crear" class="create">Crear</button>
+    <button type="submit" name="crear" class="create"> Actualizar </button>
+
 </form>
 {% endblock content %}
 
@@ -110,44 +108,36 @@ $(document).ready(function () {
         "lengthMenu": [5, 10]
     });
 
-    // Variable para almacenar las bobinas seleccionadas
-    var selectedBobinas = {};
-
     // Función para actualizar la cantidad total de marbetes solicitados
     function updateTotalQuantity() {
         var totalQuantity = 0;
-        Object.keys(selectedBobinas).forEach(function (key) {
-            totalQuantity += selectedBobinas[key];
+        $('input[type="checkbox"][name="selected_bobinas"]:checked').each(function() {
+            totalQuantity += parseInt($(this).closest('tr').find('td:nth-child(6)').text().trim());
         });
         $('#total_quantity').text(totalQuantity);
         $('#total_quantity_hidden').val(totalQuantity);
     }
 
-    // Manejar el cambio de selección de checkbox
-    $('body').on('change', 'input[type="checkbox"][name="selected_bobinas"]', function () {
-        var bobinaId = $(this).val();
-        var numrollo = parseInt($(this).data('numrollo'));
-
-        if ($(this).is(':checked')) {
-            selectedBobinas[bobinaId] = numrollo;
-        } else {
-            delete selectedBobinas[bobinaId];
-        }
-
+    // Actualizar la cantidad total cuando se seleccionan/desmarcan las bobinas
+    $('input[type="checkbox"][name="selected_bobinas"]').change(function() {
         updateTotalQuantity();
     });
 
     // Inicializar la cantidad total al cargar la página
     updateTotalQuantity();
 
-    $('form').submit(function() {
-        // Asegurarse de que todas las selecciones se envíen al backend
-        $('<input>').attr({
-            type: 'hidden',
-            name: 'selected_bobinas',
-            value: selectedBobinas.join(',')
-        }).appendTo('form');
+    $('#coilForm').submit(function(event) {
+    // Verificar si se está realizando una selección de bobinas
+    if ($('input[type="submit"][name="crear"]').length > 0) {
+        // Validar solo si se está creando una solicitud (botón "crear" presionado)
+        if ($('input[type="checkbox"][name="selected_bobinas"]:checked').length === 0) {
+            alert('Debe seleccionar al menos una bobina.');
+            event.preventDefault();
+        }
+    }
     });
 });
+
+
 </script>
 {% endblock javascripts %}

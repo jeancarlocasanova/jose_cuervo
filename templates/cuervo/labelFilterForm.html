@@ -11,14 +11,42 @@
      {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Introduce los Filtros</h2>
+    <h2>Introduce Folio o Bobina</h2>
     {% endif %}
 
   <div class="user-box">
     {{ form.uniqueid }}
       <label>Folio del marbete</label>
     </div>
-
+ <div style="margin-top:20px;" >
+      <label style="color:white;">Bobina</label>
+    {{ form.coil }}
+    </div>
     <button type="submit" name="login" class="create"> Filtrar </button>
   </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var uniqueidInput = document.querySelector('input[name="uniqueid"]');
+    var coilInput = document.querySelector('select[name="coil"]');
+
+    function toggleInputs() {
+        if (uniqueidInput.value) {
+            coilInput.disabled = true;
+        } else {
+            coilInput.disabled = false;
+        }
+
+        if (coilInput.value) {
+            uniqueidInput.disabled = true;
+        } else {
+            uniqueidInput.disabled = false;
+        }
+    }
+
+    uniqueidInput.addEventListener('input', toggleInputs);
+    coilInput.addEventListener('change', toggleInputs);
+});
+</script>
+
 {% endblock content %}

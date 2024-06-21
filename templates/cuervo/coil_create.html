@@ -3,30 +3,30 @@
  <link href="/static/css/forms.css" rel="stylesheet">
 {% endblock stylesheets %}
 
+
 {% block content %}
-
 <form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
-  {% csrf_token %}
+    {% csrf_token %}
 
-     {% if msg %}
+    {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
     <h2>Crea una Bobina</h2>
     {% endif %}
 
-<div class="user-box">
-    {{ form.initNumber }}
-      <label>Número de Folio Inicial</label>
+    <div class="user-box">
+    {{ form.ordenproduccion }}
+        <label>Número de Folio Inicial</label>
     </div>
 
-<div class="user-box">
+    <div class="user-box">
     {{ form.finishNumber }}
-      <label>Número de Folio Final</label>
+        <label>Número de Folio Final</label>
     </div>
 
-<div class="user-box">
+    <div class="user-box">
     {{ form.boxNumber }}
-      <label>Número de Caja</label>
+        <label>Número de Caja</label>
     </div>
 
 <div class="user-box">
