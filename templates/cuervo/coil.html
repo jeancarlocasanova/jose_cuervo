@@ -10,31 +10,39 @@
 	<table class="table" id="myTable">
 		<thead style="background-color: #1e264e">
 			<tr>
-                <th scope="col">No Rollo</th>
-                <th scope="col">Folios Utilizados</th>
-                <th scope="col">Folios Faltantes</th>
-                <th scope="col">Folios Entregados</th>
-                <th scope="col">No. de Caja</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">Rollo</th>
+                        <th scope="col">SKU</th>
+                        <th scope="col">Folio Inicial</th>
+                        <th scope="col">Folio Final</th>
+                        <th scope="col">Total Rollo</th>
+                        <th scope="col">Merma</th>
+                        <th scope="col">No caja</th>
+                        <th scope="col">Total por caja</th>
+                        <th scope="col">Estatus</th>
 				 {% if perms.cuervo.change_coil %}
 				<th scope="col">Editar</th>{% endif %}
                 {% if perms.cuervo.delete_label %}
 				<th scope="col">Borrar Folios</th>{% endif %}
-                <th scope="col">Marbetes Faltantes</th>
 			</tr>
 		</thead>
 		<tbody>
-		{% for i in coilList %}
+		{% for coil in coilList %}
 			<tr>
-                <td>{{ i.numrollo }}</td>
-                <td>{{ i.delivered }}</td>
-                <td>{{ i.notDelivered }}</td>
-                <td>{{ i.missing }}</td>
-                <td>{{ i.boxNumber }}</td>
+            <td>{{ coil.id }}</td>
+                        <td>{{ coil.numrollo }}</td>
+                        <td>{{ coil.sku }}</td>
+                        <td>{{ coil.initNumber }}</td>
+                        <td>{{ coil.finishNumber }}</td>
+                        <td>{{ coil.missing }}</td>
+                        <td>{{ coil.notDelivered }}</td>
+                        <td>{{ coil.boxNumber }}</td>
+                        <td>{{ coil.missing }}</td>
+                        <td>{{ coil.FK_coilStatus_id.name }}</td>
 				 {% if perms.cuervo.change_coil %}
-				<td><a href="{% url 'coil-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				<td><a href="{% url 'coil-edit' coil.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
                 {% if perms.cuervo.delete_label %}
-				<td><a href="{% url 'deleteLabelsFromCoil' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
-                <td><a href="{% url 'label-find' i.id %}"><span><img class="img" src="{% static 'media/findDelete.webp' %}"/></span></a></td>
+				<td><a href="{% url 'deleteLabelsFromCoil' coil.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
 			</tr>
 		{% endfor %}
 		</tbody>

@@ -31,11 +31,11 @@ class coilProvider(models.Model):
 
 class SKU(models.Model):
     sku = models.CharField(max_length=50)
-    description = models.CharField(max_length=200)
-    bts = models.CharField(max_length=12, default='')
-    cap = models.CharField(max_length=10, default='')
-    percentage_Alcohol = models.CharField(max_length=10, default='')
-    Fk_sku_type_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=False, help_text='Linked SKU Type')
+    description = models.CharField(max_length=200,null=True)
+    bts = models.CharField(max_length=12, default='',null=True)
+    cap = models.CharField(max_length=10, default='',null=True)
+    percentage_Alcohol = models.CharField(max_length=10, default='',null=True)
+    Fk_sku_type_id = models.ForeignKey(sku_Type, on_delete=models.PROTECT, null=True, help_text='Linked SKU Type')
 
 class coil(models.Model):
     initNumber = models.CharField(max_length=200, null=False)
@@ -46,7 +46,7 @@ class coil(models.Model):
     delivered = models.IntegerField(null=False, default=0)
     boxNumber = models.IntegerField(null=False, default=1)
     purchaseOrder = models.CharField(default="NA", max_length=50)
-    unit = models.CharField(default="P2", max_length=50)
+    unit = models.CharField(default="PZ3", max_length=50)
     orderUniqueid = models.CharField(max_length=10, help_text="Orden", null=False, default="")
     sku = models.CharField(max_length=200, null=True, help_text='Linked brand')
     FK_coilStatus_id = models.ForeignKey(coilStatus, on_delete=models.PROTECT, null=False, help_text='Linked Coil Status')

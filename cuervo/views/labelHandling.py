@@ -197,24 +197,24 @@ def init_label_information(request):
                                          ).save()
                             except Exception as e:
                                 #label.objects.filter(FK_coil_id=coilObj).delete()
-                                msg = "Error al generar marbetes" + str(e)
+                                messages.error(request, "Error al generar marbetes" + str(e))
                         else:
-                            msg = "Algunos de estos marbetes ya existen"
+                            messages.error(request, "Algunos de estos marbetes ya existen")
                     else:
                         if duplicates:
                             # Aquí puedes trabajar con los datos repetidos
                             for index in duplicates:
                                 print(f"El texto '{textos[index]}' está repetido en el folio: {folios[index]}.")
                         else:
-                            msg = 'Revisa si los números de folio o los folios no entregados estén bien'
-                messages.success(request, 'La información ha sido Procesada correctamente')
+                            messages.error(request, 'Revisa si los números de folio o los folios no entregados estén bien')
+                issaved = True
             else:
                 msg = 'Ha ocurrido un error'
                 print(form.errors)
         else:
             form = LabelInitForm()
         if issaved:
-            return redirect('/labelMenu/')
+            messages.success(request, 'La información ha sido procesada correctamente')
 
         return render(request, "cuervo/label_init_create.html", {"form": form, "msg": msg})
 

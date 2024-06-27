@@ -198,19 +198,7 @@ def createCoilProvider_view(request):
 # <------ COIL CRUD --------!>
 def coil_view(request):
     coilList = coil.objects.all()
-    if request.method == 'POST':
-        form = FilterCoilForm(request.POST)
-        if form.is_valid():
-            boxNumber = form.cleaned_data['boxNumber']
-            purchaseOrder = form.cleaned_data['purchaseOrder']
-            if boxNumber and boxNumber >= 0:
-                coilList = coilList.filter(boxNumber=boxNumber)
-            if purchaseOrder:
-                coilList = coilList.filter(purchaseOrder=purchaseOrder)
-            return render(request, "cuervo/coil.html", {'coilList': coilList})
-    else:
-        form = FilterCoilForm()
-    return render(request, 'cuervo/coilFilterForm.html', {'form': form})
+    return render(request, "cuervo/coil.html", {'coilList': coilList})
 
 
 class updateCoil_view(PermissionRequiredMixin, UpdateView):
