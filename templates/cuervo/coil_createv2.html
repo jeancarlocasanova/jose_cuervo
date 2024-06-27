@@ -1,6 +1,40 @@
 {% extends "base.html" %}
 {% block stylesheets %}
- <link href="/static/css/forms.css" rel="stylesheet">
+<link href="/static/css/forms.css" rel="stylesheet">
+<style>
+    .table-container {
+        max-height: 400px; /* Ajusta la altura según tus necesidades */
+        overflow-y: auto;
+        border: 1px solid #ccc;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table thead {
+        position: sticky;
+        top: 0;
+        background-color: #1e264e;
+        color: white;
+    }
+    .table th, .table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    /* Estilos del scroll personalizado */
+    .table-container::-webkit-scrollbar-track {
+        border: 0.5px solid #000000;
+        background-color: #F5F5F5;
+    }
+    .table-container::-webkit-scrollbar {
+        width: 10px;
+        background-color: #F5F5F5;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+        background-color: #ffd500;
+    }
+</style>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -10,7 +44,7 @@
     {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Crea una Bobina</h2>
+    <h2>Asignación de Bobinas</h2>
     {% endif %}
     <div class="container">
         <!-- Formulario de búsqueda -->
@@ -41,107 +75,61 @@
                 </tr>
             </tbody>
         </table>
-        <br><br>
-        <h3 style="color: white">LOTES GRANEL</h3>
-        <table class="table" style="color: white">
-            <thead style="background-color: #1e264e; color: white">
-                <tr>
-                    <th scope="col">Lote Granel</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for granel_lote in granel_lotes %}
-                <tr>
-                    <td>{{ granel_lote.granel_lot }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <br><br>
-        <div>
-        <label style="color:white;">LOTE:</label>
-        <select name="selected_lote" id="selected_lote" onchange="this.form.submit()">
-            <option value="" {% if not selected_lote_id %}selected{% endif %}>Seleccione un lote</option>
-            {% for lote in lotes %}
-            <option value="{{ lote.id }}" {% if lote.id == selected_lote_id %}selected{% endif %}>
-                {{ lote.lot }}
-            </option>
-            {% endfor %}
-        </select>
     </div>
-
-    <input type="hidden" name="selected_lote_hidden" id="selected_lote_hidden" value="{% if selected_lote %}{{ selected_lote.id }}{% endif %}">
     <br>
-    {% if selected_lote %}
-    <h3 style="color: white">DATOS DEL LOTE</h3>
-    <table class="table" style="color: white">
-        <thead style="background-color: #1e264e; color: white">
-            <tr>
-                <th scope="col">Lote</th>
-                <th scope="col">Proveedor</th>
-                <th scope="col">Tipo Marbete</th>
-                <th scope="col">Material</th>
-                <th scope="col">Almacén</th>
-                <th scope="col">Número de piezas</th>
-                <th scope="col">Número de factura</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>{{ selected_lote.lot }}</td>
-                <td>{{ selected_lote.FK_coilProvider_id.name }}</td>
-                <td>{{ selected_lote.label_type }}</td>
-                <td>{{ selected_lote.material }}</td>
-                <td>{{ selected_lote.store }}</td>
-                <td>{{ selected_lote.pieces_number }}</td>
-                <td>{{ selected_lote.invoice_number }}</td>
-            </tr>
-        </tbody>
-    </table>
-    {% endif %}
-        <br><br>
-        {% endif %}
-    </div>
+    {% if orden.status == 'LIB' %}
 
-    <br><br><br>
     <div class="container">
+        <div class="user-box">
+            {{ form2.folio_inicial }}
+            <label>Folio Inicial</label>
+        </div>
+        <div class="user-box">
+            {{ form2.folio_final }}
+            <label>Folio Final</label>
+        </div>
+        <button type="submit" name="filtrar" class="button"> FILTRAR </button>
         <h3 style="color: white">BOBINAS</h3>
-        <table class="table" id="myTable">
-            <thead style="background-color: #1e264e; color: white">
-                <tr>
-                    <th scope="col">Seleccionar</th>
-                    <th scope="col">Bobina</th>
-                    <th scope="col">SKU</th>
-                    <th scope="col">Folio Inicial</th>
-                    <th scope="col">Folio Final</th>
-                    <th scope="col">Total Rollo</th>
-                    <th scope="col">Lugar Destino</th>
-                    <th scope="col">Merma</th>
-                    <th scope="col">No caja</th>
-                    <th scope="col">Total por caja</th>
-                </tr>
-            </thead>
-            <tbody style="color: white">
-    {% for bobina in bobinas %}
-    <tr>
-        <td>
-            <input type="checkbox" name="selected_bobinas" value="{{ bobina.id }}"
-                            data-numrollo="{{ bobina.numrollo }}"
-                            {% if bobina.id in selected_order_coils %}checked{% endif %}>
-        </td>
-        <td>{{ bobina.id }}</td>
-        <td>{{ bobina.sku }}</td>
-        <td>{{ bobina.initNumber }}</td>
-        <td>{{ bobina.finishNumber }}</td>
-        <td>{{ bobina.numrollo }}</td>
-        <td>{{ bobina.unit }}</td>
-        <td>{{ bobina.missing }}</td>
-        <td>{{ bobina.boxNumber }}</td>
-        <td>{{ bobina.delivered }}</td>
-    </tr>
-    {% endfor %}
-</tbody>
-        </table>
+        <div class="table-container">
+            <table class="table" id="myTable">
+                <thead style="background-color: #1e264e; color: white">
+                    <tr>
+                        <th scope="col">
+                            <input type="checkbox" id="select_all"> <!-- Checkbox para seleccionar todo -->
+                        </th>
+                        <th scope="col">Rollo</th>
+                        <th scope="col">SKU</th>
+                        <th scope="col">Folio Inicial</th>
+                        <th scope="col">Folio Final</th>
+                        <th scope="col">Total Rollo</th>
+                        <th scope="col">Merma</th>
+                        <th scope="col">No caja</th>
+                        <th scope="col">Total por caja</th>
+                        <th scope="col">Estatus</th>
+                    </tr>
+                </thead>
+                <tbody style="color: white">
+                    {% for bobina in bobinas %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="selected_bobinas" value="{{ bobina.id }}"
+                                   data-numrollo="{{ bobina.numrollo }}"
+                                   {% if bobina.id in selected_order_coils %}checked{% endif %}>
+                        </td>
+                        <td>{{ bobina.numrollo }}</td>
+                        <td>{{ bobina.sku }}</td>
+                        <td>{{ bobina.initNumber }}</td>
+                        <td>{{ bobina.finishNumber }}</td>
+                        <td>{{ bobina.missing }}</td>
+                        <td>{{ bobina.notDelivered }}</td>
+                        <td>{{ bobina.boxNumber }}</td>
+                        <td>{{ bobina.missing }}</td>
+                        <td>{{ bobina.FK_coilStatus_id.name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     <input type="hidden" name="selected_bobinasft" id="selected_bobinasft" value="">
     <input type="hidden" name="initial_bobinas" value="{{ orden.coils }}">
@@ -149,18 +137,13 @@
     <input type="hidden" name="bobinas_solicitadas" value='{{ bobinas_solicitadas|join:"," }}'>
     <!-- Botón de crear dentro del formulario -->
     <button type="submit" name="crear" class="create"> Crear </button>
+    {% endif %}
+    {% endif %}
 </form>
 {% endblock content %}
 
 {% block javascripts %}
 <script>
-$(document).ready(function () {
-    var table = $('#myTable').DataTable({
-        "pageLength": 5,
-        "lengthMenu": [5, 10]
-    });
-});
-
 var selectedBobinas = [];
 
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -174,6 +157,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     });
     document.getElementById('selected_bobinasft').value = selectedBobinas.join(',');
+
+    // Checkbox "Seleccionar Todo"
+    document.getElementById('select_all').addEventListener('change', function(event) {
+        let checkboxes = document.querySelectorAll('input[type="checkbox"][name="selected_bobinas"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = event.target.checked;
+            if (event.target.checked) {
+                if (!selectedBobinas.includes(checkbox.value)) {
+                    selectedBobinas.push(checkbox.value);
+                }
+            } else {
+                selectedBobinas = [];
+            }
+        });
+        document.getElementById('current_bobinas').value = selectedBobinas.join(',');
+        document.getElementById('selected_bobinasft').value = selectedBobinas.join(',');
+    });
 
     // Actualiza el campo hidden 'current_bobinas' al cambiar el estado de cualquier checkbox
     document.querySelectorAll('input[type="checkbox"][name="selected_bobinas"]').forEach(checkbox => {
@@ -196,11 +196,5 @@ document.addEventListener('DOMContentLoaded', (event) => {
         document.getElementById('current_bobinas').value = selectedBobinas.join(',');
     });
 });
-
-document.getElementById('selected_lote').addEventListener('change', function() {
-    document.getElementById('selected_lote_hidden').value = this.value;
-    this.form.submit();
-});
-
 </script>
 {% endblock javascripts %}

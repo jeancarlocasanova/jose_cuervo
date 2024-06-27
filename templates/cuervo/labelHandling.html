@@ -1,52 +1,123 @@
 {% extends "base.html" %}
 {% load static %}
-{% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
+{% block stylesheets %}
+    <link href="/static/css/crud.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}" type="text/css"/>
+    <style>
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .table-wrapper {
+            max-height: 400px; /* Altura máxima de la tabla */
+            overflow-y: auto; /* Habilitar el desplazamiento vertical */
+        }
+    </style>
+{% endblock stylesheets %}
 
 {% block content %}
 {% if user.is_authenticated %}
 <div class="container">
-	<h1 style="color: white; margin-bottom: 30px">Manejo de Marbetes</h1>
-	<table class="table" id="myTable">
-		<thead style="background-color: #1e264e">
-			<tr>
-				<th scope="col">Folio</th>
-                <th scope="col">Bobina</th>
-                <th scope="col">Estatus</th>
-                <th scope="col">Inventario</th>
-                {% if perms.cuervo.change_label %}
-				<th scope="col">Editar</th>{% endif %}
-			</tr>
-		</thead>
-		<tbody>
-		{% for i in labelList %}
-			<tr>
-                <td>{{ i.uniqueid }}</td>
-                <td>{{ i.FK_coil_id.id }}</td>
-                <td>{{ i.FK_labelStatus_id.name }}</td>
-                <td>{{ i.FK_inventoryLocation_id.name }}</td>
-                {% if perms.cuervo.change_label %}
-				<td><a href="{% url 'label-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
-            </tr>
-		{% endfor %}
-		</tbody>
-	</table>
+    <h1 style="color: white; margin-bottom: 30px">Manejo de Marbetes</h1>
+    <form id="repForm" action="" method="post">{% csrf_token %}
+        <div class="w3-row">
+            <div class="w3-quarter w3-padding-24">
+                <div class="form-group">
+                    <label for="{{ form.startDatetime.id_for_label }}">Fecha Inicio</label>
+                    {{ form.startDatetime.errors }}
+                    {{ form.startDatetime }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.endDatetime.id_for_label }}">Fecha Final</label>
+                    {{ form.endDatetime.errors }}
+                    {{ form.endDatetime }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.sku.id_for_label }}">Sku</label>
+                    {{ form.sku.errors }}
+                    {{ form.sku }}
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="w3-button w3-yellow">Filtrar</button>
+                </div>
+            </div>
+        </div>
+    </form>
+     <div class="table-wrapper">
+        <table class="table" id="myTable">
+            <thead style="background-color: #1e264e">
+                <tr>
+                    <th scope="col">Folio</th>
+                    <th scope="col">Bobina</th>
+                    <th scope="col">Estatus</th>
+                    <th scope="col">Url</th>
+                    <th scope="col">Ministración</th>
+                    {% if perms.cuervo.change_label %}
+                    <th scope="col">Editar</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+            {% for i in labelList %}
+                <tr>
+                    <td>{{ i.uniqueid }}</td>
+                    <td>{{ i.FK_coil_id.id }}</td>
+                    <td>{{ i.FK_labelStatus_id.name }}</td>
+                    <td>{{ i.url }}</td>
+                    <td>{{ i.ministrationNumber }}</td>
+                    {% if perms.cuervo.change_label %}
+                    <td><a href="{% url 'label-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination" style="color: white">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1&startDatetime={{ request.session.startDatetime }}&endDatetime={{ request.session.endDatetime }}&sku={{ request.session.sku }}">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}&startDatetime={{ request.session.startDatetime }}&endDatetime={{ request.session.endDatetime }}&sku={{ request.session.sku }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&startDatetime={{ request.session.startDatetime }}&endDatetime={{ request.session.endDatetime }}&sku={{ request.session.sku }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}&startDatetime={{ request.session.startDatetime }}&endDatetime={{ request.session.endDatetime }}&sku={{ request.session.sku }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
 </div>
 {% else %}
- <div class="w3-panel w3-yellow">
-            <h3 style="color: white">No has iniciado seccion!</h3>
-            <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
-        </div>
+<div class="w3-panel w3-yellow">
+    <h3 style="color: white">No has iniciado sesión!</h3>
+    <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar sesión</p>
+</div>
 {% endif %}
 {% endblock content %}
 
 {% block javascripts %}
-<script>
+    <script type="text/javascript" src="{% static 'js/jquery.datetimepicker.full.min.js' %}"></script>
+    <script>
         $(document).ready(function () {
-            var table = $('#myTable').DataTable({
-                "pageLength": 5,
-                "lengthMenu": [5, 10]
+            $(".datetimepicker").datetimepicker({
+                timepicker: true,
+                format: 'Y-m-d H:i'
             });
-            generateBarcodes();
         });
     </script>
 {% endblock javascripts %}

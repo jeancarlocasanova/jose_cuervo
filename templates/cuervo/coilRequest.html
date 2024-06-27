@@ -6,9 +6,12 @@
 {% if user.is_authenticated %}
 <div class="container">
 	<h1 style="color: white; margin-bottom: 30px">Manejo de Solicitudes de Bobinas</h1>
+
+
+	{% if statusRequest == 'Pendiente' %}
 	{% if perms.cuervo.add_coil_request%}
 	<a class="create" href="{% url 'coil-request-create'%}"><img  style=" margin-top:10px; margin-right: 10px; margin-bottom:10px; height: 25px; width: 25px" src="{% static 'media/add.png' %}"/>Crear Solicitud</a>{% endif %}
-	<table class="table" id="myTable">
+	<table class="table" id="myTablePendiente">
 		<thead style="background-color: #1e264e">
 			<tr>
 				<th scope="col">No. Solicitud</th>
@@ -17,9 +20,8 @@
                 <th scope="col">Fecha de emisión</th>
                 <th scope="col">Cantidad</th>
                  <th scope="col">Creada por</th>
-                 <th scope="col">Aceptada por</th>
-                <th scope="col">Estatus</th>
-				<th scope="col">Bobinas</th>
+                <th scope="col">Bobinas</th>
+				<th scope="col">Estatus</th>
 				 {% if perms.cuervo.change_coilprovider %}
 				<th scope="col">Editar</th>{% endif %}
 				{% if perms.cuervo.delete_coilprovider %}
@@ -35,7 +37,6 @@
                 <td>{{ i.request_date }}</td>
                 <td>{{ i.total_number }}</td>
                 <td>{{ i.created_by }}</td>
-                <td>Pendiente...</td>
 				<form role="form" method="post" action="{% url 'view-coils' i.id %}">
                     {% csrf_token %}
                     <td><button type="submit"><a>VER BOBINAS</a></button></td>
@@ -49,6 +50,93 @@
 		{% endfor %}
 		</tbody>
 	</table>
+	{% endif %}
+	{% if statusRequest == 'Aceptada' %}
+	<table class="table" id="myTableAceptada">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">No. Solicitud</th>
+				<th scope="col">Orden</th>
+                <th scope="col">Lote</th>
+                <th scope="col">Fecha de emisión</th>
+                <th scope="col">Cantidad</th>
+                 <th scope="col">Creada por</th>
+                 <th scope="col">Aceptada por</th>
+                <th scope="col">Bobinas</th>
+				<th scope="col">Estatus</th>
+				 {% if perms.cuervo.change_coilprovider %}
+				<th scope="col">Editar</th>{% endif %}
+				{% if perms.cuervo.delete_coilprovider %}
+				<th scope="col">Eliminar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in coil_request %}
+			<tr>
+                <td>{{ i.id }}</td>
+				<td>{{ i.FK_order_id.uniqueid }}</td>
+                <td>{{ i.FK_lot_id.granel_lot }}</td>
+                <td>{{ i.request_date }}</td>
+                <td>{{ i.total_number }}</td>
+                <td>{{ i.created_by }}</td>
+                <td>{{ i.accepted_by }}</td>
+				<form role="form" method="post" action="{% url 'view-coils' i.id %}">
+                    {% csrf_token %}
+                    <td><button type="submit"><a>VER BOBINAS</a></button></td>
+                </form>
+                <td>{{ i.FK_coil_request_status_id.status }}</td>
+				 {% if perms.cuervo.change_coil_request %}
+				<td><a href="{% url 'coil-request-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				{% if perms.cuervo.delete_coil_request %}
+				<td><a href="{% url 'coil-request-delete-id' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+	{% endif %}
+	{% if statusRequest == 'Declinada' %}
+	<table class="table" id="myTableDeclinada">
+		<thead style="background-color: #1e264e">
+			<tr>
+				<th scope="col">No. Solicitud</th>
+				<th scope="col">Orden</th>
+                <th scope="col">Lote</th>
+                <th scope="col">Fecha de emisión</th>
+                <th scope="col">Cantidad</th>
+				<th scope="col">Creada por</th>
+				<th scope="col">Declinada por</th>
+                <th scope="col">Bobinas</th>
+				<th scope="col">Estatus</th>
+				 {% if perms.cuervo.change_coilprovider %}
+				<th scope="col">Editar</th>{% endif %}
+				{% if perms.cuervo.delete_coilprovider %}
+				<th scope="col">Eliminar</th>{% endif %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in coil_request %}
+			<tr>
+                <td>{{ i.id }}</td>
+				<td>{{ i.FK_order_id.uniqueid }}</td>
+                <td>{{ i.FK_lot_id.granel_lot }}</td>
+                <td>{{ i.request_date }}</td>
+                <td>{{ i.total_number }}</td>
+                <td>{{ i.created_by }}</td>
+                <td>{{ i.accepted_by }}</td>
+				<form role="form" method="post" action="{% url 'view-coils' i.id %}">
+                    {% csrf_token %}
+                    <td><button type="submit"><a>VER BOBINAS</a></button></td>
+                </form>
+                <td>{{ i.FK_coil_request_status_id.status }}</td>
+				 {% if perms.cuervo.change_coil_request %}
+				<td><a href="{% url 'coil-request-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
+				{% if perms.cuervo.delete_coil_request %}
+				<td><a href="{% url 'coil-request-delete-id' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+	{% endif %}
 </div>
 {% else %}
  <div class="w3-panel w3-yellow">
@@ -61,7 +149,21 @@
 {% block javascripts %}
 <script>
         $(document).ready(function () {
-            var table = $('#myTable').DataTable({
+            var table = $('#myTablePendiente').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+        $(document).ready(function () {
+            var table = $('#myTableAceptada').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10]
+            });
+            generateBarcodes();
+        });
+        $(document).ready(function () {
+            var table = $('#myTableDeclinada').DataTable({
                 "pageLength": 5,
                 "lengthMenu": [5, 10]
             });

@@ -143,7 +143,7 @@ urlpatterns = [
     path('coilRequest/decline/<int:pk>', DeclineCoilRequest, name='decline-coilrequest'),
 
     path('coilreturn/', returnOfCoilsFilter, name='return-coil'),
-    path('coilreturn/<int:lot_id>/<int:order_id>', returnOfCoils, name='return-coil'),
+    path('coilreturn/<int:order_id>', returnOfCoils, name='return-coil'),
     path('coil-return-create/', createReturnOfCoil, name='coil-return-create'),
     path('coil-return-edit/<int:pk>', updateCoilTrace_view.as_view(), name='coil-return-edit'),
     path('coil-return-delete/<int:pk>', deleteCoilTrace_view.as_view(), name='coil-return-delete'),

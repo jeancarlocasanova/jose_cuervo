@@ -1,6 +1,39 @@
 {% extends "base.html" %}
 {% block stylesheets %}
  <link href="/static/css/forms.css" rel="stylesheet">
+<style>
+    .table-container {
+        max-height: 400px; /* Ajusta la altura según tus necesidades */
+        overflow-y: auto;
+        border: 1px solid #ccc;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table thead {
+        position: sticky;
+        top: 0;
+        background-color: #1e264e;
+        color: white;
+    }
+    .table th, .table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    .table-container::-webkit-scrollbar-track {
+        border: 0.5px solid #000000;
+        background-color: #F5F5F5;
+    }
+    .table-container::-webkit-scrollbar {
+        width: 10px;
+        background-color: #F5F5F5;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+        background-color: #ffd500;
+    }
+</style>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -13,7 +46,6 @@
     <h2>Crear Solicitud de Bobinas</h2>
     {% endif %}
     <div class="container">
-        <!-- Formulario de búsqueda -->
         <div class="user-box">
             {{ form.ordenproduccion }}
             <label>Orden de producción</label>
@@ -42,6 +74,12 @@
             </tbody>
         </table>
         <br><br>
+        {% endif %}
+    </div>
+    <br>
+    {% if orden.status == 'LIB' %}
+    <div class="container">
+
         <div class="user-box">
             <input type="number" name="marbetes_necesarios" id="marbetes_necesarios" value="{{ marbetes_necesarios }}">
             <label>Cantidad de marbetes necesarios</label>
@@ -49,16 +87,15 @@
 
         <button type="submit" name="seleccionar" class="button">Seleccionar Bobinas</button>
         <br>
-        {% endif %}
-    </div>
-    <br>
-    <div class="container">
         <h3 style="color: white">BOBINAS</h3>
+        <div class="table-container">
         <table class="table" id="myTable">
             <thead style="background-color: #1e264e; color: white">
                 <tr>
-                    <th scope="col">Seleccionar</th>
-                    <th scope="col">Bobina</th>
+                    <th scope="col">
+                            <input type="checkbox" id="select_all"> <!-- Checkbox para seleccionar todo -->
+                    </th>
+                    <th scope="col">Rollo</th>
                     <th scope="col">SKU</th>
                     <th scope="col">Folio Inicial</th>
                     <th scope="col">Folio Final</th>
@@ -66,31 +103,32 @@
                     <th scope="col">Merma</th>
                     <th scope="col">No caja</th>
                     <th scope="col">Total por caja</th>
+                    <th scope="col">Estatus</th>
                 </tr>
             </thead>
             <tbody style="color: white">
                 {% for bobina in bobinas %}
                 <tr>
                     <td>
-                        <!--<input type="checkbox" name="selected_bobinas" value="{{ bobina.id }}"data-numrollo="{{ bobina.numrollo }}"{% if bobina.id in selected_order_coils %}checked{% endif %}>    ESTO ES PARA QUE SE MARQUEB LAS QUE ESTAN ASIGNADAS-->
                         <input type="checkbox" name="selected_bobinas" value="{{ bobina.id }}"
-                            data-numrollo="{{ bobina.numrollo }}"
+                            data-missing="{{ bobina.missing }}"
                             {% if bobina.selected %}checked{% endif %}>
                     </td>
-                    <td>{{ bobina.id }}</td>
+                    <td>{{ bobina.numrollo }}</td>
                     <td>{{ bobina.sku }}</td>
                     <td>{{ bobina.initNumber }}</td>
                     <td>{{ bobina.finishNumber }}</td>
-                    <td>{{ bobina.numrollo }}</td>
                     <td>{{ bobina.missing }}</td>
+                    <td>{{ bobina.notDelivered }}</td>
                     <td>{{ bobina.boxNumber }}</td>
-                    <td>{{ bobina.delivered }}</td>
+                    <td>{{ bobina.missing }}</td>
+                    <td>{{ bobina.FK_coilStatus_id.name }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
-
     <div>
     <h3 style="color: white">CANTIDAD TOTAL DE MARBETES SOLICITADOS:</h3>
     <h4 style="color: red" id="total_quantity">{{ marbetes_totales }}</h4> <!-- Usar la variable `marbetes_totales` -->
@@ -98,19 +136,13 @@
     <input type="hidden" id="current_bobinas" name="current_bobinas" value="{{ orden.coils }}">
 </div>
 
-    <!-- Botón de crear dentro del formulario -->
     <button type="submit" name="crear" class="create">Crear</button>
+    {% endif %}
 </form>
 {% endblock content %}
 
 {% block javascripts %}
 <script>
-$(document).ready(function () {
-    var table = $('#myTable').DataTable({
-        "pageLength": 5,
-        "lengthMenu": [5, 10]
-    });
-
     var selectedBobinas = {};
     var checkedBobinas = [];
 
@@ -125,10 +157,10 @@ $(document).ready(function () {
 
     $('body').on('change', 'input[type="checkbox"][name="selected_bobinas"]', function () {
         var bobinaId = $(this).val();
-        var numrollo = parseInt($(this).data('numrollo'));
+        var missing = parseInt($(this).data('missing'));
 
         if ($(this).is(':checked')) {
-            selectedBobinas[bobinaId] = numrollo;
+            selectedBobinas[bobinaId] = missing;
             if (!checkedBobinas.includes(bobinaId)) {
                 checkedBobinas.push(bobinaId);
             }
@@ -157,11 +189,11 @@ $(document).ready(function () {
         $('#myTable tbody tr').each(function () {
             var checkbox = $(this).find('input[type="checkbox"][name="selected_bobinas"]');
             var bobinaId = checkbox.val();
-            var numrollo = parseInt(checkbox.data('numrollo'));
+            var missing = parseInt(checkbox.data('missing'));
 
             if (totalMarbetes < marbetesNecesarios) {
-                totalMarbetes += numrollo;
-                selectedBobinas[bobinaId] = numrollo;
+                totalMarbetes += missing;
+                selectedBobinas[bobinaId] = missing;
                 checkedBobinas.push(bobinaId);
                 checkbox.prop('checked', true);
             } else {
@@ -184,6 +216,11 @@ $(document).ready(function () {
         $('#current_bobinas').val(checkedBobinas.join(','));
         updateTotalQuantity();  // Asegurarse de que el total se actualiza antes de enviar el formulario
     });
-});
+
+    // Seleccionar/deseleccionar todas las bobinas
+    $('#select_all').on('change', function () {
+        var checked = $(this).is(':checked');
+        $('input[type="checkbox"][name="selected_bobinas"]').prop('checked', checked).trigger('change');
+    });
 </script>
 {% endblock javascripts %}

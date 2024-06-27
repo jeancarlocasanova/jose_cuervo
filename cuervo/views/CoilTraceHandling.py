@@ -20,33 +20,20 @@ def returnOfCoilsFilter(request):
                 uniqueid = form.cleaned_data.get("uniqueid")
                 try:
                     devolution = order.objects.get(uniqueid=uniqueid)
-                    orderLots = lot.objects.filter(FK_order_id=devolution)
-                    lot_form = LotSelectionForm(queryset=orderLots)
-                    return render(request, "cuervo/return_of_coils_lot.html", {
-                        "form": form,
-                        "lot_form": lot_form,
-                        "devolution": devolution,
-                        "orderLots": orderLots
-                    })
+                    id_order = devolution.id
+                    return redirect(f"/coilreturn/{id_order}")
                 except order.DoesNotExist:
                     msg = 'No se ha encontrado ninguna orden de producción con el ID proporcionado.'
             else:
                 msg = 'El formulario no es válido. Por favor, revise los datos ingresados.'
-        elif 'lot_form' in request.POST:
-            lot_value = request.POST.get("lote")
-            lot_obj = lot.objects.get(id=lot_value)
-            id_order =lot_obj.FK_order_id.id
-            return redirect(f"/coilreturn/{lot_value}/{id_order}")
     else:
         form = orderForm2()
 
     return render(request, 'cuervo/return_of_coils_filter.html', {'form': form, "msg": msg})
 
 @permission_required('cuervo.add_labelstatus', login_url='/login/')
-def returnOfCoils(request, lot_id, order_id):
-    lot_obj = get_object_or_404(lot, id=lot_id)
+def returnOfCoils(request, order_id):
     order_obj = get_object_or_404(order, id=order_id)
-    granel_obj = granel_lot.objects.filter(FK_order_id__id=order_id)
 
     coilsWithComa = order_obj.coils
     coilsWithComaList = coilsWithComa.split(',') if coilsWithComa else []
@@ -96,7 +83,7 @@ def returnOfCoils(request, lot_id, order_id):
 
         return redirect(request.path_info)
 
-    return render(request, "cuervo/return_of_coils.html", {"lot": lot_obj, "coils": coil_list, "order": order_obj, "granel": granel_obj})
+    return render(request, "cuervo/return_of_coils.html", {"coils": coil_list, "order": order_obj})
 
 
 @permission_required('cuervo.add_coiltrace', login_url='/login/')

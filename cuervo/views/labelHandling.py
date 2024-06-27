@@ -1,34 +1,74 @@
 from django.shortcuts import render, redirect, get_object_or_404, reverse
 from ..models import label, coil, labelStatus, init_label, order, lot, coilStatus, coil_request, \
     coil_request_status, coilType, inventoryLocation, granel_lot
-from django.views.generic import UpdateView, CreateView
+from django.views.generic import UpdateView
 from django.urls import reverse_lazy
 from ..form import FilterLabelForm, UpdateLabelForm, LabelInitForm, CreateCoilFormv2
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.contrib import messages
 from openpyxl import load_workbook
 import re
 from django.utils import timezone
 from django.http import HttpResponse
+import pandas as pd
+import pytz
+from jose_cuervo.settings import TIME_ZONE
+from django.core.paginator import Paginator
+
+def setSystemTimeZoneToDatetime(someDateTime):
+    # Expects to recieve naive datetime with a local datetime value. Then this function includes system time to
+    # convert to UTC
+    if (someDateTime.tzinfo is None):
+        tz = pytz.timezone(TIME_ZONE)
+        if (type(someDateTime) is pd.Timestamp):
+            someDt = pd.date_range(start=someDateTime, periods=1).tz_localize(tz)
+            newDate = someDt[0]
+        else:
+            newDate = someDateTime.astimezone(tz)
+    else:
+        newDate = someDateTime
+
+    return newDate
 
 def labelHandling_view(request):
+    label_list = None
+    page_obj = None
+    now = datetime.now()
+    form = FilterLabelForm(request.POST or None)
+
     if request.method == 'POST':
-        labelList = None
-        form = FilterLabelForm(request.POST)
         if form.is_valid():
-            uniqueid = form.cleaned_data['uniqueid']
-            coil = form.cleaned_data['coil']
-            if uniqueid:
-                labelList = label.objects.filter(uniqueid__contains=uniqueid)
-            if coil:
-                labelList = label.objects.filter(FK_coil_id=coil)
-            return render(request, "cuervo/labelHandling.html", {'labelList': labelList})
+            request.session['startDatetime'] = request.POST.get('startDatetime')
+            request.session['endDatetime'] = request.POST.get('endDatetime')
+            request.session['sku'] = form.cleaned_data.get('sku').description if form.cleaned_data.get('sku') else None
     else:
-        form = FilterLabelForm()
-    return render(request, 'cuervo/labelFilterForm.html', {'form': form})
+        form.fields['startDatetime'].initial = (now - timedelta(days=1)).strftime('%Y-%m-%d %H:%M')
+        form.fields['endDatetime'].initial = now.strftime('%Y-%m-%d %H:%M')
+
+    startdatetime = request.session.get('startDatetime')
+    enddatetime = request.session.get('endDatetime')
+    sku = request.session.get('sku')
+
+    if startdatetime and enddatetime:
+        startdatetimeUTC = setSystemTimeZoneToDatetime(datetime.strptime(startdatetime, '%Y-%m-%d %H:%M'))
+        enddatetimeUTC = setSystemTimeZoneToDatetime(datetime.strptime(enddatetime, '%Y-%m-%d %H:%M'))
+
+        labels = label.objects.filter(last_update__range=[startdatetimeUTC, enddatetimeUTC])
+
+        if sku:
+            coil_list = coil.objects.filter(sku__in=sku)
+            labels = labels.filter(FK_coil_id__in=coil_list)
+
+        paginator = Paginator(labels, 100)  # Muestra 100 registros por página
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        label_list = page_obj
+
+    return render(request, 'cuervo/labelHandling.html', {'form': form, 'labelList': label_list, 'page_obj': page_obj})
 
 class updateLabel_view(PermissionRequiredMixin, UpdateView):
     model = label
@@ -167,7 +207,7 @@ def init_label_information(request):
                                 print(f"El texto '{textos[index]}' está repetido en el folio: {folios[index]}.")
                         else:
                             msg = 'Revisa si los números de folio o los folios no entregados estén bien'
-                issaved = True
+                messages.success(request, 'La información ha sido Procesada correctamente')
             else:
                 msg = 'Ha ocurrido un error'
                 print(form.errors)
@@ -454,12 +494,17 @@ def extract_data_from_excel_warehouse_label(file, sheet_name_pattern):
 @permission_required('cuervo.add_labelstatus', login_url='/login/')
 def init_label_in_inventory(request):
     msg = None
+    coil_msg_list = []
+    label_msg_list = []
+    coil_filter = None
+    label_filter = None
+    loaded_labels = None
     if request.method == "POST":
         csv_files = request.FILES.getlist('csv_file')
-        obj_status = coilStatus.objects.get(name='Disponible').first()
+        obj_status = coilStatus.objects.get(name='Disponible')
         obj_type = coilType.objects.all().first()
-        obj_label_status = labelStatus.objects.get(name='Asignado').first()
-        obj_inventory = inventoryLocation.objects.get(name='Almacen').first()
+        obj_label_status = labelStatus.objects.get(name='Asignado')
+        obj_inventory = inventoryLocation.objects.get(name='Almacen')
         try:
             for file in csv_files:
                 sheet_name = 'OT'
@@ -470,41 +515,74 @@ def init_label_in_inventory(request):
                     continue
                 for i in range(len(labels['folios_iniciales'])):
                     if labels['folios_iniciales'][i] is None or labels['folios_finales'][i] is None:
-                        messages.error(request, 'Faltan datos esenciales para crear el objeto coil.')
+                        messages.error(request, 'Faltan datos esenciales para crear la bobina.')
                         continue
-                    obj_coil = coil.objects.create(
+
+                    coil_filter = coil.objects.filter(
                         initNumber=labels['folios_iniciales'][i],
                         finishNumber=labels['folios_finales'][i],
                         numrollo=labels['num_rollo'][i],
-                        notDelivered=labels['folios_faltantes'][i],
-                        missing=labels['cantidad_rollo'][i],
-                        delivered=labels['folios_utilizados'][i],
-                        boxNumber=labels['num_caja'][i],
-                        purchaseOrder=labels['orden'],
-                        orderUniqueid=labels['ot'],
-                        sku=labels['desc'],
-                        FK_coilStatus_id=obj_status,
-                        FK_coilType_id=obj_type,
-                        last_edit_user=request.user
                     )
-                    matching_labels = init_label.objects.filter(
-                        uniqueid__gte=labels['folios_iniciales'][i],
-                        uniqueid__lte=labels['folios_finales'][i]
-                    )
-                    for matching_label in matching_labels:
-                        label.objects.create(
-                            uniqueid=matching_label.uniqueid,
-                            url=matching_label.url,
-                            brand=matching_label.brand,
-                            ministrationNumber=matching_label.ministrationNumber,
-                            supplier=matching_label.supplier,
-                            FK_coil_id=obj_coil,
-                            FK_labelStatus_id=obj_label_status,
-                            FK_inventoryLocation_id=obj_inventory,
-                            last_edit_user=request.user,
-                            expiration=matching_label.expiration
+                    if not coil_filter:
+                        obj_coil = coil.objects.create(
+                            initNumber=labels['folios_iniciales'][i],
+                            finishNumber=labels['folios_finales'][i],
+                            numrollo=labels['num_rollo'][i],
+                            notDelivered=labels['folios_faltantes'][i],
+                            missing=labels['cantidad_rollo'][i],
+                            delivered=labels['folios_utilizados'][i],
+                            boxNumber=labels['num_caja'][i],
+                            purchaseOrder=labels['orden'],
+                            orderUniqueid=labels['ot'],
+                            sku=labels['desc'],
+                            FK_coilStatus_id=obj_status,
+                            FK_coilType_id=obj_type,
+                            last_edit_user=request.user
                         )
-            msg = "Datos cargados exitosamente."
+                        matching_labels = init_label.objects.filter(
+                            uniqueid__gte=labels['folios_iniciales'][i],
+                            uniqueid__lte=labels['folios_finales'][i]
+                        )
+                        if matching_labels:
+                            for matching_label in matching_labels:
+                                label_filter = label.objects.filter(url=matching_label.url)
+                                if not label_filter:
+                                    label.objects.create(
+                                        uniqueid=matching_label.uniqueid,
+                                        url=matching_label.url,
+                                        brand=matching_label.brand,
+                                        ministrationNumber=matching_label.ministrationNumber,
+                                        supplier=matching_label.supplier,
+                                        FK_coil_id=obj_coil,
+                                        FK_labelStatus_id=obj_label_status,
+                                        FK_inventoryLocation_id=obj_inventory,
+                                        last_edit_user=request.user,
+                                        expiration=matching_label.expiration
+                                    )
+                                else:
+                                    mensaje_label = f"El marbete con la url {matching_label.url} ya ha sido registrada<br/>"
+                                    label_msg_list.append(mensaje_label)
+                        else:
+                            messages.error(request, f"No se han cargado los marbetes asignados a esta bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]}")
+                            loaded_labels = True
+                            obj_coil.delete()
+                    else:
+                        mensaje_coil = f"La bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} ya esta creada<br/>"
+                        coil_msg_list.append(mensaje_coil)
+
+            if coil_msg_list:
+                error_message = ' '.join(coil_msg_list)
+                messages.error(request, f'Error al cargar las bobinas: <br/>{error_message}')
+
+            if label_msg_list:
+                error_message = ' '.join(label_msg_list)
+                messages.error(request, f'Error al cargar los marbetes:<br/> {error_message}')
+            if not label_msg_list and not coil_msg_list and not loaded_labels:
+                messages.success(request, "Datos cargados exitosamente.")
+        except FileNotFoundError as fnf_error:
+            messages.error(request, f'Error al cargar el archivo: {str(fnf_error)}')
+        except ValueError as value_error:
+            messages.error(request, f'Error al procesar los datos del archivo: {str(value_error)}')
         except Exception as e:
             messages.error(request, f'Hubo un error al cargar datos: {str(e)}')
     return render(request, "cuervo/label_in_inventory.html", {"msg": msg})
@@ -523,133 +601,140 @@ def solicitudmarbete_request(request, pk):
     bobinas = []
     selected_lote_coils = []
     marbetes_necesarios = 0
+    marbetes_totales = 0
 
-    coil_request_instance = get_object_or_404(coil_request, pk=pk)
+    try:
 
-    if request.method == "POST":
-        form = CreateCoilFormv2(request.POST)
+        coil_request_instance = get_object_or_404(coil_request, pk=pk)
 
-        if 'crear' in request.POST and form.is_valid():
-            bobinas_seleccionadas = request.POST.getlist('selected_bobinas')
+        if request.method == "POST":
+            form = CreateCoilFormv2(request.POST)
 
-            if not bobinas_seleccionadas:
-                msg = 'Debe seleccionar al menos una bobina para actualizar la solicitud.'
-            else:
-                total_quantity = sum(
-                    int(coil.numrollo) for coil in coil.objects.filter(id__in=bobinas_seleccionadas))
+            if 'crear' in request.POST and form.is_valid():
+                bobinas_seleccionadas = request.POST.getlist('selected_bobinas')
 
-                # Guardar la orden para asegurarse de que no quede en null
-                if not orden:
-                    orden = coil_request_instance.FK_order_id
-
-
-                # Obtener las bobinas previamente seleccionadas
-                previously_selected_coils = [int(id) for id in coil_request_instance.requested_coils.split(',')] if coil_request_instance.requested_coils else []
-
-                coil_request_instance.FK_order_id = orden
-                coil_request_instance.requested_coils = ','.join(bobinas_seleccionadas)
-                coil_request_instance.request_date = timezone.now()
-                coil_request_instance.FK_coil_request_status_id = coil_request_status.objects.get(
-                    status='Pendiente')
-                coil_request_instance.created_by = request.user
-                coil_request_instance.total_number = total_quantity
-                coil_request_instance.save()
-
-                # Cambiar el estado de las bobinas seleccionadas
-                coil.objects.filter(id__in=bobinas_seleccionadas).update(
-                    FK_coilStatus_id=coilStatus.objects.get(name__in='Solicitada')
-                )
-
-                # Cambiar el estado de las bobinas desmarcadas (las que estaban seleccionadas pero ya no lo están) a 'Asignada'
-                bobinas_deseleccionadas = set(previously_selected_coils) - set(map(int, bobinas_seleccionadas))
-                if bobinas_deseleccionadas:
-                    coil.objects.filter(id__in=bobinas_deseleccionadas).update(
-                        FK_coilStatus_id=coilStatus.objects.get(name__in='Asignada')
+                if not bobinas_seleccionadas:
+                    msg = 'Debe seleccionar al menos una bobina para actualizar la solicitud.'
+                else:
+                    total_quantity = sum(
+                        int(coil.missing) for coil in coil.objects.filter(id__in=bobinas_seleccionadas)
                     )
 
-                # Devolver una respuesta con JavaScript
-                return HttpResponse("""
-                                <script>
-                                    alert('La solicitud se ha actualizado correctamente.');
-                                    window.location.href = '/coil-request/';
-                                </script>
-                            """)
+                    if not orden:
+                        orden = coil_request_instance.FK_order_id
 
-        elif 'seleccionar' in request.POST and form.is_valid():
-            marbetes_necesarios = int(request.POST.get('marbetes_necesarios', 0))
-            try:
+                    previously_selected_coils = [int(id) for id in coil_request_instance.requested_coils.split(
+                        ',')] if coil_request_instance.requested_coils else []
+
+                    coil_request_instance.FK_order_id = orden
+                    coil_request_instance.requested_coils = ','.join(bobinas_seleccionadas)
+                    coil_request_instance.request_date = timezone.now()
+                    coil_request_instance.FK_coil_request_status_id = coil_request_status.objects.get(status='Pendiente')
+                    coil_request_instance.created_by = request.user
+                    coil_request_instance.total_number = total_quantity
+                    coil_request_instance.save()
+
+                    coil.objects.filter(id__in=bobinas_seleccionadas).update(
+                        FK_coilStatus_id=coilStatus.objects.get(id=10002)
+                    )
+
+                    bobinas_deseleccionadas = set(previously_selected_coils) - set(map(int, bobinas_seleccionadas))
+                    if bobinas_deseleccionadas:
+                        coil.objects.filter(id__in=bobinas_deseleccionadas).update(
+                            FK_coilStatus_id=coilStatus.objects.get(id=1)
+                        )
+
+                    return HttpResponse("""
+                                        <script>
+                                            alert('La solicitud se ha actualizado correctamente.');
+                                            window.location.href = '/coil-request/';
+                                        </script>
+                                    """)
+
+            elif 'seleccionar' in request.POST and form.is_valid():
+                marbetes_necesarios = int(request.POST.get('marbetes_necesarios', 0))
+                try:
+                    orden = coil_request_instance.FK_order_id
+                    selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+
+                    assigned_coil_ids = coil_request.objects.exclude(pk=pk).values_list('requested_coils', flat=True)
+                    assigned_coil_ids = [int(id) for sublist in assigned_coil_ids for id in sublist.split(',') if id]
+
+                    bobinas = coil.objects.filter(
+                        id__in=selected_order_coils
+                    )
+
+                    total_marbetes = 0
+                    selected_bobinas_ids = []
+                    for bobina in bobinas:
+                        if total_marbetes < marbetes_necesarios:
+                            total_marbetes += bobina.missing
+                            selected_bobinas_ids.append(bobina.id)
+
+                    # Marcar bobinas según las seleccionadas y las preseleccionadas
+                    selected_lote_coils = []
+                    selected_quantity = 0
+                    for bobina in bobinas:
+                        if bobina.id in selected_bobinas_ids or bobina.id in previously_selected_coils:
+                            selected_lote_coils.append(bobina.id)
+                            selected_quantity += bobina.missing
+                            bobina.selected = True
+                        else:
+                            bobina.selected = False
+
+                        if selected_quantity >= marbetes_necesarios:
+                            break
+
+                    marbetes_totales = selected_quantity
+
+                    return render(request, "cuervo/solicitudmarbete.html", {
+                        "form": form,
+                        "msg": msg,
+                        "bobinas": bobinas,
+                        "orden": orden,
+                        "selected_lote_coils": selected_lote_coils,
+                        "coil_request_instance": coil_request_instance,
+                        "marbetes_necesarios": marbetes_necesarios,
+                        "marbetes_totales": marbetes_totales
+                    })
+
+                except order.DoesNotExist:
+                    msg = 'Orden de producción no encontrada'
+                except lot.DoesNotExist:
+                    msg = 'Lote granel no encontrado'
+        else:
+            if coil_request_instance.FK_order_id:
                 orden = coil_request_instance.FK_order_id
-                selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+
+            form = CreateCoilFormv2(initial={'ordenproduccion': coil_request_instance.FK_order_id.uniqueid})
+
+            if orden:
+                all_coils_in_order = coil.objects.filter(
+                    id__in=[int(id) for id in orden.coils.split(',')] if orden.coils else []
+                )
 
                 assigned_coil_ids = coil_request.objects.exclude(pk=pk).values_list('requested_coils', flat=True)
                 assigned_coil_ids = [int(id) for sublist in assigned_coil_ids for id in sublist.split(',') if id]
 
-                bobinas = coil.objects.filter(
-                    id__in=selected_order_coils,
-                    FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
-                ).exclude(id__in=assigned_coil_ids)
+                bobinas = all_coils_in_order.exclude(id__in=assigned_coil_ids)
 
-                total_marbetes = 0
-                selected_bobinas_ids = []
-                for bobina in bobinas:
-                    if total_marbetes < marbetes_necesarios:
-                        total_marbetes += bobina.numrollo
-                        selected_bobinas_ids.append(bobina.id)
-
-                for bobina in bobinas:
-                    bobina.selected = bobina.id in selected_bobinas_ids
-
-                previously_selected_coils = [int(id) for id in coil_request_instance.requested_coils.split(
+                selected_coil_ids = [int(id) for id in coil_request_instance.requested_coils.split(
                     ',')] if coil_request_instance.requested_coils else []
-                selected_lote_coils = [bobina.id for bobina in
-                                       bobinas.filter(id__in=selected_bobinas_ids + previously_selected_coils)]
+                selected_lote_coils = [bobina.id for bobina in all_coils_in_order.filter(id__in=selected_coil_ids)]
 
-                # Render the template with the updated selection
-                return render(request, "cuervo/solicitudmarbete.html", {
-                    "form": form,
-                    "msg": msg,
-                    "bobinas": bobinas,
-                    "orden": orden,
-                    "selected_lote_coils": selected_lote_coils,
-                    "coil_request_instance": coil_request_instance,
-                    "marbetes_necesarios": marbetes_necesarios
-                })
-
-            except order.DoesNotExist:
-                msg = 'Orden de producción no encontrada'
-            except lot.DoesNotExist:
-                msg = 'Lote granel no encontrado'
-    else:
-        if coil_request_instance.FK_order_id:
-            orden = coil_request_instance.FK_order_id
-
-        form = CreateCoilFormv2(initial={'ordenproduccion': coil_request_instance.FK_order_id.uniqueid})
-
-        if orden:
-            # Obtener todas las bobinas de la orden
-            all_coils_in_order = coil.objects.filter(
-                id__in=[int(id) for id in orden.coils.split(',')] if orden.coils else []
-            )
-
-            # Obtener bobinas asignadas a otras solicitudes
-            assigned_coil_ids = coil_request.objects.exclude(pk=pk).values_list('requested_coils', flat=True)
-            assigned_coil_ids = [int(id) for sublist in assigned_coil_ids for id in sublist.split(',') if id]
-
-            # Excluir las bobinas asignadas a otras solicitudes
-            bobinas = all_coils_in_order.exclude(id__in=assigned_coil_ids)
-
-            # Obtener bobinas asignadas a esta solicitud específica
-            selected_coil_ids = [int(id) for id in coil_request_instance.requested_coils.split(
-                ',')] if coil_request_instance.requested_coils else []
-            selected_lote_coils = [bobina.id for bobina in all_coils_in_order.filter(id__in=selected_coil_ids)]
-
-        return render(request, "cuervo/solicitudmarbete.html", {
-            "form": form,
-            "msg": msg,
-            "bobinas": bobinas,
-            "orden": orden,
-            "selected_lote_coils": selected_lote_coils,  # Lista de IDs de bobinas seleccionadas
-            "coil_request_instance": coil_request_instance,
+            return render(request, "cuervo/solicitudmarbete.html", {
+                "form": form,
+                "msg": msg,
+                "bobinas": bobinas,
+                "orden": orden,
+                "selected_lote_coils": selected_lote_coils,
+                "coil_request_instance": coil_request_instance,
+                "marbetes_totales": marbetes_totales
+            })
+    except:
+        msg = 'Ocurrió un error'
+        return render(request, "cuervo/ErrorMsg.html", {
+            "msg": msg
         })
 
 codigos_escaneados = []

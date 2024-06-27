@@ -27,6 +27,7 @@ class coilType(models.Model):
 
 class coilProvider(models.Model):
     name = models.CharField(max_length=70)
+    number = models.IntegerField(null=False, default=0)
 
 class SKU(models.Model):
     sku = models.CharField(max_length=50)
@@ -62,7 +63,8 @@ class label(models.Model):
     supplier = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=False, default=1)
     FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
     FK_labelStatus_id = models.ForeignKey(labelStatus, on_delete=models.PROTECT, null=False, help_text='Linked Label Status')
-    FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=True, help_text='Linked Inventory Location')
+    FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=True,
+                                                help_text='Linked Inventory Location')
     last_update = models.DateTimeField(auto_now=True, null=False)
     last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False, help_text='Linked User')
     expiration = models.DateTimeField(auto_now=False, null=True)
@@ -81,14 +83,10 @@ class order(models.Model):
     status = models.CharField(max_length=30, null=True)
     init_date = models.DateTimeField(auto_now=True, null=True)  # Set editable to False
     finish_date = models.DateTimeField(null=True)
-    coils = models.CharField(max_length=100, null=True)
     FK_inventoryLocation_id = models.ForeignKey(inventoryLocation, on_delete=models.PROTECT, null=True, help_text='Linked Inventory Location')
+    coils = models.CharField(max_length=4000, null=True)
+    consumo_date = models.DateTimeField(auto_now=False, null=True)
 
-class granel_lot(models.Model):
-    granel_lot = models.CharField(max_length=50, null=True)
-    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=True, help_text='Linked order')
-    initNumber = models.CharField(max_length=200, null=True, help_text="Folio inicial")
-    finishNumber = models.CharField(max_length=200, null=True, help_text="Folio final")
 
 class lot(models.Model):
     lot = models.CharField(max_length=50, null=True)
@@ -100,6 +98,12 @@ class lot(models.Model):
     FK_coilProvider_id = models.ForeignKey(coilProvider, on_delete=models.PROTECT, null=True, help_text='Linked Coil Provider')
     FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=True, help_text='Linked order')
 
+
+class granel_lot(models.Model):
+    granel_lot = models.CharField(max_length=50, null=True)
+    FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=True, help_text='Linked order')
+    initNumber = models.CharField(max_length=200, null=True, help_text="Folio inicial")
+    finishNumber = models.CharField(max_length=200, null=True, help_text="Folio final")
 
 class coilTrace(models.Model):
     timestamp = models.DateTimeField(auto_now=True, null=False)
@@ -128,7 +132,6 @@ class coil_request_status(models.Model):
 
 class coil_request(models.Model):
     FK_order_id = models.ForeignKey(order, on_delete=models.PROTECT, null=True, help_text="Linked Order")
-    FK_lot_id = models.ForeignKey(lot, on_delete=models.PROTECT, null=True, help_text="Linked Lot")
     requested_coils = models.CharField(max_length=100, null=True)
     request_date = models.DateTimeField(auto_now=True, null=True)
     FK_coil_request_status_id = models.ForeignKey(coil_request_status, on_delete=models.PROTECT, null=True, help_text="Linked Coil Request Status")
@@ -167,7 +170,6 @@ class coilsInInventory(models.Model):
     last_edit_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False,
                                        help_text='Linked User')
     FK_coil_id = models.ForeignKey(coil, on_delete=models.PROTECT, null=False, help_text='Linked Coil')
-
 
 class zip_file_parent(models.Model):
     file_name = models.CharField(max_length=100)

@@ -11,13 +11,19 @@ import re
 
 def coilRequest_view(request):
     requestCoil = coil_request.objects.all()
+    statusRequest = coil_request_status.objects.all()
     if request.method == 'POST':
         form = CoilRequestFilter(request.POST)
         if form.is_valid():
             statusID = form.cleaned_data['Fk_coil_request_status']
             if statusID:
+                statusID = statusID.id
                 requestCoil = requestCoil.filter(FK_coil_request_status_id=statusID)
-            return render(request, "cuervo/coilRequest.html", {'coil_request': requestCoil})
+                statusRequest = statusRequest.filter(id=statusID).first()
+                print(statusRequest)
+                statusreq = statusRequest.status
+                print(statusreq)
+            return render(request, "cuervo/coilRequest.html", {'coil_request': requestCoil, 'statusRequest': statusreq})
     else:
         form = CoilRequestFilter()
     return render(request, 'cuervo/coilRequestFilterForm.html', {'form': form})
@@ -38,118 +44,110 @@ class deleteCoilRequest_view(PermissionRequiredMixin, DeleteView):
 def createCoilRequest(request):
     msg = None
     orden = None
-    granel_lote = None
-    lotes = []
     bobinas = []
     selected_order_coils = []
     marbetes_necesarios = 0
+    marbetes_totales = 0
 
+    try:
 
-    if request.method == "POST":
-        form = CreateCoilFormv2(request.POST)
+        if request.method == "POST":
+            form = CreateCoilFormv2(request.POST)
 
-        if 'buscar' in request.POST and form.is_valid():
-            ordenproduccion = form.cleaned_data.get("ordenproduccion")
-            try:
-                orden = order.objects.get(uniqueid=ordenproduccion)
-                granel_lote = granel_lot.objects.get(FK_order_id=orden)
+            if 'buscar' in request.POST and form.is_valid():
+                ordenproduccion = form.cleaned_data.get("ordenproduccion")
+                try:
+                    orden = order.objects.get(uniqueid=ordenproduccion)
+                    if orden.status == 'LIB':
 
-                selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+                        selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+                        bobinas = coil.objects.filter(id__in=selected_order_coils,
+                                                    FK_coilStatus_id=coilStatus.objects.get(name='Asignada'))
+                    elif orden.status == 'REL':
+                        msg = 'Orden de producción con consumo'
 
-                bobinas = coil.objects.filter(
-                    id__in=selected_order_coils,
-                    FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
-                )
-            except order.DoesNotExist:
-                msg = 'Orden de producción no encontrada'
-            except lot.DoesNotExist:
-                msg = 'Lote granel no encontrado'
+                    elif orden.status == 'ABIE':
+                        msg = 'No se pueden asignar bobinas a esta orden de producción'
 
-        elif 'seleccionar' in request.POST:
-            marbetes_necesarios = int(request.POST.get('marbetes_necesarios', 0))
-            ordenproduccion = request.POST.get("ordenproduccion")
-            try:
-                orden = order.objects.get(uniqueid=ordenproduccion)
-                selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+                    elif orden.status == 'CTCO':
+                        msg = 'Orden de producción cerrada'
+                except order.DoesNotExist:
+                    msg = 'Orden de producción no encontrada'
 
-                bobinas = coil.objects.filter(
-                    FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
-                )
+            elif 'seleccionar' in request.POST:
+                marbetes_necesarios = int(request.POST.get('marbetes_necesarios', 0))
+                ordenproduccion = request.POST.get("ordenproduccion")
+                try:
+                    orden = order.objects.get(uniqueid=ordenproduccion)
+                    selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+                    bobinas = coil.objects.filter(FK_coilStatus_id=coilStatus.objects.get(name='Asignada'))
 
-                total_marbetes = 0
-                selected_bobinas_ids = []
-                for bobina in bobinas:
-                    if total_marbetes < marbetes_necesarios:
-                        total_marbetes += bobina.numrollo
-                        selected_bobinas_ids.append(bobina.id)
+                    total_marbetes = 0
+                    selected_bobinas_ids = []
+                    for bobina in bobinas:
+                        if total_marbetes < marbetes_necesarios:
+                            total_marbetes += bobina.missing
+                            selected_bobinas_ids.append(bobina.id)
 
-                for bobina in bobinas:
-                    bobina.selected = bobina.id in selected_bobinas_ids
+                    for bobina in bobinas:
+                        bobina.selected = bobina.id in selected_bobinas_ids
 
-                marbetes_totales = total_marbetes  # Calculamos la cantidad total seleccionada
+                    marbetes_totales = total_marbetes
 
-            except order.DoesNotExist:
-                msg = 'Orden de producción no encontrada'
-            except lot.DoesNotExist:
-                msg = 'Lote granel no encontrado'
+                except order.DoesNotExist:
+                    msg = 'Orden de producción no encontrada'
 
-        elif 'crear' in request.POST and form.is_valid():
+            elif 'crear' in request.POST and form.is_valid():
+                bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
+                bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
 
-            bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
-            bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
+                ordenproduccion = form.cleaned_data.get("ordenproduccion")
 
-            print(bobinas_seleccionadas_str)
-            print(bobinas_seleccionadas)
-
-            ordenproduccion = form.cleaned_data.get("ordenproduccion")
-
-            if not bobinas_seleccionadas:
-                msg = 'Debe seleccionar al menos una bobina para generar la solicitud.'
-            else:
-                orden = order.objects.get(uniqueid=ordenproduccion)
-                if not orden:
-                    msg = 'Orden de producción no seleccionada.'
+                if not bobinas_seleccionadas:
+                    msg = 'Debe seleccionar al menos una bobina para generar la solicitud.'
                 else:
-                    granel_lote = granel_lot.objects.get(FK_order_id=orden)
+                    orden = order.objects.get(uniqueid=ordenproduccion)
+                    if not orden:
+                        msg = 'Orden de producción no seleccionada.'
+                    else:
+                        total_quantity = int(request.POST.get('total_quantity_hidden', 0))
 
-                    total_quantity = int(request.POST.get('total_quantity_hidden', 0))
+                        nueva_solicitud = coil_request.objects.create(
+                            FK_order_id=orden,
+                            requested_coils=bobinas_seleccionadas_str,
+                            request_date=timezone.now(),
+                            FK_coil_request_status_id=coil_request_status.objects.get(status='Pendiente'),
+                            created_by=request.user,
+                            total_number=total_quantity
+                        )
 
-                    nueva_solicitud = coil_request.objects.create(
-                        FK_order_id=orden,
-                        FK_lot_id=granel_lote,
-                        requested_coils=bobinas_seleccionadas_str,
-                        request_date=timezone.now(),
-                        FK_coil_request_status_id=coil_request_status.objects.get(status='Pendiente'),
-                        created_by=request.user,
-                        total_number=total_quantity
-                    )
+                        coil_status_solicitada = coilStatus.objects.get(id=10002)
+                        coil.objects.filter(id__in=bobinas_seleccionadas).update(FK_coilStatus_id=coil_status_solicitada)
 
-                    # Actualizar el estado de las bobinas seleccionadas a "Solicitada" (ID 10002)
-                    coil_status_solicitada = coilStatus.objects.get(id=10002)
-                    coil.objects.filter(id__in=bobinas_seleccionadas).update(
-                        FK_coilStatus_id=coil_status_solicitada
-                    )
+                        return HttpResponse("""
+                                                <script>
+                                                    alert('La solicitud se ha actualizado correctamente.');
+                                                    window.location.href = '/coil-request/';
+                                                </script>
+                                            """)
 
-                    return HttpResponse("""
-                                        <script>
-                                            alert('La solicitud se ha actualizado correctamente.');
-                                            window.location.href = '/coil-request/';
-                                        </script>
-                                    """)
+        else:
+            form = CreateCoilFormv2()
 
-    else:
-        form = CreateCoilFormv2()
-
-    return render(request, "cuervo/coil_request_create.html", {
-        "form": form,
-        "msg": msg,
-        "bobinas": bobinas,
-        "orden": orden,
-        "lotes": lotes if orden else [],
-        "granel_lote": granel_lote,
-        "selected_order_coils": selected_order_coils,
-        "marbetes_necesarios": marbetes_necesarios
-    })
+        return render(request, "cuervo/coil_request_create.html", {
+            "form": form,
+            "msg": msg,
+            "bobinas": bobinas,
+            "orden": orden,
+            "selected_order_coils": selected_order_coils,
+            "marbetes_necesarios": marbetes_necesarios,
+            "marbetes_totales": marbetes_totales
+        })
+    except:
+        msg = 'Ocurrió un error'
+        return render(request, "cuervo/ErrorMsg.html", {
+            "msg": msg
+        })
 
 
 #----------------- Coil Request Status -----------------
@@ -182,14 +180,14 @@ class deleteCoilRequestStatus_view(PermissionRequiredMixin, DeleteView):
 # ----------------- Coil acept request -----------------
 def CoilRequestHandling_view(request):
     statusList = coil_request.objects.all()
-    statusList = statusList.filter(FK_coil_request_status_id__id=10003)
+    statusList = statusList.filter(FK_coil_request_status_id__id=4)
     return render(request, "cuervo/coilRequestHandling.html", {'statusList': statusList})
 @require_http_methods(['POST'])
 def AcceptCoilRequest(request, pk):
     status = coil_request_status.objects.filter(status='Aceptada').first()
     ObjCoilRequest= coil_request.objects.filter(id=pk).first()
     ObjCoilRequest.FK_coil_request_status_id = status
-    ObjCoilRequest.last_edit_user = request.user
+    ObjCoilRequest.accepted_by = request.user
     ObjCoilRequest.save()
     return redirect('coilRequestHandling')
 
@@ -198,7 +196,7 @@ def DeclineCoilRequest(request, pk):
     status = coil_request_status.objects.filter(status='Declinada').first()
     ObjCoilRequest = coil_request.objects.filter(id=pk).first()
     ObjCoilRequest.FK_coil_request_status_id = status
-    ObjCoilRequest.last_edit_user = request.user
+    ObjCoilRequest.accepted_by = request.user
     ObjCoilRequest.save()
     return redirect('coilRequestHandling')
 

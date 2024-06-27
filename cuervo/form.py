@@ -171,8 +171,19 @@ class DeleteLabelForm(forms.Form):
     uniqueid = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
 
 class FilterLabelForm(forms.Form):
-    uniqueid = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))
-    coil = CoilChoiceFieldFilter(queryset=coil.objects.all(), required=False)
+    startDatetime = forms.DateTimeField(help_text='Start Date Time', required=False)
+    startDatetime.widget.attrs.update({
+        'class': 'datetimepicker',
+        'size': 14,
+        'onchange': 'this.form.submit();'
+    })
+    endDatetime = forms.DateTimeField(help_text='End Date Time', required=False)
+    endDatetime.widget.attrs.update({
+        'class': 'datetimepicker',
+        'size': 14,
+        'onchange': 'this.form.submit();'
+    })
+    sku = SkuChoiceField(queryset=SKU.objects.all(), required=False)
 
 class UpdateLabelForm(forms.ModelForm):
     FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
@@ -262,3 +273,8 @@ class CoilSelectionForm(forms.Form):
 
 class CreateCoilFormv2(forms.Form):
     ordenproduccion = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+
+
+class FilterCoilFormOrderAsign(forms.Form):
+    folio_inicial = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={"class": "form"}))
+    folio_final = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={"class": "form"}))

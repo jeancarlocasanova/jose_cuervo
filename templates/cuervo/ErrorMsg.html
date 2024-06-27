@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data" id="coilForm">
+    {% csrf_token %}
+
+    {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+
+    {% endif %}
+
+</form>
+{% endblock content %}

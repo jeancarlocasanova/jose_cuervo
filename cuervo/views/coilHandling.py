@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from ..models import coilStatus, coilType, coilProvider, coil, label, init_label, coilsInInventory, order, lot, granel_lot
 from django.views.generic import DeleteView, UpdateView
 from django.urls import reverse_lazy
-from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CreateCoilForm, CreateCoilFormv2, UpdateCoilForm, FilterCoilForm,DeleteLabelForm
+from ..form import CoilStatusForm, CoilProviderForm, CoilTypeForm, CreateCoilForm, CreateCoilFormv2, UpdateCoilForm, FilterCoilForm,DeleteLabelForm,FilterCoilFormOrderAsign
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError, IntegerField, Value
@@ -10,6 +10,8 @@ from django.forms import formset_factory
 from django.db.models.functions import Cast
 from django.db.models.expressions import RawSQL
 from datetime import datetime, timedelta
+from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 
 def coilHandling_view(request):
@@ -148,7 +150,7 @@ class deleteCoilProvider_view(PermissionRequiredMixin, DeleteView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         success_url = self.get_success_url()
-        tittle = "Ha ocurrido un error"
+        tittle = "A ocurrido un error"
         msg = "No se puede eliminar este dato debido a que esta asignado a un registro"
         isError = False
         try:
@@ -196,14 +198,15 @@ def createCoilProvider_view(request):
 # <------ COIL CRUD --------!>
 def coil_view(request):
     coilList = coil.objects.all()
-    print(coilList)
     if request.method == 'POST':
         form = FilterCoilForm(request.POST)
         if form.is_valid():
             boxNumber = form.cleaned_data['boxNumber']
             purchaseOrder = form.cleaned_data['purchaseOrder']
-            if boxNumber and purchaseOrder:
-                coilList = coilList.filter(boxNumber=boxNumber, purchaseOrder=purchaseOrder)
+            if boxNumber and boxNumber >= 0:
+                coilList = coilList.filter(boxNumber=boxNumber)
+            if purchaseOrder:
+                coilList = coilList.filter(purchaseOrder=purchaseOrder)
             return render(request, "cuervo/coil.html", {'coilList': coilList})
     else:
         form = FilterCoilForm()
@@ -226,138 +229,74 @@ class updateCoil_view(PermissionRequiredMixin, UpdateView):
             # User doesn't have the permission, filter by last_edit_user
             owner = self.request.user
             return self.model.objects.filter(last_edit_user=owner)
+def are_consecutive_rolls(bobinas_seleccionadas):
+    if not bobinas_seleccionadas:
+        return True  # Si no hay bobinas seleccionadas, no hay restricción de consecutividad
+
+    # Obtener números de rollo ordenados
+    bobinas = coil.objects.filter(id__in=bobinas_seleccionadas).order_by('numrollo')
+    numeros_rollo = [bobina.numrollo for bobina in bobinas]
+
+    # Verificar si los números de rollo son consecutivos
+    return all(numeros_rollo[i] + 1 == numeros_rollo[i + 1] for i in range(len(numeros_rollo) - 1))
 
 @permission_required('cuervo.add_labelstatus', login_url='/login/')
 def init_coil_create(request):
     msg = None
     orden = None
-    selected_lote = None
-    selected_lote_id = None
-    selected_granel_lote = None
-    selected_granel_lote_id = None
-    lotes = []
-    granel_lotes = []
-    bobinas_disponibles = []
-    bobinas = []
+    bobinas = coil.objects.none()
     selected_order_coils = []
     bobinas_solicitadas = set()
-    solicitada_status = 4
+    form_filter = FilterCoilFormOrderAsign()
+
+    try:
 
 
-    if request.method == "POST":
-        form = CreateCoilFormv2(request.POST)
+        if request.method == "POST":
+            form = CreateCoilFormv2(request.POST)
+            form_filter = FilterCoilFormOrderAsign(request.POST)
 
-        if 'buscar' in request.POST and form.is_valid():
-            ordenproduccion = form.cleaned_data.get("ordenproduccion")
-            try:
-                orden = order.objects.get(uniqueid=ordenproduccion)
-                lotes = lot.objects.filter(FK_order_id=orden)
-                granel_lotes = granel_lot.objects.filter(FK_order_id=orden)
+            if 'buscar' in request.POST and form.is_valid():
+                ordenproduccion = form.cleaned_data.get("ordenproduccion")
 
-                selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
-
-                bobinas_asignadas = coil.objects.filter(
-                    id__in=selected_order_coils,
-                    FK_coilStatus_id__name='Asignada'
-                )
-
-                print(selected_order_coils)
-
-                bobinas_disponibles = coil.objects.filter(
-                    sku=orden.FK_sku_id.description
-                ).exclude(
-                    FK_coilStatus_id__in=[solicitada_status] if solicitada_status else []
-                )
-
-                bobinas = bobinas_disponibles | bobinas_asignadas
-
-                bobinas_asignadastotales = coil.objects.filter(
-                    id__in=selected_order_coils
-                )
-
-
-                print(bobinas_asignadastotales)
-
-                # Obtener bobinas solicitadas de las asignadas
-                bobinas_solicitadas = set(
-                    bobina.id for bobina in bobinas_asignadastotales.filter(
-                        FK_coilStatus_id__name='Solicitada'
-                    )
-                )
-
-                print(bobinas_solicitadas)
-
-            except order.DoesNotExist:
-                msg = 'Orden de producción no encontrada'
-
-        elif 'crear' in request.POST and form.is_valid():
-            bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
-            bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
-
-            initial_bobinas_str = request.POST.get('initial_bobinas', '')
-            initial_bobinas = [int(id) for id in initial_bobinas_str.split(',') if id.isdigit()]
-
-            ordenproduccion = form.cleaned_data.get("ordenproduccion")
-            orden = order.objects.get(uniqueid=ordenproduccion)
-            if not orden:
-                msg = 'Orden de producción no seleccionada.'
-            else:
-                # Recuperar bobinas_solicitadas del contexto y procesarlas como enteros
-                bobinas_solicitadas_str = request.POST.get('bobinas_solicitadas', '')
-                bobinas_solicitadas = [int(id) for id in bobinas_solicitadas_str.split(',') if id.isdigit()]
-
-                bobinas_a_desasignar = list(set(initial_bobinas) - set(bobinas_seleccionadas))
-                bobinas_a_asignar = list(set(bobinas_seleccionadas) - set(initial_bobinas))
-
-
-                print(bobinas_solicitadas)
-
-                for bobina_id in bobinas_a_desasignar:
-                    if bobina_id not in bobinas_solicitadas:
-                        bobina = coil.objects.get(id=bobina_id)
-                        bobina.FK_coilStatus_id = coilStatus.objects.get(name='Disponible')
-                        bobina.save()
-
-                for bobina_id in bobinas_a_asignar:
-                    bobina = coil.objects.get(id=bobina_id)
-                    bobina.FK_coilStatus_id = coilStatus.objects.get(name='Asignada')
-                    bobina.save()
-
-                bobinas_actualizadas = sorted(bobinas_seleccionadas + bobinas_solicitadas)
-                orden.coils = ','.join(map(str, bobinas_actualizadas))
-                orden.save()
-                msg = 'Bobinas actualizadas con éxito en la orden.'
-
-        elif 'selected_lote' in request.POST:
-            selected_lote_id = request.POST.get('selected_lote')
-            if selected_lote_id:
                 try:
-                    selected_lote = lot.objects.get(id=selected_lote_id)
-                    if not orden:
-                        orden = selected_lote.FK_order_id
-                        lotes = lot.objects.filter(FK_order_id=orden)
-                        granel_lotes = granel_lot.objects.filter(FK_order_id=orden)
+                    orden = order.objects.get(uniqueid=ordenproduccion)
 
+                    if orden.status == 'LIB':
                         selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
 
+                        #binas asignadas (solo las asignadas no solicitadas)
                         bobinas_asignadas = coil.objects.filter(
                             id__in=selected_order_coils,
                             FK_coilStatus_id__name='Asignada'
                         )
 
+                        print('ASIGNADAS: ',bobinas_asignadas)
+
+                        print(orden.FK_sku_id.description)
+
+
+                        # Bobinas disponibles (estado 'Sin asignar' o 'Devuelta'), excluyendo 'Solicitada'
                         bobinas_disponibles = coil.objects.filter(
                             sku=orden.FK_sku_id.description
+                        ).filter(
+                            Q(FK_coilStatus_id__name='Sin asignar') | Q(FK_coilStatus_id__name='Devuelta')
                         ).exclude(
-                            FK_coilStatus_id__in=[solicitada_status] if solicitada_status else []
+                            FK_coilStatus_id__name__in=['Solicitada'] if 'Solicitada' else []
                         )
 
-                        bobinas = bobinas_disponibles | bobinas_asignadas
+                        print('DISPONIBLES + DEVUELTAS, SIN SOLICITADAS: ',bobinas_disponibles)
+
+
+                        bobinas = (bobinas_disponibles | bobinas_asignadas).order_by('initNumber')
+
+                        print('BOBINAS FINALES QUE SE MUESTRAN: ',bobinas)
+
+                        print('BOBINAS DE RANGO: ', bobinas)
 
                         bobinas_asignadastotales = coil.objects.filter(
                             id__in=selected_order_coils
                         )
-
-                        print(bobinas_asignadastotales)
 
                         # Obtener bobinas solicitadas de las asignadas
                         bobinas_solicitadas = set(
@@ -366,29 +305,226 @@ def init_coil_create(request):
                             )
                         )
 
-                        print(bobinas_solicitadas)
+                        print('BOBINAS SOLICITADAS: ',bobinas_solicitadas)
 
-                except lot.DoesNotExist:
-                    selected_lote = None
+                    elif orden.status == 'REL':
+                        msg = 'Orden de producción con consumo'
 
-    else:
-        form = CreateCoilFormv2()
+                    elif orden.status == 'ABIE':
+                        msg = 'No se pueden asignar bobinas a esta orden de producción'
 
-    return render(request, "cuervo/coil_createv2.html", {
-        "form": form,
-        "msg": msg,
-        "bobinas": bobinas,
-        "orden": orden,
-        "lotes": lotes if orden else [],
-        "granel_lotes": granel_lotes if orden else [],
-        "selected_lote": selected_lote,
-        "selected_lote_id": selected_lote_id,
-        "selected_granel_lote": selected_granel_lote,
-        "selected_granel_lote_id": selected_granel_lote_id,
-        "selected_order_coils": selected_order_coils,
-        "bobinas_solicitadas": bobinas_solicitadas,
-    })
+                    elif orden.status == 'CTCO':
+                        msg = 'Orden de producción cerrada'
 
+                except order.DoesNotExist:
+                    msg = 'Orden de producción no encontrada'
+
+            elif 'filtrar' in request.POST and form_filter.is_valid():
+                if form_filter.is_valid():
+
+                    folio_inicial = form_filter.cleaned_data.get("folio_inicial")
+                    folio_final = form_filter.cleaned_data.get("folio_final")
+                    ordenproduccion = request.POST.get("ordenproduccion")
+
+                    # Asegurarse de que los folios incluyan el prefijo 'Ne-'
+                    if not folio_inicial.startswith('Ne-'):
+                        folio_inicial = 'Ne-' + folio_inicial
+
+                    if not folio_final.startswith('Ne-'):
+                        folio_final = 'Ne-' + folio_final
+                    try:
+                        orden = order.objects.get(uniqueid=ordenproduccion)
+
+                        if orden.status == 'LIB':
+                            selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+
+                            # binas asignadas (solo las asignadas no solicitadas)
+                            bobinas_asignadas = coil.objects.filter(
+                                id__in=selected_order_coils,
+                                FK_coilStatus_id__name='Asignada'
+                            )
+
+                            print('ASIGNADAS: ', bobinas_asignadas)
+
+                            print(orden.FK_sku_id.description)
+
+                            # Bobinas disponibles (estado 'Sin asignar' o 'Devuelta'), excluyendo 'Solicitada'
+                            bobinas_disponibles = coil.objects.filter(
+                                sku=orden.FK_sku_id.description
+                            ).filter(
+                                Q(FK_coilStatus_id__name='Sin asignar') | Q(FK_coilStatus_id__name='Devuelta')
+                            ).exclude(
+                                FK_coilStatus_id__name__in=['Solicitada'] if 'Solicitada' else []
+                            )
+
+                            print('DISPONIBLES + DEVUELTAS, SIN SOLICITADAS: ', bobinas_disponibles)
+
+                            bobinas = (bobinas_disponibles | bobinas_asignadas).order_by('initNumber')
+
+                            print('BOBINAS FINALES QUE SE MUESTRAN: ', bobinas)
+
+                            if folio_inicial and folio_final:
+                                bobinas = bobinas.filter(
+                                    Q(initNumber__gte=folio_inicial) & Q(finishNumber__lte=folio_final)
+                                )
+
+                            print('BOBINAS FINALES QUE SE MUESTRAN DE RANGO: ', bobinas)
+
+                            bobinas_asignadastotales = coil.objects.filter(
+                                id__in=selected_order_coils
+                            )
+
+                            # Obtener bobinas solicitadas de las asignadas
+                            bobinas_solicitadas = set(
+                                bobina.id for bobina in bobinas_asignadastotales.filter(
+                                    FK_coilStatus_id__name='Solicitada'
+                                )
+                            )
+
+                            print('BOBINAS SOLICITADAS: ', bobinas_solicitadas)
+
+                        elif orden.status == 'REL':
+                            msg = 'Orden de producción con consumo'
+
+                        elif orden.status == 'ABIE':
+                            msg = 'No se pueden asignar bobinas a esta orden de producción'
+
+                        elif orden.status == 'CTCO':
+                            msg = 'Orden de producción cerrada'
+
+                    except order.DoesNotExist:
+                        msg = 'Orden de producción no encontrada'
+
+            elif 'crear' in request.POST and form.is_valid():
+                bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
+                bobinas_seleccionadas_ids = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
+
+                initial_bobinas_str = request.POST.get('initial_bobinas', '')
+                initial_bobinas_ids = [int(id) for id in initial_bobinas_str.split(',') if id.isdigit()]
+
+                ordenproduccion = form.cleaned_data.get("ordenproduccion")
+                orden = order.objects.get(uniqueid=ordenproduccion)
+
+                if not orden:
+                    msg = 'Orden de producción no seleccionada.'
+                else:
+                    bobinas_solicitadas_str = request.POST.get('bobinas_solicitadas', '')
+                    bobinas_solicitadas_ids = [int(id) for id in bobinas_solicitadas_str.split(',') if id.isdigit()]
+
+                    bobinas_seleccionadas = coil.objects.filter(id__in=bobinas_seleccionadas_ids)
+                    initial_bobinas = coil.objects.filter(id__in=initial_bobinas_ids)
+                    bobinas_solicitadas = coil.objects.filter(id__in=bobinas_solicitadas_ids)
+
+                    bobinas_a_desasignar = list(set(initial_bobinas_ids) - set(bobinas_seleccionadas_ids))
+                    bobinas_a_asignar = list(set(bobinas_seleccionadas_ids) - set(initial_bobinas_ids))
+
+                    if not are_consecutive_rolls(bobinas_seleccionadas):
+                        msg = 'Las bobinas seleccionadas no son consecutivas.'
+                        ordenproduccion = form.cleaned_data.get("ordenproduccion")
+
+                        try:
+                            orden = order.objects.get(uniqueid=ordenproduccion)
+
+                            if orden.status == 'LIB':
+                                selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+
+                                # binas asignadas (solo las asignadas no solicitadas)
+                                bobinas_asignadas = coil.objects.filter(
+                                    id__in=selected_order_coils,
+                                    FK_coilStatus_id__name='Asignada'
+                                )
+
+                                print('ASIGNADAS: ', bobinas_asignadas)
+
+                                print(orden.FK_sku_id.description)
+
+                                # Bobinas disponibles (estado 'Sin asignar' o 'Devuelta'), excluyendo 'Solicitada'
+                                bobinas_disponibles = coil.objects.filter(
+                                    sku=orden.FK_sku_id.description
+                                ).filter(
+                                    Q(FK_coilStatus_id__name='Sin asignar') | Q(FK_coilStatus_id__name='Devuelta')
+                                ).exclude(
+                                    FK_coilStatus_id__name__in=['Solicitada'] if 'Solicitada' else []
+                                )
+
+                                print('DISPONIBLES + DEVUELTAS, SIN SOLICITADAS: ', bobinas_disponibles)
+
+                                bobinas = (bobinas_disponibles | bobinas_asignadas).order_by('initNumber')
+
+                                print('BOBINAS FINALES QUE SE MUESTRAN: ', bobinas)
+
+                                print('BOBINAS DE RANGO: ', bobinas)
+
+                                bobinas_asignadastotales = coil.objects.filter(
+                                    id__in=selected_order_coils
+                                )
+
+                                # Obtener bobinas solicitadas de las asignadas
+                                bobinas_solicitadas = set(
+                                    bobina.id for bobina in bobinas_asignadastotales.filter(
+                                        FK_coilStatus_id__name='Solicitada'
+                                    )
+                                )
+
+                                print('BOBINAS SOLICITADAS: ', bobinas_solicitadas)
+
+                                return render(request, "cuervo/coil_createv2.html", {
+                                    "form": form,
+                                    "msg": msg,
+                                    "bobinas": bobinas,
+                                    "orden": orden,
+                                    "selected_order_coils": selected_order_coils,
+                                    "bobinas_solicitadas": bobinas_solicitadas,
+                                    "form2": form_filter
+                                })
+
+                            elif orden.status == 'REL':
+                                msg = 'Orden de producción con consumo'
+
+                            elif orden.status == 'ABIE':
+                                msg = 'No se pueden asignar bobinas a esta orden de producción'
+
+                            elif orden.status == 'CTCO':
+                                msg = 'Orden de producción cerrada'
+
+                        except order.DoesNotExist:
+                            msg = 'Orden de producción no encontrada'
+                    else:
+                        # Desasignar bobinas que ya no están seleccionadas
+                        for bobina_id in bobinas_a_desasignar:
+                            if bobina_id not in bobinas_solicitadas_ids:
+                                bobina = coil.objects.get(id=bobina_id)
+                                bobina.FK_coilStatus_id = coilStatus.objects.get(name='Sin asignar')
+                                bobina.save()
+
+                        # Asignar bobinas que están seleccionadas pero no estaban asignadas inicialmente
+                        for bobina_id in bobinas_a_asignar:
+                            bobina = coil.objects.get(id=bobina_id)
+                            bobina.FK_coilStatus_id = coilStatus.objects.get(name='Asignada')
+                            bobina.save()
+
+                        # Actualizar la lista de bobinas asignadas en la orden de producción
+                        bobinas_actualizadas = list(bobinas_seleccionadas) + list(bobinas_solicitadas)
+                        orden.coils = ','.join(str(bobina.id) for bobina in bobinas_actualizadas)
+                        orden.save()
+                        msg = 'Bobinas actualizadas con éxito en la orden.'
+        else:
+            form = CreateCoilFormv2()
+
+        return render(request, "cuervo/coil_createv2.html", {
+            "form": form,
+            "msg": msg,
+            "bobinas": bobinas,
+            "orden": orden,
+            "selected_order_coils": selected_order_coils,
+            "bobinas_solicitadas": bobinas_solicitadas,
+            "form2": form_filter
+        })
+    except:
+        msg = 'Ocurrió un error'
+        return render(request, "cuervo/ErrorMsg.html", {
+            "msg": msg
+        })
 
 @permission_required('cuervo.add_coil', login_url='/login/')
 def createCoil_view(request):
@@ -520,6 +656,9 @@ def deleteLabelsOfaCoil(request, id):
     else:
         formset = formset_factory(DeleteLabelForm, extra=num_form)
     return render(request, 'cuervo/deleteLabelsOfaCoil.html', {'formset': formset, "msg": msg})
+
+
+
 
 
 

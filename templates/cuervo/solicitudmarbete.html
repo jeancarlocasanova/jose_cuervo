@@ -1,6 +1,39 @@
 {% extends "base.html" %}
 {% block stylesheets %}
  <link href="/static/css/forms.css" rel="stylesheet">
+<style>
+    .table-container {
+        max-height: 400px; /* Ajusta la altura según tus necesidades */
+        overflow-y: auto;
+        border: 1px solid #ccc;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table thead {
+        position: sticky;
+        top: 0;
+        background-color: #1e264e;
+        color: white;
+    }
+    .table th, .table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    .table-container::-webkit-scrollbar-track {
+        border: 0.5px solid #000000;
+        background-color: #F5F5F5;
+    }
+    .table-container::-webkit-scrollbar {
+        width: 10px;
+        background-color: #F5F5F5;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+        background-color: #ffd500;
+    }
+</style>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -43,8 +76,6 @@
             <input type="number" name="marbetes_necesarios" id="marbetes_necesarios" value="{{ marbetes_necesarios }}">
             <label>Cantidad de marbetes necesarios</label>
         </div>
-
-
         <button type="submit" name="seleccionar" class="button">Seleccionar Bobinas</button>
         {% endif %}
     </div>
@@ -52,10 +83,13 @@
     <br><br><br>
     <div class="container">
         <h3 style="color: white">BOBINAS</h3>
+        <div class="table-container">
         <table class="table" id="myTable">
             <thead style="background-color: #1e264e; color: white">
                 <tr>
-                    <th scope="col">Seleccionar</th>
+                    <th scope="col">
+                        <input type="checkbox" id="select_all">
+                    </th>
                     <th scope="col">Bobina</th>
                     <th scope="col">SKU</th>
                     <th scope="col">Folio Inicial</th>
@@ -78,7 +112,7 @@
                     <td>{{ bobina.sku }}</td>
                     <td>{{ bobina.initNumber }}</td>
                     <td>{{ bobina.finishNumber }}</td>
-                    <td>{{ bobina.numrollo }}</td>
+                    <td>{{ bobina.missing }}</td>
                     <td>{{ bobina.unit }}</td>
                     <td>{{ bobina.missing }}</td>
                     <td>{{ bobina.boxNumber }}</td>
@@ -87,12 +121,13 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
 
     <div>
         <h3 style="color: white">CANTIDAD TOTAL DE MARBETES SOLICITADOS:</h3>
-        <h4 style="color: red" id="total_quantity">0</h4>
-        <input type="hidden" name="total_quantity_hidden" id="total_quantity_hidden" value="0">
+        <h4 style="color: red" id="total_quantity">{{ marbetes_totales }}</h4>
+        <input type="hidden" name="total_quantity_hidden" id="total_quantity_hidden" value="{{ marbetes_totales }}">
     </div>
 
     <button type="submit" name="crear" class="create"> Actualizar </button>
@@ -103,12 +138,7 @@
 {% block javascripts %}
 <script>
 $(document).ready(function () {
-    var table = $('#myTable').DataTable({
-        "pageLength": 5,
-        "lengthMenu": [5, 10]
-    });
 
-    // Función para actualizar la cantidad total de marbetes solicitados
     function updateTotalQuantity() {
         var totalQuantity = 0;
         $('input[type="checkbox"][name="selected_bobinas"]:checked').each(function() {
@@ -118,26 +148,23 @@ $(document).ready(function () {
         $('#total_quantity_hidden').val(totalQuantity);
     }
 
-    // Actualizar la cantidad total cuando se seleccionan/desmarcan las bobinas
     $('input[type="checkbox"][name="selected_bobinas"]').change(function() {
         updateTotalQuantity();
     });
 
-    // Inicializar la cantidad total al cargar la página
     updateTotalQuantity();
 
+    $('#select_all').click(function() {
+        $('input[type="checkbox"][name="selected_bobinas"]').prop('checked', this.checked);
+        updateTotalQuantity();
+    });
+
     $('#coilForm').submit(function(event) {
-    // Verificar si se está realizando una selección de bobinas
-    if ($('input[type="submit"][name="crear"]').length > 0) {
-        // Validar solo si se está creando una solicitud (botón "crear" presionado)
         if ($('input[type="checkbox"][name="selected_bobinas"]:checked').length === 0) {
             alert('Debe seleccionar al menos una bobina.');
             event.preventDefault();
         }
-    }
     });
 });
-
-
 </script>
 {% endblock javascripts %}
