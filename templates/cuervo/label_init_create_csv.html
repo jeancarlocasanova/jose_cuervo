@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+    <style>
+     #suggestions {
+        border: 1px solid #ccc;
+        max-height: 150px;
+        overflow-y: auto;
+        position: absolute;
+        background-color: white;
+        z-index: 1000;
+    }
+    #suggestions li {
+        padding: 8px;
+        cursor: pointer;
+    }
+    #suggestions li:hover {
+        background-color: #f0f0f0;
+    }
+    </style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
+  {% csrf_token %}
+
+    <h2>Carga de Marbetes</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+                         {{ message|safe }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+ <div style="margin-top:20px;">
+   <label style="color:white;">Folios</label>
+   <input type="file" name="csv_file" accept=".csv" multiple>
+ </div>
+
+<div class="user-box">
+    {{ form.brand }}
+      <label>Submarca</label>
+    </div>
+
+  <div class="user-box">
+    {{ form.ministrationNumber }}
+      <label>Número de Ministración</label>
+    </div>
+
+   <button type="submit" name="login" class="create"> Crear </button>
+  </form>
+{% endblock content %}
+
+{% block javascripts %}
+    <script>
+    $(document).ready(function () {
+
+        $('#brand').on('keyup', function () {
+            let query = $(this).val();
+            if (query.length > 2) {
+                $.ajax({
+                    url: "{% url 'autocomplete_brand' %}",
+                    data: {
+                        'term': query
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#suggestions').remove();
+                        let suggestions = '<ul id="suggestions">';
+                        data.forEach(function (item) {
+                            suggestions += `<li data-value="${item.value}">${item.label}</li>`;
+                        });
+                        suggestions += '</ul>';
+                        $('#brand').after(suggestions);
+
+                        $('#suggestions li').on('click', function () {
+                            // Al seleccionar una opción, el valor se establece en el input
+                            $('#brand').val($(this).data('value'));
+                            $('#suggestions').remove();
+                        });
+                    }
+                });
+            } else {
+                $('#suggestions').remove();
+            }
+        });
+    });
+</script>
+{% endblock javascripts %}

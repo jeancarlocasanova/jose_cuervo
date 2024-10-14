@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
+  {% csrf_token %}
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Asignacion de Lotes Granel <span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span></h2>
+    {% endif %}
+    <div class="container">
+        <div class="user-box">
+            {{ form.ordenproduccion }}
+            <label>Orden de produccion</label>
+        </div>
+
+        <button type="submit" name="buscar" class="button"> BUSCAR </button>
+
+        {% if orden %}
+        <h3 style="color: white">DATOS DE LA ORDEN</h3>
+        <table class="table" style="color: white">
+            <thead style="background-color: #1e264e; color: white">
+                <tr>
+                    <th scope="col">Orden</th>
+                    <th scope="col">SKU</th>
+                    <th scope="col">Descripci&oacute;n SKU</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ orden.uniqueid }}</td>
+                    <td>{{ orden.FK_sku_id.sku }}</td>
+                    <td>{{ orden.FK_sku_id.description }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <br>
+    {% if orden.status == 'REL' or orden.status == 'CRTD' %}
+    <div class="container">
+    <h3 style="color: white">LOTES GRANEL</h3>
+    <div>
+      <label style="color:white;">Lotes</label>
+        {{ form.granel_lot }}
+    </div>
+    <button type="submit" class="button" name="asignar"> ASIGNAR </button>
+    </div>
+    <div class="container">
+    <h3 style="color: white">Detalle de Consumo por Lote Granel</h3>
+    <table class="table" style="color: white">
+        <thead style="background-color: #1e264e; color: white">
+            <tr>
+                <th>Lote Granel</th>
+                <th>Numero de Rollo</th>
+                <th>Folio Inicial</th>
+                <th>Folio Final</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles_consumo %}
+            <tr>
+                <td>{{ detalle.FK_granel_lot.granel_lot }}</td>  <!-- Accede al nombre del lote granel -->
+                <td>{{ detalle.FK_coil.numrollo }}</td>
+                <td>{{ detalle.folio_inicial }}</td>
+                <td>{{ detalle.folio_final }}</td>
+                <td>{{ detalle.cantidad }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    <div id="confirmarModal" class="modal-custom" style="display: {{ confirmalert }}">
+  <div class="modal-content-custom">
+    <span class="close-custom" onclick="closeModal()">&times;</span>
+    <h2>Confirmar Asignacion</h2>
+      {% if data_to_confirm %}
+    <p>Orden: {{ data_to_confirm.orden }}</p>
+    <p>Lote Granel: {{ data_to_confirm.lote_granel }}</p>
+    <p>Folio Inicial: {{ data_to_confirm.folio_inicial }}</p>
+    <p>Folio Final: {{ data_to_confirm.folio_final }}</p>
+    <p>Cantidad: {{ data_to_confirm.cantidad }}</p>
+    {% endif %}
+    <form method="post" action="" onsubmit="disableButton()">
+            {% csrf_token %}
+            <button type="submit" class="button" id="confirmButton" name="confirmar_asignacion">Confirmar</button>
+            <button type="button" class="button" onclick="closeModal()">Cancelar</button>
+     </form>
+  </div>
+</div>
+    {% endif %}
+
+
+
+    {% endif %}
+
+
+  </form>
+
+
+<!-- Modal -->
+<div class="modal fade" id="instruccionesModal" tabindex="-1" aria-labelledby="instruccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instruccionesModalLabel">Instrucciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><b>Objetivo:</b> Seccionar por submarca la  ministraci&oacute;n de marbetes y asignar a su respectiva bobina.</p>
+		<p><b>Requisitos:</b> Carga previa de los marbetes pertenecientes a cada bobina, archivo de carga con el correcto formato.</p>
+                <p><b>Paso 1:</b> Cargar el archivo .csv.</p>
+                <p><b>Paso 2:</b> Ingresar el SKU del producto planeado para las bobinas a cargar (Al escribir los primeros 3 caracteres te arroja la sugerencia).</p>
+                <p><b>Paso 3:</b> Realizar la carga de bobinas.</p>
+		<p><b>IMPORTANTE:</b> El tiempo de carga de las bobinas depende de la cantidad de bobinas y marbetes que se asignan a estas bobinas. La pgina aparecer
+		 actualizando durante la carga,<b> NO</b> se debe cerrar ni salir de la pgina donde se esta realizando la carga de bobinas.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal de Confirmacin -->
+
+
+
+
+<script>
+function closeModal() {
+    document.getElementById("confirmarModal").style.display = "none";
+}
+
+function disableButton() {
+    document.getElementById("confirmButton").disabled = true;
+    closeModal();
+}
+</script>
+
+<style>
+.modal-custom{
+  display: none;
+  position: fixed;
+  z-index: 1;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+  margin-left: 200px;
+  padding-right: 200px;
+}
+
+.modal-content-custom {
+  background-color: #000000; /* Fondo negro */
+  margin: auto;
+  padding: 20px;
+  border: 2px solid #FFD700; /* Borde amarillo */
+  width: 80%;
+  color: #FFFFFF; /* Texto blanco */
+}
+
+.close-custom {
+  color: #FFD700; /* Color del botn de cerrar */
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #FFFFFF; /* Color del botn de cerrar al pasar el mouse */
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#loadingIndicator {
+    text-align: center;
+}
+</style>
+
+{% endblock content %}

@@ -1,5 +1,23 @@
-{% load static %}
+﻿{% load static %}
 {% if user.is_authenticated %}
+    <style>
+    .badge {
+    display: inline-block;
+    padding: 0.5em 0.7em;
+    font-size: 0.75em;
+    font-weight: bold;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 30%;
+    background-color: red; /* Color de fondo */
+}
+
+.badge-warning {
+    background-color: red; /* Color para la notificación de nuevos archivos */
+}
+    </style>
 <div class="sticky" id="wrapper">
       <!-- Sidebar -->
       <div  id="sidebar-wrapper">
@@ -9,14 +27,20 @@
                <a href="{% url 'configuration' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/config.png' %}"/></span>Configuración</a>
             </li>
             <li>
-               <a href="{% url 'order-menu' %}"> <span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/botella.png' %}"/></span>Ordenes</a>
-            </li>
-            <li>
                <a href="{% url 'label-menu' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/qr.png' %}"/></span>Marbetes</a>
             </li>
             </li>
              <li>
                <a href="{% url 'reports' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/reportes.png' %}"/></span>Reportes</a>
+            </li>
+              <li>
+                <a href="{% url 'progress_charge_labels' %}">
+                    <span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/carpeta.webp' %}"/></span>
+                    Archivos
+                    {% if unseen_files_count > 0 %}
+                    <span class="badge" id="unseen-files-count">{{ unseen_files_count }}</span>
+                    {% endif %}
+                </a>
             </li>
             <li>
                <a href="{% url 'logout' %}"><span class="fa-stack fa-lg pull-left"><img class="img" src="{% static 'media/desconectar.png' %}" class=""/></span>Desconectar</a>
@@ -24,6 +48,8 @@
          </ul>
       </div>
      </div>
+
+
 {% endif %}
 
 {% block javascripts %}

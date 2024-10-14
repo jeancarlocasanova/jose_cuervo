@@ -1,20 +1,21 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block stylesheets %}  <link href="/static/css/submenu.css" rel="stylesheet"> {% endblock stylesheets %}
 
 {% block content %}
 {% if user.is_authenticated %}
+<form style="margin-left: 250px; padding-right: 100px">
 
 <div class="cards-list">
 
-    <div class="card 2" onclick="javascript:location.href='/labeluploadinventory'">
-            <div class="card_image">
-            <img src="{% static 'media/boxqr.webp' %}" />
-            </div>
-            <div class="card_title title-white">
-            <p class="card_text">Alta de Folios Almacén</p>
-            </div>
+<div class="card 1" onclick="javascript:location.href='/consumo-manualidades'">
+  <div class="card_image">
+    <img src="{% static 'media/aprobacion-solicitudes.jpeg' %}" />
     </div>
+  <div class="card_title title-white">
+    <p class="card_text">Consumo Manualidades</p>
+  </div>
+  </div>
 
   <div class="card 2" onclick="javascript:location.href='/labelHandling'">
   <div class="card_image">
@@ -78,21 +79,21 @@
             </div>
     </div>
 
-        <div class="card 2" onclick="javascript:location.href='/coilcreate'">
-  <div class="card_image">
-    <img src="{% static 'media/warehousing_logistics.jpg' %}" />
+    <div class="card 2" onclick="javascript:location.href='/labeluploadinventory'">
+            <div class="card_image">
+            <img src="{% static 'media/boxqr.webp' %}" />
+            </div>
+            <div class="card_title title-white">
+            <p class="card_text">Alta de Folios Almacén</p>
+            </div>
     </div>
-  <div class="card_title title-white">
-    <p class="card_text">Asignación de bobinas</p>
-  </div>
-  </div>
 
-    <div class="card 3" onclick="javascript:location.href='/labeluploadcanceled'">
+    <div class="card 3" onclick="javascript:location.href='/consumo-envasado'">
             <div class="card_image">
             <img src="{% static 'media/aprobacion-solicitudes.jpeg' %}" />
             </div>
             <div class="card_title title-white">
-            <p class="card_text">Alta de Folios Cancelados</p>
+            <p class="card_text">Consumo Envasado</p>
             </div>
     </div>
 </div>
@@ -101,12 +102,48 @@
 
       <div class="card 1" onclick="javascript:location.href='/labeldamaged'">
   <div class="card_image">
-    <img src="{% static 'media/aprobacion-solicitudes.jpeg' %}" />
+    <img src="{% static 'media/administracion.jpeg' %}" />
     </div>
   <div class="card_title title-white">
     <p class="card_text">Marbetes dañados</p>
   </div>
   </div>
+
+    <div class="card 2" onclick="javascript:location.href='/coilcreate'">
+  <div class="card_image">
+    <img src="{% static 'media/warehousing_logistics.jpg' %}" />
+    </div>
+  <div class="card_title title-white">
+    <p class="card_text">Asignación de bobinas</p>
+  </div>
+  </div>
+
+    <div class="card 1" onclick="javascript:location.href='/granel-lote'">
+  <div class="card_image">
+    <img src="{% static 'media/qr-bottle.jpg' %}" />
+    </div>
+  <div class="card_title title-white">
+    <p class="card_text">Lotes Granel</p>
+  </div>
+  </div>
+
+</div>
+
+
+<div class="cards-list">
+
+      
+
+    <div class="card 1" onclick="javascript:location.href='/noasignacion'">
+  <div class="card_image">
+    <img src="{% static 'media/returnCoil.webp' %}" />
+    </div>
+  <div class="card_title title-white">
+    <p class="card_text">Números de Asignación</p>
+  </div>
+  </div>
+
+    
 </div>
 
 
@@ -115,5 +152,7 @@
             <h3 style="color: white">No has iniciado seccion!</h3>
             <p style="color: white">Por favor acceda al siguiente<a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
         </div>
+
+      </form>
 {% endif %}
 {% endblock content %}

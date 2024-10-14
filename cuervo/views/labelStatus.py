@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
 
+@permission_required('cuervo.view_labelstatus', login_url='/login/')
 def labelStatus_view(request):
     label_status = labelStatus.objects.all()
     return render(request, "cuervo/labelStatus.html", {'label_status': label_status})

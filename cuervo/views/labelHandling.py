@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404, reverse
 from ..models import label, coil, labelStatus, init_label, order, lot, coilStatus, coil_request, \
-    coil_request_status, coilType, inventoryLocation, granel_lot
+    coil_request_status, coilType, inventoryLocation, granel_lot, SKU, zip_file_parent, zip_file_child, log_files, sku_Type, coilProvider, sku_SubType 
 from django.views.generic import UpdateView
 from django.urls import reverse_lazy
-from ..form import FilterLabelForm, UpdateLabelForm, LabelInitForm, CreateCoilFormv2
+from ..form import FilterLabelForm, UpdateLabelForm, LabelInitForm, CreateCoilFormv2, LabelInitFormCSV, LabelInitInventoryForm
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 import csv
@@ -17,6 +17,15 @@ import pandas as pd
 import pytz
 from jose_cuervo.settings import TIME_ZONE
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from urllib.parse import unquote
+from django.http import JsonResponse
+import zipfile
+import os
+import pyzipper
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from django.db.models import Q
+from django.db import transaction
 
 def setSystemTimeZoneToDatetime(someDateTime):
     # Expects to recieve naive datetime with a local datetime value. Then this function includes system time to
@@ -33,6 +42,35 @@ def setSystemTimeZoneToDatetime(someDateTime):
 
     return newDate
 
+
+def autocomplete_sku(request):
+    if 'term' in request.GET:
+        qs = SKU.objects.filter(sku__icontains=request.GET.get('term'))
+        titles = list(qs.values('sku'))
+        return JsonResponse(titles, safe=False)
+    return JsonResponse([], safe=False)
+    
+def autocomplete_subbrand(request):
+    if 'term' in request.GET:
+        qs = sku_SubType.objects.filter(name__icontains=request.GET.get('term'))
+        titles = list(qs.values('name'))
+        return JsonResponse(titles, safe=False)
+    return JsonResponse([], safe=False)
+    
+def autocomplete_brand(request):
+    if 'term' in request.GET:
+        # Filtrar por name o description que contengan el término de búsqueda
+        qs = sku_Type.objects.filter(
+            Q(name__icontains=request.GET.get('term')) |
+            Q(description__icontains=request.GET.get('term'))
+        )
+        # Concatenar name y description para mostrar en las sugerencias
+        suggestions = list(qs.values_list('name', 'description'))
+        results = [{'label': f"{name}, {description}", 'value': f"{name}, {description}"} for name, description in suggestions]
+        return JsonResponse(results, safe=False)
+    return JsonResponse([], safe=False)
+
+@permission_required('cuervo.view_label', login_url='/login/')
 def labelHandling_view(request):
     label_list = None
     page_obj = None
@@ -43,7 +81,7 @@ def labelHandling_view(request):
         if form.is_valid():
             request.session['startDatetime'] = request.POST.get('startDatetime')
             request.session['endDatetime'] = request.POST.get('endDatetime')
-            request.session['sku'] = form.cleaned_data.get('sku').description if form.cleaned_data.get('sku') else None
+            request.session['sku'] = form.cleaned_data.get('sku') if form.cleaned_data.get('sku') else None
     else:
         form.fields['startDatetime'].initial = (now - timedelta(days=1)).strftime('%Y-%m-%d %H:%M')
         form.fields['endDatetime'].initial = now.strftime('%Y-%m-%d %H:%M')
@@ -59,7 +97,7 @@ def labelHandling_view(request):
         labels = label.objects.filter(last_update__range=[startdatetimeUTC, enddatetimeUTC])
 
         if sku:
-            coil_list = coil.objects.filter(sku__in=sku)
+            coil_list = coil.objects.filter(sku=sku)
             labels = labels.filter(FK_coil_id__in=coil_list)
 
         paginator = Paginator(labels, 100)  # Muestra 100 registros por página
@@ -117,6 +155,267 @@ def searchLabelByCoilFK(request, pk):
 
 #-------------------- Init Label  ------------------------------
 
+def progress_charge_labels(request):
+    return render(request, "cuervo/progress_charge_labels.html")
+
+def get_unseen_files_count(request):
+    unseen_files_count = zip_file_parent.objects.filter(seen=False).count()
+    return {'unseen_files_count': unseen_files_count}
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+def mark_as_seen(request, id):
+    if request.method == 'POST':
+        try:
+            parent_zip = zip_file_parent.objects.get(id=id)
+            parent_zip.seen = True
+            parent_zip.save()
+            # Prepara el mensaje de éxito
+            message = f'{parent_zip.file_name_parent} marcado como visto.'
+            return JsonResponse({'success': True, 'message': message})
+        except zip_file_parent.DoesNotExist:
+            message = 'El archivo especificado no existe.'
+            return JsonResponse({'success': False, 'message': message})
+    else:
+        message = 'Solicitud inválida.'
+        return JsonResponse({'success': False, 'message': message})
+        
+def view_log_files(request, id):
+    child_zips = zip_file_child.objects.filter(parent_id=id)
+    log_files_list = log_files.objects.filter(FK_zip_child__in=child_zips)
+    context = {
+        'log_files_list': log_files_list,
+    }
+    return render(request, 'cuervo/log_files_table.html', context)
+
+def view_folios(request, file_name):
+    csv_file_path = f'E:\\ministration_files\\csv-files\\{file_name}'
+    init_labels = init_label.objects.filter(file_name=csv_file_path)
+
+    # Paginación
+    paginator = Paginator(init_labels, 50)  # Muestra 50 registros por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'init_labels': page_obj,
+        'page_obj': page_obj,
+    }
+    return render(request, 'cuervo/registed_labels_csv.html', context)
+
+def progress_data_ajax(request):
+    # Obtener todos los objetos zip_file_parent
+    parents = zip_file_parent.objects.filter(seen=False)
+
+    # Crear una lista de progreso
+    progress_data = []
+    for parent in parents:
+        total_files = parent.num_files
+        processed_files = parent.num_processed_files
+        progress_percentage = (processed_files / total_files) * 100 if total_files > 0 else 0
+
+        # Verificar si existen log_files asociados a este parent
+        child_zips = zip_file_child.objects.filter(parent=parent)
+        has_log_files = log_files.objects.filter(FK_zip_child__in=child_zips).exists()
+
+        progress_data.append({
+            'id': parent.id,
+            'file_name_parent': parent.file_name_parent,
+            'progress_percentage': progress_percentage,
+            'processed_files': processed_files,
+            'total_files': total_files,
+            'has_log_files': has_log_files,  # Nuevo campo
+        })
+
+    return JsonResponse({'progress_data': progress_data})
+    
+def charge_csv_server(request):
+    msg = None
+    if request.method == "POST":
+        form = LabelInitFormCSV(request.POST, request.FILES)
+        if form.is_valid():
+            csv_files = request.FILES.getlist('csv_file')
+            brand = form.cleaned_data.get('brand')
+            ministrationNumber = form.cleaned_data.get('ministrationNumber')
+
+            # Usar la ruta especificada
+            csv_destination_dir = r'E:\ministration_files\csv-files'
+
+            # Crear el directorio si no existe
+            os.makedirs(csv_destination_dir, exist_ok=True)
+            processed_files = []
+            child_objects = []
+            try:
+                brand_name, brand_description = map(str.strip, brand.split(','))    
+                brand_obj = sku_Type.objects.filter(name=brand_name, description=brand_description).first()
+                for file in csv_files:
+                    if not file.name.endswith('.csv'):
+                        messages.error(request, 'Este archivo no contiene la extension .csv')
+                        break
+                    # Guardar el archivo CSV en la carpeta especificada
+                    file_path = os.path.join(csv_destination_dir, file.name)
+                    with open(file_path, 'wb+') as destination:
+                        for chunk in file.chunks():
+                            destination.write(chunk)
+
+                    # Crear una instancia del modelo para el archivo subido
+
+                    child_obj = zip_file_child.objects.create(
+                        brand_name=brand_obj,
+                        ministration_number=ministrationNumber,
+                        file_name=file.name,
+                    )
+                    child_objects.append(child_obj)
+                    processed_files.append(file.name)
+
+                if not msg:
+                    messages.success(request, 'Los archivos CSV se han subido correctamente.')
+
+                # Guardar la referencia en el modelo parent (si es necesario)
+                if processed_files:
+                    for child_obj in child_objects:
+                        zip_file_obj = zip_file_parent.objects.create(
+                            brand_name=brand_obj,
+                            ministration_number=ministrationNumber,
+                            file_name_parent=child_obj.file_name,
+                            num_files=1
+                        )
+                        child_obj.parent = zip_file_obj
+                        child_obj.save()
+            except Exception as e:
+                messages.error(request, 'Verifica que toda la información sea correcta')
+                print(str(e))
+        else:
+            msg = 'Ha ocurrido un error en el formulario'
+            print(form.errors)
+    else:
+        form = LabelInitForm()
+
+    return render(request, "cuervo/label_init_create_csv.html", {"form": form, "msg": msg})
+
+def charge_zip_server(request):
+    msg = None
+    corrupted_files_list = []
+    coil_msg_list = []
+    if request.method == "POST":
+        form = LabelInitForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_files = request.FILES.getlist('csv_file')
+            brand = form.cleaned_data.get('brand')
+            zip_pass = form.cleaned_data.get('zip_pass')
+            ministrationNumber = form.cleaned_data.get('ministrationNumber')
+            
+             # Usar las rutas especificadas
+            destination_dir = r'E:\ministration_files\zip-files'
+            csv_destination_dir = r'E:\ministration_files\csv-files'
+
+            # Crear los directorios si no existen
+            os.makedirs(destination_dir, exist_ok=True)
+            os.makedirs(csv_destination_dir, exist_ok=True)
+            processed_files = []
+            child_objects = []
+            counter = 0
+
+            try:
+                for file in csv_files:
+                    if not file.name.endswith('.zip'):
+                        continue
+                    brand_name, brand_description = map(str.strip, brand.split(','))    
+                    brand_obj = sku_Type.objects.filter(name=brand_name, description=brand_description).first()
+                    with zipfile.ZipFile(file, 'r') as zip_ref:
+                        test_file_names = zip_ref.namelist()  # Obtener los nombres de los archivos en el zip
+                        processed_files.extend(
+                            test_file_names)  # Guardar los nombres de archivos para su posterior referencia
+                        for zip in test_file_names:
+                            zip_ref.extract(zip, path=destination_dir)
+
+                        # Procesar solo los archivos ZIP que se cargaron previamente
+                        for root, dirs, files in os.walk(destination_dir):
+                            for filename in files:
+                                file_path = os.path.join(root, filename)
+                                if filename in processed_files:
+                                    if not file_path.endswith('.zip'):
+                                        os.remove(file_path)
+                                        continue
+
+                                    try:
+                                        with pyzipper.AESZipFile(file_path, 'r',
+                                                                 compression=pyzipper.ZIP_DEFLATED) as extracted_zip:
+                                            for extracted_file in extracted_zip.namelist():
+                                                try:
+                                                    extracted_zip.extract(extracted_file, path=csv_destination_dir,
+                                                                          pwd=zip_pass.encode('utf-8'))
+                                                    child_obj = zip_file_child.objects.create(
+                                                        brand_name=brand_obj,
+                                                        ministration_number=ministrationNumber,
+                                                        file_name=extracted_file,
+                                                    )
+                                                    child_objects.append(child_obj)
+                                                    counter += 1
+                                                except RuntimeError as e:
+                                                    if 'Bad password for file' in str(e):
+                                                        msg = f'Contraseña incorrecta para los archivos'
+                                                    else:
+                                                        msg = f'Error inesperado al procesar los archivos: {str(e)}'
+                                                    # Eliminar el archivo ZIP original en caso de error
+                                                    if os.path.exists(file_path):
+                                                        os.remove(file_path)
+                                    except Exception as e:
+                                        msg = 'a'
+                                        # Eliminar el archivo ZIP original en caso de error al abrirlo
+                                        corrupted_files_list.append(filename)
+                                        if os.path.exists(file_path):
+                                            os.remove(file_path)
+                                            
+                    # Eliminar el archivo ZIP después de procesarlo
+                    if os.path.exists(os.path.join(destination_dir, file.name)):
+                        os.remove(os.path.join(destination_dir, file.name))
+
+                    zip_file_obj = zip_file_parent.objects.create(
+                        brand_name=brand_obj,
+                        ministration_number=ministrationNumber,
+                        file_name_parent=file.name,
+                        password=zip_pass,
+                        num_files=counter
+                    )
+
+                    for child_obj in child_objects:
+                        child_obj.parent = zip_file_obj
+                        child_obj.save()
+
+                if not msg:
+                   messages.success(request, 'La contraseña es correcta y los archivos zip se pueden abrir')
+                elif msg != 'a':
+                   messages.error(request, msg)   
+                
+                print(corrupted_files_list)
+                if corrupted_files_list:
+                    for corrupted_file in corrupted_files_list:
+                        coil_msg_list.append(f"El archivo {corrupted_file} no se pudo abrir porque está corrupto.<br/>")
+                    error_message = ' '.join(coil_msg_list)
+                    print(f'Se ha hecho la carga pero hubo un error al procesar los siguientes archivos: <br/>{error_message}')
+                    messages.warning(request, f'Se ha hecho la carga pero hubo un error al procesar los siguientes archivos: <br/>{error_message}')
+
+
+
+            except zipfile.BadZipFile:
+                msg = 'El archivo no es un archivo zip válido'
+            except RuntimeError as e:
+                if 'Bad password for file' in str(e):
+                    msg = 'Contraseña incorrecta para el archivo zip'
+                else:
+                    msg = f'Error inesperado: {str(e)}'
+            except Exception as e:
+                msg = f'Error inesperado: {str(e)}'
+                print(msg)
+        else:
+            msg = 'Ha ocurrido un error en el formulario'
+            print(form.errors)
+    else:
+        form = LabelInitForm()
+
+    return render(request, "cuervo/label_init_create.html", {"form": form, "msg": msg})
 
 @permission_required('cuervo.add_labelstatus', login_url='/login/')
 def init_label_information(request):
@@ -127,7 +426,6 @@ def init_label_information(request):
             if form.is_valid():
                 csv_files = request.FILES.getlist('csv_file')
                 brand = form.cleaned_data.get('brand')
-                supplier = form.cleaned_data.get('supplier')
                 # Obtener la fecha actual
                 fecha_actual = datetime.now()
 
@@ -192,7 +490,6 @@ def init_label_information(request):
                                             file_name=str(csv_file.name),
                                             brand=brand,
                                             ministrationNumber=ministrationNumber,
-                                            supplier=supplier,
                                             expiration=fecha_nueve_meses_despues
                                          ).save()
                             except Exception as e:
@@ -279,166 +576,38 @@ def init_label_canceled(request):
 
         return render(request, "cuervo/label_canceled.html", {"msg": msg})
 
-codigos_escaneados = []
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
-def init_label_damaged(request):
-    return render(request, "cuervo/label_damaged.html", {'codigos': codigos_escaneados})
-
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
-def agregar_codigo(request):
-    if request.method == 'POST':
-        codigo = request.POST['codigo']
-        codigos_escaneados.append(codigo)  # Agregar el código a la lista interna
-    return redirect('label-damaged')
-
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
-def confirmar_listado(request):
-    codigos_input = request.POST.get('codigos', '')  # Obtener los códigos del campo oculto
-    codigos_escaneados.extend(codigos_input.split(','))  # Agregar los códigos a la lista interna
-    codigos_bd = label.objects.values_list('uniqueid', flat=True)
-
-    codigos_no_cambiados = []  # Lista para almacenar los códigos que no se cambiaron de estado
-
-    for codigo in codigos_escaneados:
-        if codigo in codigos_bd:
-            # Verificar si el código ya está registrado como dañado
-            if not label.objects.filter(uniqueid=codigo, FK_labelStatus_id__name="dañado").exists():
-                # Actualizar el estado a "dañado" en la base de datos
-                codigo_obj = label.objects.get(uniqueid=codigo)
-                labelStatus_obj = labelStatus.objects.get(name="dañado")
-                codigo_obj.FK_labelStatus_id = labelStatus_obj
-                codigo_obj.save()
-            else:
-                codigos_no_cambiados.append(codigo)  # Agregar el código a la lista de no cambiados
-        else:
-            codigos_no_cambiados.append(codigo)  # Agregar el código a la lista de no cambiados
-
-    # Limpiar la lista de códigos escaneados
-    codigos_escaneados.clear()
-
-    # Mensaje de alerta para los códigos no cambiados
-    if codigos_no_cambiados:
-        messages.warning(request, f"Los siguientes códigos no se cambiaron de estado: {', '.join(codigos_no_cambiados)}")
-
-    return redirect('label-damaged')
-
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
-def quitar_codigo(request, codigo):
-    if codigo in codigos_escaneados:
-        codigos_escaneados.remove(codigo)  # Remover el código de la lista interna
-    return redirect('label-damaged')
 
 
+def extract_data_from_excel_defect_label(file, sheet_name_pattern, request):
+    values = {}
+    no_rollo = []
+    folios = []
+    num_caja = []
 
+    # Load the Excel workbook with data_only=True
+    wb = load_workbook(file, data_only=True)
 
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
-def init_coil_create(request):
-    msg = None
-    orden = None
-    selected_lote = None
-    selected_lote_id = None
-    selected_granel_lote = None
-    selected_granel_lote_id = None
-    lotes = []
-    granel_lotes = []
-    bobinas_disponibles = []
-    bobinas = []
-    selected_order_coils = []
-
-    if request.method == "POST":
-        form = CreateCoilFormv2(request.POST)
-
-        if 'buscar' in request.POST and form.is_valid():
-            ordenproduccion = form.cleaned_data.get("ordenproduccion")
-            try:
-                orden = order.objects.get(uniqueid=ordenproduccion)
-                lotes = lot.objects.filter(FK_order_id=orden)
-                granel_lotes = granel_lot.objects.filter(FK_order_id=orden)
-
-                selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
-
-                bobinas = coil.objects.filter(
-                    sku=orden.FK_sku_id.description
-                ).exclude(
-                    FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
-                ) | coil.objects.filter(
-                    id__in=[int(id) for id in selected_order_coils]
-                )
-
-            except order.DoesNotExist:
-                msg = 'Orden de producción no encontrada'
-
-        elif 'crear' in request.POST and form.is_valid():
-            bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
-            bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
-
-            initial_bobinas_str = request.POST.get('initial_bobinas', '')
-            initial_bobinas = [int(id) for id in initial_bobinas_str.split(',') if id.isdigit()]
-
-            ordenproduccion = form.cleaned_data.get("ordenproduccion")
-            orden = order.objects.get(uniqueid=ordenproduccion)
-            if not orden:
-                msg = 'Orden de producción no seleccionada.'
-            else:
-                bobinas_a_desasignar = list(set(initial_bobinas) - set(bobinas_seleccionadas))
-                bobinas_a_asignar = list(set(bobinas_seleccionadas) - set(initial_bobinas))
-
-                for bobina_id in bobinas_a_desasignar:
-                    bobina = coil.objects.get(id=bobina_id)
-                    bobina.FK_coilStatus_id = coilStatus.objects.get(name='Disponible')
-                    bobina.save()
-
-                for bobina_id in bobinas_a_asignar:
-                    bobina = coil.objects.get(id=bobina_id)
-                    bobina.FK_coilStatus_id = coilStatus.objects.get(name='Asignada')
-                    bobina.save()
-
-                bobinas_actualizadas = sorted(bobinas_seleccionadas)
-                orden.coils = ','.join(map(str, bobinas_actualizadas))
-                orden.save()
-                msg = 'Bobinas actualizadas con éxito en la orden.'
-
-        elif 'selected_lote' in request.POST:
-            selected_lote_id = request.POST.get('selected_lote')
-            if selected_lote_id:
-                try:
-                    selected_lote = lot.objects.get(id=selected_lote_id)
-                    if not orden:
-                        orden = selected_lote.FK_order_id
-                        lotes = lot.objects.filter(FK_order_id=orden)
-                        granel_lotes = granel_lot.objects.filter(FK_order_id=orden)
-
-                        selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
-
-                        bobinas = coil.objects.filter(
-                            sku=orden.FK_sku_id.description
-                        ).exclude(
-                            FK_coilStatus_id=coilStatus.objects.get(name='Asignada')
-                        ) | coil.objects.filter(
-                            id__in=[int(id) for id in selected_order_coils]
-                        )
-
-                except lot.DoesNotExist:
-                    selected_lote = None
-
+    # Find the worksheet that matches the pattern
+    matching_sheets = [ws for ws in wb.sheetnames if re.search(sheet_name_pattern, ws, re.IGNORECASE)]
+    if not matching_sheets:
+        messages.warning(request, 'No se encontró la hoja llamada "Folios con defecto" dentro del excel')
     else:
-        form = CreateCoilFormv2()
+        ws = wb[matching_sheets[0]]
 
-    return render(request, "cuervo/coil_createv2.html", {
-        "form": form,
-        "msg": msg,
-        "bobinas": bobinas,
-        "orden": orden,
-        "lotes": lotes if orden else [],
-        "granel_lotes": granel_lotes if orden else [],
-        "selected_lote": selected_lote,
-        "selected_lote_id": selected_lote_id,
-        "selected_granel_lote": selected_granel_lote,
-        "selected_granel_lote_id": selected_granel_lote_id,
-        "selected_order_coils": selected_order_coils,
-    })
+        # Iterate over rows starting from row 13
+        for row in ws.iter_rows(min_row=2, min_col=1, max_col=3, values_only=True):
+            if any(cell is None for cell in row):
+                break
+            no_rollo.append(row[0])
+            folios.append(row[1])
+            num_caja.append(row[2])
 
-def extract_data_from_excel_warehouse_label(file, sheet_name_pattern):
+        values['folios'] = folios
+        values['no_rollo'] = no_rollo
+        values['num_caja'] = num_caja
+    return values
+
+def extract_data_from_excel_warehouse_label(file, sheet_name_pattern, request):
     values = {}
     no_rollo = []
     folios_iniciales = []
@@ -455,43 +624,81 @@ def extract_data_from_excel_warehouse_label(file, sheet_name_pattern):
     # Find the worksheet that matches the pattern
     matching_sheets = [ws for ws in wb.sheetnames if re.search(sheet_name_pattern, ws, re.IGNORECASE)]
     if not matching_sheets:
-        raise ValueError("No sheet found matching the pattern: {}".format(sheet_name_pattern))
+        messages.error(request, 'No se encontró la hoja llamada "OT" dentro del excel')
+    else:
+        ws = wb[matching_sheets[0]]
 
-    ws = wb[matching_sheets[0]]
+        values['proveedor'] = ws['B4'].value
+        values['ot'] = ws['B7'].value
+        values['etiqueta'] = ws['B8'].value
+        values['item'] = ws['B9'].value
 
-    values['proveedor'] = ws['B4'].value
-    values['ot'] = ws['B7'].value
-    values['etiqueta'] = ws['B8'].value
-    values['item'] = ws['B9'].value
+        values['orden'] = ws['D7'].value
+        values['desc'] = ws['D8'].value
+        values['factura'] = ws['D9'].value
 
-    values['orden'] = ws['D7'].value
-    values['desc'] = ws['D8'].value
-    values['factura'] = ws['D9'].value
+        # Create a dictionary to store the values for merged cells
+        merged_cell_ranges = ws.merged_cells.ranges
 
-    # Iterate over rows starting from row 13
-    for row in ws.iter_rows(min_row=13, min_col=1, max_col=8, values_only=True):
-        if any(cell is None for cell in row):
-            break
-        no_rollo.append(row[0])
-        folios_iniciales.append(row[1])
-        folios_finales.append(row[2])
-        folios_utilizados.append(row[3])
-        folios_faltantes.append(row[4])
-        cantidad_rollo.append(row[5])
-        num_caja.append(row[6])
-        cantidad_caja.append(row[7])
+        # Iterate over rows starting from row 13
+        for row in ws.iter_rows(min_row=13, min_col=1, max_col=8, values_only=False):
+            row_values = []
 
-    values['folios_iniciales'] = folios_iniciales
-    values['folios_finales'] = folios_finales
-    values['folios_utilizados'] = folios_utilizados
-    values['folios_faltantes'] = folios_faltantes
-    values['cantidad_rollo'] = cantidad_rollo
-    values['num_caja'] = num_caja
-    values['cantidad_caja'] = cantidad_caja
-    values['num_rollo'] = no_rollo
+            for cell in row:
+                # Check if the cell is part of a merged range
+                is_merged = any(cell.coordinate in merge for merge in merged_cell_ranges)
+                if is_merged:
+                    # Get the top-left cell of the merged range to use its value
+                    top_left_cell = next((merge.start_cell for merge in merged_cell_ranges if cell.coordinate in merge), cell)
+                    cell_value = top_left_cell.value
+                else:
+                    # Use the cell's own value
+                    cell_value = cell.value
+
+                row_values.append(cell_value)
+
+            # Check if the row contains only None values (stop condition)
+            if all(value is None for value in row_values):
+                break
+
+            # Append the values to the respective lists
+            try:
+                numrollo = int(row_values[0])
+                cr = int(row_values[5])
+                no_rollo.append(row_values[0])
+                folios_iniciales.append(row_values[1])
+                folios_finales.append(row_values[2])
+                folios_utilizados.append(row_values[3])
+                folios_faltantes.append(row_values[4])
+                cantidad_rollo.append(row_values[5])
+                num_caja.append(row_values[6])
+                cantidad_caja.append(row_values[7])
+            except Exception as e:
+                messages.error(request, f"No se ha cargado la bobina con el rango {row_values[1]} - {row_values[2]} la causa puede estar en que el No. de Caja o No. de Rollo no sea un número entero o el campo este vacio")
+
+        if "Total" in str(folios_finales[-1]):
+            no_rollo.pop()
+            folios_iniciales.pop()
+            folios_finales.pop()
+            folios_utilizados.pop()
+            folios_faltantes.pop()
+            cantidad_rollo.pop()
+            num_caja.pop()
+            cantidad_caja.pop()
+
+        # Assign the lists to the values dictionary
+        values['folios_iniciales'] = folios_iniciales
+        values['folios_finales'] = folios_finales
+        values['folios_utilizados'] = folios_utilizados
+        values['folios_faltantes'] = folios_faltantes
+        values['cantidad_rollo'] = cantidad_rollo
+        values['num_caja'] = num_caja
+        values['cantidad_caja'] = cantidad_caja
+        values['num_rollo'] = no_rollo
 
     return values
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
+
+@permission_required('auth.load_coil', login_url='/login/')
 def init_label_in_inventory(request):
     msg = None
     coil_msg_list = []
@@ -499,93 +706,186 @@ def init_label_in_inventory(request):
     coil_filter = None
     label_filter = None
     loaded_labels = None
+    form = LabelInitInventoryForm()
+    
     if request.method == "POST":
-        csv_files = request.FILES.getlist('csv_file')
-        obj_status = coilStatus.objects.get(name='Disponible')
-        obj_type = coilType.objects.all().first()
-        obj_label_status = labelStatus.objects.get(name='Asignado')
-        obj_inventory = inventoryLocation.objects.get(name='Almacen')
-        try:
-            for file in csv_files:
-                sheet_name = 'OT'
-                # Extract data from the specified cell
-                labels = extract_data_from_excel_warehouse_label(file, sheet_name)
-                if not labels:
-                    messages.error(request, 'No se encontraron datos válidos en el archivo.')
-                    continue
-                for i in range(len(labels['folios_iniciales'])):
-                    if labels['folios_iniciales'][i] is None or labels['folios_finales'][i] is None:
-                        messages.error(request, 'Faltan datos esenciales para crear la bobina.')
-                        continue
+        form = LabelInitInventoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            brand = form.cleaned_data.get('brand')
+            csv_files = request.FILES.getlist('csv_file')
 
-                    coil_filter = coil.objects.filter(
-                        initNumber=labels['folios_iniciales'][i],
-                        finishNumber=labels['folios_finales'][i],
-                        numrollo=labels['num_rollo'][i],
-                    )
-                    if not coil_filter:
-                        obj_coil = coil.objects.create(
-                            initNumber=labels['folios_iniciales'][i],
-                            finishNumber=labels['folios_finales'][i],
-                            numrollo=labels['num_rollo'][i],
-                            notDelivered=labels['folios_faltantes'][i],
-                            missing=labels['cantidad_rollo'][i],
-                            delivered=labels['folios_utilizados'][i],
-                            boxNumber=labels['num_caja'][i],
-                            purchaseOrder=labels['orden'],
-                            orderUniqueid=labels['ot'],
-                            sku=labels['desc'],
-                            FK_coilStatus_id=obj_status,
-                            FK_coilType_id=obj_type,
-                            last_edit_user=request.user
-                        )
-                        matching_labels = init_label.objects.filter(
-                            uniqueid__gte=labels['folios_iniciales'][i],
-                            uniqueid__lte=labels['folios_finales'][i]
-                        )
-                        if matching_labels:
-                            for matching_label in matching_labels:
-                                label_filter = label.objects.filter(url=matching_label.url)
-                                if not label_filter:
-                                    label.objects.create(
-                                        uniqueid=matching_label.uniqueid,
-                                        url=matching_label.url,
-                                        brand=matching_label.brand,
-                                        ministrationNumber=matching_label.ministrationNumber,
-                                        supplier=matching_label.supplier,
-                                        FK_coil_id=obj_coil,
-                                        FK_labelStatus_id=obj_label_status,
-                                        FK_inventoryLocation_id=obj_inventory,
-                                        last_edit_user=request.user,
-                                        expiration=matching_label.expiration
-                                    )
+            obj_status = coilStatus.objects.get(name='Disponible')
+            obj_type = coilType.objects.all().first()
+            obj_label_status = labelStatus.objects.get(name='Asignado')
+            obj_inventory = inventoryLocation.objects.get(name='Almacen')
+            obj_damaged = labelStatus.objects.get(name='Dañados Proveedor')
+            
+            try:
+                sku_brand = SKU.objects.filter(sku=brand).first()
+                for file in csv_files:
+                    sheet_name = 'OT'
+                    # Extract data from the specified cell
+                    labels = extract_data_from_excel_warehouse_label(file, sheet_name, request)
+                    if labels['folios_iniciales'] and labels['folios_finales'] and labels['num_rollo'] and\
+                            labels['folios_faltantes'] and labels['cantidad_rollo'] and labels['folios_utilizados']:
+                        if (len(labels['folios_iniciales']) == len(labels['folios_finales']) ==
+                                len(labels['num_rollo']) == len(labels['folios_faltantes']) ==
+                                len(labels['cantidad_rollo']) == len(labels['folios_utilizados'])):
+                            # Lista para hacer bulk_create de labels
+                            labels_to_create = []
+                            for i in range(len(labels['folios_iniciales'])):
+                                if labels['folios_iniciales'][i] is not None and labels['folios_finales'][i] is not None \
+                                        and labels['num_rollo'][i] is not None and labels['folios_faltantes'][i] is not None \
+                                        and labels['cantidad_rollo'][i] is not None and labels['folios_utilizados'][i] is not None \
+                                        and labels['num_caja'][i] is not None and labels['proveedor'] is not None \
+                                        and labels['item'] is not None and labels['orden'] is not None:
+
+                                    if labels['folios_iniciales'][i] < labels['folios_finales'][i]:
+                                        if sku_brand:
+                                            coil_filter = coil.objects.filter(
+                                                initNumber=labels['folios_iniciales'][i],
+                                                finishNumber=labels['folios_finales'][i],
+                                                numrollo=labels['num_rollo'][i],
+                                            )
+                                            if not coil_filter:
+                                                obj_coil = coil.objects.create(
+                                                    initNumber=labels['folios_iniciales'][i],
+                                                    finishNumber=labels['folios_finales'][i],
+                                                    numrollo=labels['num_rollo'][i],
+                                                    notDelivered=labels['folios_faltantes'][i],
+                                                    missing=labels['cantidad_rollo'][i],
+                                                    delivered=labels['folios_utilizados'][i],
+                                                    boxNumber=labels['num_caja'][i],
+                                                    qty_box=labels['cantidad_caja'][i],
+                                                    purchaseOrder=labels['orden'],
+                                                    orderUniqueid=labels['ot'],
+                                                    sku=labels['item'],
+                                                    FK_coilStatus_id=obj_status,
+                                                    FK_coilType_id=obj_type,
+                                                    last_edit_user=request.user,
+                                                    FK_coilProvider_id=labels['proveedor'],
+                                                    Fk_sku_subtype_id=sku_brand.Fk_sku_subtype_id
+                                                )
+                                                matching_labels = init_label.objects.filter(
+                                                    uniqueid__gte=labels['folios_iniciales'][i],
+                                                    uniqueid__lte=labels['folios_finales'][i]
+                                                )
+                                                print(matching_labels)
+                                                if matching_labels:
+                                                    for matching_label in matching_labels:
+                                                        label_filter = label.objects.filter(url=matching_label.url)
+                                                        obj_provider = coilProvider.objects.filter(number=labels['proveedor']).first()
+                                                        if not label_filter:
+                                                            # Recolectar los labels para hacer bulk_create
+                                                            labels_to_create.append(label(
+                                                                uniqueid=matching_label.uniqueid,
+                                                                url=matching_label.url,
+                                                                brand=matching_label.brand,
+                                                                ministrationNumber=matching_label.ministrationNumber,
+                                                                supplier=obj_provider,
+                                                                FK_coil_id=obj_coil,
+                                                                FK_labelStatus_id=obj_label_status,
+                                                                FK_inventoryLocation_id=obj_inventory,
+                                                                last_edit_user=request.user,
+                                                                expiration=matching_label.expiration
+                                                            ))
+                                                        else:
+                                                            mensaje_label = f"El marbete con la url {matching_label.url} ya ha sido registrada<br/>"
+                                                            label_msg_list.append(mensaje_label)
+                                                else:
+                                                    messages.error(request, f"No se han cargado los marbetes asignados a esta bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]}")
+                                                    loaded_labels = True
+                                                    obj_coil.delete()
+                                                              
+                                            else:
+                                                mensaje_coil = f"La bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} ya esta creada<br/>"
+                                                coil_msg_list.append(mensaje_coil)
+                                        else:
+                                            messages.error(request,
+                                                           f"No se ha cargado la bobina la causa puede estar en que el No. de Proveedor no sea valido")
+                                    else:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina la causa puede estar en que los valores de los campos de Folio Inicial y Final esten invertidos")
                                 else:
-                                    mensaje_label = f"El marbete con la url {matching_label.url} ya ha sido registrada<br/>"
-                                    label_msg_list.append(mensaje_label)
+                                    if labels['item'] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} la causa puede estar en un campo vacio en Item")
+                              
+                                    if labels['orden'] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} la causa puede estar en un campo vacio en Orden de Compra")
+                                    if labels['proveedor'] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} la causa puede estar en un campo vacio en No. Proveedor")
+                                    if labels['num_caja'][i] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} la causa puede estar en un campo vacio en No. Caja")
+                                    if labels['folios_faltantes'][i] is None:
+                                        messages.error(request,
+                                                       f"No se han cargado la bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} la causa puede estar en un campo vacio en Folios Faltantes")
+                                    if labels['folios_utilizados'][i] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} la causa puede estar en un campo vacio en Folios Utilizados")
+                                    if labels['cantidad_rollo'][i] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} la causa puede estar en un campo vacio en Cantidad Rollo")
+                                    if labels['num_rollo'][i] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} la causa puede estar en un campo vacio en ID Rollo")
+                                    if labels['folios_finales'][i] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina la causa puede estar en un campo vacio en Folios Finales")
+                                    if labels['folios_iniciales'][i] is None:
+                                        messages.error(request,
+                                                       f"No se ha cargado la bobina la causa puede estar en un campo vacio en Folios Inicailes")
+                            if labels_to_create:
+                                label.objects.bulk_create(labels_to_create)
+                            # Se lee el data sheet folios con defecto
+
+                            # Se lee el data sheet folios con defecto
+                            sheet = 'defecto'
+                            labels_cancel = extract_data_from_excel_defect_label(file, sheet, request)
+
+                            if labels_cancel['folios'] and labels_cancel['no_rollo'] and labels_cancel['num_caja']:
+
+                                if len(labels_cancel['folios']) == len(labels_cancel['num_caja']) == len(labels_cancel['no_rollo']):
+
+                                    for i in range(len(labels_cancel['folios'])):
+                                        label_damaged = label.objects.get(
+                                            uniqueid=labels_cancel['folios'][i],
+                                            FK_labelStatus_id=obj_label_status,
+                                            last_edit_user=request.user,
+                                        )
+                                        label_damaged.FK_labelStatus_id = obj_damaged
+                                        label_damaged.save()
+
                         else:
-                            messages.error(request, f"No se han cargado los marbetes asignados a esta bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]}")
-                            loaded_labels = True
-                            obj_coil.delete()
+                            messages.error(request, 'El numero de columnas no coinciden.')
                     else:
-                        mensaje_coil = f"La bobina con el rango {labels['folios_iniciales'][i]} - {labels['folios_finales'][i]} ya esta creada<br/>"
-                        coil_msg_list.append(mensaje_coil)
+                        messages.error(request, 'No se encontraron todos los datos correspondientes en el archivo.')
 
-            if coil_msg_list:
-                error_message = ' '.join(coil_msg_list)
-                messages.error(request, f'Error al cargar las bobinas: <br/>{error_message}')
 
-            if label_msg_list:
-                error_message = ' '.join(label_msg_list)
-                messages.error(request, f'Error al cargar los marbetes:<br/> {error_message}')
-            if not label_msg_list and not coil_msg_list and not loaded_labels:
-                messages.success(request, "Datos cargados exitosamente.")
-        except FileNotFoundError as fnf_error:
-            messages.error(request, f'Error al cargar el archivo: {str(fnf_error)}')
-        except ValueError as value_error:
-            messages.error(request, f'Error al procesar los datos del archivo: {str(value_error)}')
-        except Exception as e:
-            messages.error(request, f'Hubo un error al cargar datos: {str(e)}')
-    return render(request, "cuervo/label_in_inventory.html", {"msg": msg})
+                if coil_msg_list:
+                    error_message = ' '.join(coil_msg_list)
+                    messages.error(request, f'Error al cargar las bobinas: <br/>{error_message}')
+
+                if label_msg_list:
+                    error_message = ' '.join(label_msg_list)
+                    messages.error(request, f'Error al cargar los marbetes:<br/> {error_message}')
+                if not label_msg_list and not coil_msg_list and not loaded_labels:
+                    messages.success(request, "Datos cargados exitosamente.")
+                else:
+                    messages.warning(request, "Revisar los errores en las bobinas indicadas, la demas información se cargo exitosamente")
+            except FileNotFoundError as fnf_error:
+                messages.error(request, f'Error al cargar el archivo: {str(fnf_error)}')
+            except ValueError as value_error:
+                messages.error(request, f'Error al procesar los datos del archivo: {str(value_error)}')
+            except Exception as e:
+                messages.error(request, f'Hubo un error al cargar datos: {str(e)}')
+        else:
+            msg = 'Ha ocurrido un error en el formulario'
+            print(form.errors)
+    return render(request, "cuervo/label_in_inventory.html", {"msg": msg, "form": form})
 
 
 def view_coils(request, pk):
@@ -594,7 +894,7 @@ def view_coils(request, pk):
     bobinas = coil.objects.filter(id__in=bobinas_ids)  # Obtener las instancias de las bobinas
     return render(request, 'cuervo/view_coils.html', {'solicitud': solicitud, 'bobinas': bobinas})
 
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
+@permission_required('cuervo.view_coil_request', login_url='/login/')
 def solicitudmarbete_request(request, pk):
     msg = None
     orden = None
@@ -635,7 +935,7 @@ def solicitudmarbete_request(request, pk):
                     coil_request_instance.save()
 
                     coil.objects.filter(id__in=bobinas_seleccionadas).update(
-                        FK_coilStatus_id=coilStatus.objects.get(id=10002)
+                        FK_coilStatus_id=coilStatus.objects.get(id=4)
                     )
 
                     bobinas_deseleccionadas = set(previously_selected_coils) - set(map(int, bobinas_seleccionadas))
@@ -731,56 +1031,80 @@ def solicitudmarbete_request(request, pk):
                 "coil_request_instance": coil_request_instance,
                 "marbetes_totales": marbetes_totales
             })
-    except:
-        msg = 'Ocurrió un error'
+    except Exception as e:
+        msg = f'Ocurrió un error: {str(e)}'
         return render(request, "cuervo/ErrorMsg.html", {
             "msg": msg
         })
 
 codigos_escaneados = []
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
+@permission_required('cuervo.view_labelstatus', login_url='/login/')
 def init_label_damaged(request):
     return render(request, "cuervo/label_damaged.html", {'codigos': codigos_escaneados})
 
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
+@permission_required('cuervo.view_labelstatus', login_url='/login/')
 def agregar_codigo(request):
     if request.method == 'POST':
         codigo = request.POST['codigo']
         codigos_escaneados.append(codigo)  # Agregar el código a la lista interna
     return redirect('label-damaged')
 
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
+
+def obtener_uniqueid(request):
+    codigo = request.GET.get('url', '')
+    print('ESTA ES LA URL/CODIGO:', codigo)
+    try:
+        if codigo.startswith('http'):
+            # Buscar por URL
+            uniqueid = label.objects.get(url=codigo).uniqueid
+        else:
+            # Buscar por uniqueid
+            uniqueid = label.objects.get(uniqueid=codigo).uniqueid
+        return JsonResponse({'uniqueid': uniqueid})
+    except label.DoesNotExist:
+        return JsonResponse({'error': 'Código no encontrado'}, status=404)
+
+
+@permission_required('cuervo.view_labelstatus', login_url='/login/')
 def confirmar_listado(request):
     codigos_input = request.POST.get('codigos', '')  # Obtener los códigos del campo oculto
-    codigos_escaneados.extend(codigos_input.split(','))  # Agregar los códigos a la lista interna
-    codigos_bd = label.objects.values_list('uniqueid', flat=True)
+    codigos_escaneados = codigos_input.split(',')  # Separar las entradas escaneadas
 
-    codigos_no_cambiados = []  # Lista para almacenar los códigos que no se cambiaron de estado
+    labelStatus_daniado = labelStatus.objects.get(name="Dañados")
+
+    # Crear listas para almacenar los cambios
+    codigos_cambiados = []
+    codigos_no_cambiados = []
 
     for codigo in codigos_escaneados:
-        if codigo in codigos_bd:
-            # Verificar si el código ya está registrado como dañado
-            if not label.objects.filter(uniqueid=codigo, FK_labelStatus_id__name="dañado").exists():
-                # Actualizar el estado a "dañado" en la base de datos
-                codigo_obj = label.objects.get(uniqueid=codigo)
-                labelStatus_obj = labelStatus.objects.get(name="dañado")
-                codigo_obj.FK_labelStatus_id = labelStatus_obj
-                codigo_obj.save()
-            else:
-                codigos_no_cambiados.append(codigo)  # Agregar el código a la lista de no cambiados
+        # Verifica si el código es una URL o un folio
+        if codigo.startswith('http://') or codigo.startswith('https://'):
+            # Buscar por URL
+            label_obj = label.objects.filter(url=codigo).first()
         else:
-            codigos_no_cambiados.append(codigo)  # Agregar el código a la lista de no cambiados
+            # Buscar por folio
+            label_obj = label.objects.filter(uniqueid=codigo).first()
 
-    # Limpiar la lista de códigos escaneados
-    codigos_escaneados.clear()
+        if label_obj:
+            if label_obj.FK_labelStatus_id != labelStatus_daniado:
+                label_obj.FK_labelStatus_id = labelStatus_daniado  # Asigna la instancia directamente
+                label_obj.save()
+                codigos_cambiados.append(label_obj.uniqueid)
+            else:
+                codigos_no_cambiados.append(label_obj.uniqueid + ' Ya Dañado')
+        else:
+            codigos_no_cambiados.append(codigo + ' No existe')
 
-    # Mensaje de alerta para los códigos no cambiados
+    # Mensajes de éxito y advertencia
+    if codigos_cambiados:
+        messages.success(request, f"Los siguientes Marbetes se cambiaron de estado: {', '.join(codigos_cambiados)}")
+
     if codigos_no_cambiados:
-        messages.warning(request, f"Los siguientes códigos no se cambiaron de estado: {', '.join(codigos_no_cambiados)}")
+        messages.warning(request, f"Los siguientes Marbetes no se cambiaron de estado: {', '.join(codigos_no_cambiados)}")
 
     return redirect('label-damaged')
 
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
+@permission_required('cuervo.view_labelstatus', login_url='/login/')
 def quitar_codigo(request, codigo):
     if codigo in codigos_escaneados:
         codigos_escaneados.remove(codigo)  # Remover el código de la lista interna

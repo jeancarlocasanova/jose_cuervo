@@ -7,8 +7,9 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.http import HttpResponse
-import re
+from django.contrib.auth.decorators import permission_required
 
+@permission_required('cuervo.view_coil_request', login_url='/login/')
 def coilRequest_view(request):
     requestCoil = coil_request.objects.all()
     statusRequest = coil_request_status.objects.all()
@@ -49,69 +50,72 @@ def createCoilRequest(request):
     marbetes_necesarios = 0
     marbetes_totales = 0
 
-    try:
 
-        if request.method == "POST":
-            form = CreateCoilFormv2(request.POST)
+    if request.method == "POST":
+        form = CreateCoilFormv2(request.POST)
 
-            if 'buscar' in request.POST and form.is_valid():
-                ordenproduccion = form.cleaned_data.get("ordenproduccion")
-                try:
-                    orden = order.objects.get(uniqueid=ordenproduccion)
-                    if orden.status == 'LIB':
+        if 'buscar' in request.POST and form.is_valid():
+            ordenproduccion = form.cleaned_data.get("ordenproduccion")
+            try:
+                orden = order.objects.get(uniqueid=ordenproduccion)
+                if orden.status == 'REL' or orden.status == 'CRTD':
 
-                        selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
-                        bobinas = coil.objects.filter(id__in=selected_order_coils,
-                                                    FK_coilStatus_id=coilStatus.objects.get(name='Asignada'))
-                    elif orden.status == 'REL':
-                        msg = 'Orden de producción con consumo'
-
-                    elif orden.status == 'ABIE':
-                        msg = 'No se pueden asignar bobinas a esta orden de producción'
-
-                    elif orden.status == 'CTCO':
-                        msg = 'Orden de producción cerrada'
-                except order.DoesNotExist:
-                    msg = 'Orden de producción no encontrada'
-
-            elif 'seleccionar' in request.POST:
-                marbetes_necesarios = int(request.POST.get('marbetes_necesarios', 0))
-                ordenproduccion = request.POST.get("ordenproduccion")
-                try:
-                    orden = order.objects.get(uniqueid=ordenproduccion)
                     selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
-                    bobinas = coil.objects.filter(FK_coilStatus_id=coilStatus.objects.get(name='Asignada'))
+                    bobinas = coil.objects.filter(id__in=selected_order_coils,
+                                                FK_coilStatus_id=coilStatus.objects.get(name='Asignada'))
 
-                    total_marbetes = 0
-                    selected_bobinas_ids = []
-                    for bobina in bobinas:
-                        if total_marbetes < marbetes_necesarios:
-                            total_marbetes += bobina.missing
-                            selected_bobinas_ids.append(bobina.id)
+                
+                elif orden.status == 'TECO':
+                    msg = 'Orden de producción cerrada'
+            except order.DoesNotExist:
+                msg = 'Orden de producción no encontrada'
 
-                    for bobina in bobinas:
-                        bobina.selected = bobina.id in selected_bobinas_ids
+        elif 'seleccionar' in request.POST:
+            marbetes_necesarios = int(request.POST.get('marbetes_necesarios', 0))
+            ordenproduccion = request.POST.get("ordenproduccion")
+            try:
+                orden = order.objects.get(uniqueid=ordenproduccion)
+                selected_order_coils = [int(id) for id in orden.coils.split(',')] if orden.coils else []
+                bobinas = coil.objects.filter(FK_coilStatus_id=coilStatus.objects.get(name='Asignada'))
 
-                    marbetes_totales = total_marbetes
+                total_marbetes = 0
+                selected_bobinas_ids = []
+                for bobina in bobinas:
+                    if total_marbetes < marbetes_necesarios:
+                        total_marbetes += bobina.missing
+                        selected_bobinas_ids.append(bobina.id)
 
-                except order.DoesNotExist:
-                    msg = 'Orden de producción no encontrada'
+                for bobina in bobinas:
+                    bobina.selected = bobina.id in selected_bobinas_ids
 
-            elif 'crear' in request.POST and form.is_valid():
-                bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
-                bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
+                marbetes_totales = total_marbetes
 
-                ordenproduccion = form.cleaned_data.get("ordenproduccion")
+            except order.DoesNotExist:
+                msg = 'Orden de producción no encontrada'
 
-                if not bobinas_seleccionadas:
-                    msg = 'Debe seleccionar al menos una bobina para generar la solicitud.'
+        elif 'crear' in request.POST and form.is_valid():
+            bobinas_seleccionadas_str = request.POST.get('current_bobinas', '')
+            bobinas_seleccionadas = [int(id) for id in bobinas_seleccionadas_str.split(',') if id.isdigit()]
+
+            ordenproduccion = form.cleaned_data.get("ordenproduccion")
+
+            if not bobinas_seleccionadas:
+                msg = 'Debe seleccionar al menos una bobina para generar la solicitud.'
+            else:
+                orden = order.objects.get(uniqueid=ordenproduccion)
+                if not orden:
+                    msg = 'Orden de producción no seleccionada.'
                 else:
-                    orden = order.objects.get(uniqueid=ordenproduccion)
-                    if not orden:
-                        msg = 'Orden de producción no seleccionada.'
-                    else:
-                        total_quantity = int(request.POST.get('total_quantity_hidden', 0))
+                    total_quantity = int(request.POST.get('total_quantity_hidden', 0))
 
+                    # Verificar si ya existe una solicitud similar
+                    solicitud_existente = coil_request.objects.filter(
+                        FK_order_id=orden,
+                        requested_coils=bobinas_seleccionadas_str,
+                        FK_coil_request_status_id=coil_request_status.objects.get(status='Pendiente')
+                    ).exists()
+
+                    if not solicitud_existente:
                         nueva_solicitud = coil_request.objects.create(
                             FK_order_id=orden,
                             requested_coils=bobinas_seleccionadas_str,
@@ -121,7 +125,7 @@ def createCoilRequest(request):
                             total_number=total_quantity
                         )
 
-                        coil_status_solicitada = coilStatus.objects.get(id=10002)
+                        coil_status_solicitada = coilStatus.objects.get(id=4)
                         coil.objects.filter(id__in=bobinas_seleccionadas).update(FK_coilStatus_id=coil_status_solicitada)
 
                         return HttpResponse("""
@@ -131,23 +135,18 @@ def createCoilRequest(request):
                                                 </script>
                                             """)
 
-        else:
-            form = CreateCoilFormv2()
+    else:
+        form = CreateCoilFormv2()
 
-        return render(request, "cuervo/coil_request_create.html", {
-            "form": form,
-            "msg": msg,
-            "bobinas": bobinas,
-            "orden": orden,
-            "selected_order_coils": selected_order_coils,
-            "marbetes_necesarios": marbetes_necesarios,
-            "marbetes_totales": marbetes_totales
-        })
-    except:
-        msg = 'Ocurrió un error'
-        return render(request, "cuervo/ErrorMsg.html", {
-            "msg": msg
-        })
+    return render(request, "cuervo/coil_request_create.html", {
+        "form": form,
+        "msg": msg,
+        "bobinas": bobinas,
+        "orden": orden,
+        "selected_order_coils": selected_order_coils,
+        "marbetes_necesarios": marbetes_necesarios,
+        "marbetes_totales": marbetes_totales
+    })
 
 
 #----------------- Coil Request Status -----------------
@@ -178,10 +177,13 @@ class deleteCoilRequestStatus_view(PermissionRequiredMixin, DeleteView):
     permission_required = 'cuervo.delete_coil_request_status'
 
 # ----------------- Coil acept request -----------------
+@permission_required('auth.authorize_label', login_url='/login/')
 def CoilRequestHandling_view(request):
     statusList = coil_request.objects.all()
     statusList = statusList.filter(FK_coil_request_status_id__id=4)
     return render(request, "cuervo/coilRequestHandling.html", {'statusList': statusList})
+
+@permission_required('auth.authorize_label', login_url='/login/')
 @require_http_methods(['POST'])
 def AcceptCoilRequest(request, pk):
     status = coil_request_status.objects.filter(status='Aceptada').first()

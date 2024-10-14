@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block stylesheets %}
  <link href="/static/css/forms.css" rel="stylesheet">
 <style>
@@ -43,7 +43,7 @@
     {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Crear Solicitud de Bobinas</h2>
+    <h2>Crear Solicitud de Bobinas <span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span></h2>
     {% endif %}
     <div class="container">
         <div class="user-box">
@@ -77,7 +77,7 @@
         {% endif %}
     </div>
     <br>
-    {% if orden.status == 'LIB' %}
+    {% if orden.status == 'REL' or orden.status == 'CRTD' %}
     <div class="container">
 
         <div class="user-box">
@@ -96,13 +96,14 @@
                             <input type="checkbox" id="select_all"> <!-- Checkbox para seleccionar todo -->
                     </th>
                     <th scope="col">Rollo</th>
-                    <th scope="col">SKU</th>
+                    <th scope="col">SKU Etiqueta</th>
                     <th scope="col">Folio Inicial</th>
                     <th scope="col">Folio Final</th>
                     <th scope="col">Total Rollo</th>
                     <th scope="col">Merma</th>
                     <th scope="col">No caja</th>
                     <th scope="col">Total por caja</th>
+                    <th scope="col">Provedor</th>
                     <th scope="col">Estatus</th>
                 </tr>
             </thead>
@@ -122,6 +123,7 @@
                     <td>{{ bobina.notDelivered }}</td>
                     <td>{{ bobina.boxNumber }}</td>
                     <td>{{ bobina.missing }}</td>
+                    <td>{{ bobina.FK_coilProvider_id }}</td>
                     <td>{{ bobina.FK_coilStatus_id.name }}</td>
                 </tr>
                 {% endfor %}
@@ -139,6 +141,40 @@
     <button type="submit" name="crear" class="create">Crear</button>
     {% endif %}
 </form>
+
+<!-- Modal -->
+<div class="modal fade" id="instruccionesModal" tabindex="-1" aria-labelledby="instruccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instruccionesModalLabel">Instrucciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><b>Objetivo:</b> Realizar la solicitud de bobinas, imprimir la solicitud y dar paso a la entrega de marbetes.</p>
+		<p><b>Requisitos:</b> Asignar previamente las bobinas correctas a la orden de producción.</p>
+                <p><b>Paso 1:</b> Ingresar la orden de producción a la que se le desea solicitar bobinas.</p>
+                <p><b>Paso 2:</b> Validar si hay bobinas disponibles para solicitar.</p>
+                <p><b>Paso 3:</b> Ingresar la cantidad requerida en la planeación para la orden de producción.</p>
+                <p><b>Paso 4:</b> Dar clic en “Seleccionar bobinas”.</p>
+		<p><b>NOTA:</b> Las bobinas se seleccionaran de manera ascendente según los números de folios.</p>
+                <p><b>Paso 5:</b> Validar que las bobinas seleccionadas sean las correctas.</p>
+                <p><b>Paso 6:</b> Si las bobinas no son las correctas seleccionar y deseleccionar de manera manual.</p>
+                <p><b>Paso 7:</b> Una vez validado las bobinas dar clic en “Crear”.</p>
+		<p><b>IMPORTANTE:</b> Una vez se soliciten las bobinas ya no le aparecerán dichas
+		bobinas a almacén, si se solicitó una bobina incorrecta y no se ha aceptado la
+		solicitud se puede editar y quitarla de la solicitud, si la solicitud ya se aceptó,
+		esta bobina incorrecta se debe devolver para que sea visible para almacén.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock content %}
 
 {% block javascripts %}

@@ -1,6 +1,24 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
+{% load static %}
 {% block stylesheets %}
  <link href="/static/css/forms.css" rel="stylesheet">
+    <style>
+     #suggestions {
+        border: 1px solid #ccc;
+        max-height: 150px;
+        overflow-y: auto;
+        position: absolute;
+        background-color: white;
+        z-index: 1000;
+    }
+    #suggestions li {
+        padding: 8px;
+        cursor: pointer;
+    }
+    #suggestions li:hover {
+        background-color: #f0f0f0;
+    }
+    </style>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -8,36 +26,102 @@
 <form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
   {% csrf_token %}
 
-    <h2>Carga de Marbetes</h2>
+    <h2>Carga de Marbetes <span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span></h2>
 
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+            
+ <h5 style="color: white; font-size: 18px">Si tienes archivos .zip dañados da click <a href="{% url 'init-create-csv' %}">AQUÍ</a> para ingresar el archivo .csv</h5>
+ {% if messages %}
+	{% for message in messages %}
+		<div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+			 {{ message|safe }}
+			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		</div>
+	{% endfor %}
+  {% endif %}
  <div style="margin-top:20px;">
    <label style="color:white;">Folios</label>
-   <input type="file" name="csv_file" accept=".csv" multiple>
+   <input type="file" name="csv_file" accept=".zip" multiple>
  </div>
 
-<div style="margin-top:10px; margin-bottom: 15px;">
-    <label style="color:white;">Submarca</label>
+<div class="user-box">
     {{ form.brand }}
-</div>
+      <label>Marca</label>
+    </div>
 
   <div class="user-box">
     {{ form.ministrationNumber }}
       <label>Número de Ministración</label>
     </div>
 
-  <div>
-    <label style="color:white;">Proveedor</label>
-    {{ form.supplier }}
-</div>
+    <div class="user-box">
+        {{ form.zip_pass }}
+          <label>Contraseña del Archivo Zip</label>
+    </div>
 
    <button type="submit" name="login" class="create"> Crear </button>
   </form>
+<!-- Modal -->
+<div class="modal fade" id="instruccionesModal" tabindex="-1" aria-labelledby="instruccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instruccionesModalLabel">Instrucciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><b>Objetivo:</b> Devolver bobinas que no se utilizaron o con un resto.</p>
+		<p><b>Requisitos:</b> Consumo envasado o manualidades.</p>
+		<p><b>IMPORTANTE:</b> Para hacer el consumo de una nueva orden con el mismo producto y bobinas se debe realizar la devolución y todo el proceso de asignar bobina y solicitud.</p>
+                <p><b>Paso 1:</b> Ingresar la orden de producción a la que se le desea solicitar bobinas.</p>
+                <p><b>Paso 2:</b> Validar si hay bobinas disponibles para devolver.</p>
+		<p><b>NOTA:</b> Las bobinas que se muestren son bobinas que tengan marbetes marcados como disponibles.</p>
+                <p><b>Paso 3:</b> Marcar la bobina correspondiente a la devolución, ya sea si tiene resto o es una bobina completa.</p>
+                <p><b>Paso 4:</b> Dar clic en “Devolver”.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock content %}
+
+{% block javascripts %}
+    <script>
+    $(document).ready(function () {
+
+        $('#brand').on('keyup', function () {
+            let query = $(this).val();
+            if (query.length > 2) {
+                $.ajax({
+                    url: "{% url 'autocomplete_brand' %}",
+                    data: {
+                        'term': query
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#suggestions').remove();
+                        let suggestions = '<ul id="suggestions">';
+                        data.forEach(function (item) {
+                            suggestions += `<li data-value="${item.value}">${item.label}</li>`;
+                        });
+                        suggestions += '</ul>';
+                        $('#brand').after(suggestions);
+
+                        $('#suggestions li').on('click', function () {
+                            // Al seleccionar una opción, el valor se establece en el input
+                            $('#brand').val($(this).data('value'));
+                            $('#suggestions').remove();
+                        });
+                    }
+                });
+            } else {
+                $('#suggestions').remove();
+            }
+        });
+    });
+</script>
+{% endblock javascripts %}

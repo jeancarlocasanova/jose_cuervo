@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}
+<link href="/static/css/crud.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+    <h2 style="color: white; margin-bottom: 50px;">Registro de Cargas</h2>
+
+<table class="table" id="myTable">
+		<thead style="background-color: #1e264e">
+			<tr>
+            <th>Nombre de Archivo</th>
+            <th>Comentario</th>
+			<th>Ver Folios</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for log_file in log_files_list %}
+        <tr>
+            <td>{{ log_file.file_name }}</td>
+            <td>{{ log_file.comment }}</td>
+			<td><a href="{% url 'view_folios' log_file.file_name %}"><span><img class="img" src="{% static 'media/lupa.png' %}"/></span></a></td>
+        </tr>
+        {% endfor %}
+		</tbody>
+	</table>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+    <h3 style="color: white">No has iniciado sesión!</h3>
+    <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar sesión</p>
+ </div>
+{% endif %}
+    <script>
+        $(document).ready(function () {
+            var table = $('#myTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [10, 20]
+            });
+            generateBarcodes();
+        });
+    </script>
+{% endblock content %}
+

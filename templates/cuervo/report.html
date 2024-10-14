@@ -1,33 +1,48 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block stylesheets %}  <link href="/static/css/submenu.css" rel="stylesheet"> {% endblock stylesheets %}
 
 {% block content %}
 {% if user.is_authenticated %}
+<form style="margin-left: 250px; padding-right: 100px">
 <div class="cards-list">
-
-<div class="card 1" onclick="javascript:location.href='/'">
+{% if perms.auth.view_reports %}
+    <!-- Introducir link del reporte aqui -->
+    <div class="card 1" onclick="javascript:location.href='http://mbte-edi/CuervoSQLReports/report/CuervoReports/REPORTEBOBINA'">
+{% else %}
+   <div class="card 1" onclick="javascript:location.href='/'">
+{% endif %}
   <div class="card_image"> <img src="{% static 'media/report-image.webp' %}" /> </div>
   <div class="card_title title-white">
     <p class="card_text">Reporte de Bobinas</p>
   </div>
 </div>
 
-  <div class="card 2" onclick="javascript:location.href='/'">
+{% if perms.auth.view_reports %}
+    <!-- Introducir link del reporte aqui -->
+    <div class="card 1" onclick="javascript:location.href='http://mbte-edi/CuervoSQLReports/report/CuervoReports/REPORTEUTILIZADOS'">
+{% else %}
+   <div class="card 1" onclick="javascript:location.href='/'">
+{% endif %}
   <div class="card_image">
     <img src="{% static 'media/report-image1.webp' %}" />
     </div>
   <div class="card_title title-white">
-    <p class="card_text">Reporte Control Marbete</p>
+    <p class="card_text">Reporte Marbetes Utilizados</p>
   </div>
 </div>
 
-<div class="card 3" onclick="javascript:location.href='/'">
+{% if perms.auth.view_reports %}
+    <!-- Introducir link del reporte aqui -->
+    <div class="card 1" onclick="javascript:location.href='http://mbte-edi/CuervoSQLReports/report/CuervoReports/REPORTECM'">
+{% else %}
+   <div class="card 1" onclick="javascript:location.href='/'">
+{% endif %}
   <div class="card_image">
     <img src="{% static 'media/administracion.jpeg' %}" />
   </div>
   <div class="card_title title-white">
-    <p class="card_text">Reporte Control Marbete Envasado</p>
+    <p class="card_text">Reporte Control Marbete</p>
   </div>
 </div>
 
@@ -36,7 +51,12 @@
 
     <div class="cards-list">
 
-      <div class="card 1" onclick="javascript:location.href='/'">
+{% if perms.auth.view_reports %}
+    <!-- Introducir link del reporte aqui -->
+    <div class="card 1" onclick="javascript:location.href='http://mbte-edi/CuervoSQLReports/report/CuervoReports/REPORTEDEVOLUCION'">
+{% else %}
+   <div class="card 1" onclick="javascript:location.href='/'">
+{% endif %}
   <div class="card_image">
     <img src="{% static 'media/aprobacion-solicitudes.jpeg' %}" />
     </div>
@@ -45,7 +65,12 @@
   </div>
   </div>
 
-<div class="card 2" onclick="javascript:location.href='/'">
+{% if perms.auth.view_reports %}
+    <!-- Introducir link del reporte aqui -->
+    <div class="card 1" onclick="javascript:location.href='http://mbte-edi/CuervoSQLReports/report/CuervoReports/REPORTEDA%C3%91ADOS'">
+{% else %}
+   <div class="card 1" onclick="javascript:location.href='/'">
+{% endif %}
   <div class="card_image">
     <img src="{% static 'media/Aprobacion.png' %}" />
   </div>
@@ -54,12 +79,48 @@
   </div>
 </div>
 
-<div class="card 3" onclick="javascript:location.href='/'">
+{% if perms.auth.view_reports %}
+    <!-- Introducir link del reporte aqui -->
+    <div class="card 1" onclick="javascript:location.href='http://mbte-edi/CuervoSQLReports/report/CuervoReports/REPORTESOLICITUD'">
+{% else %}
+   <div class="card 1" onclick="javascript:location.href='/'">
+{% endif %}
   <div class="card_image">
     <img src="{% static 'media/report-image2.webp' %}" />
   </div>
   <div class="card_title title-white">
     <p class="card_text">Reporte Solicitud</p>
+  </div>
+</div>
+
+
+</div>
+  <div class="cards-list">
+{% if perms.auth.view_reports %}
+    <!-- Introducir link del reporte aqui -->
+    <div class="card 1" onclick="javascript:location.href='http://mbte-edi/CuervoSQLReports/report/CuervoReports/REPORTECME'">
+{% else %}
+   <div class="card 1" onclick="javascript:location.href='/'">
+{% endif %}
+  <div class="card_image">
+    <img src="{% static 'media/returnCoil.webp' %}" />
+  </div>
+  <div class="card_title title-white">
+    <p class="card_text">Reporte Control Marbete Envasado</p>
+  </div>
+</div>
+
+{% if perms.auth.view_reports %}
+    <!-- Introducir link del reporte aqui -->
+    <div class="card 1" onclick="javascript:location.href='http://mbte-edi/CuervoSQLReports/report/CuervoReports/REPORTEMARBETES'">
+{% else %}
+   <div class="card 1" onclick="javascript:location.href='/'">
+{% endif %}
+  <div class="card_image">
+    <img src="{% static 'media/Aprobacion.png' %}" />
+  </div>
+  <div class="card_title title-white">
+    <p class="card_text">Reporte Marbetes</p>
   </div>
 </div>
 
@@ -69,6 +130,8 @@
  <div class="w3-panel w3-yellow">
             <h3 style="color: white">No has iniciado seccion!</h3>
             <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
-        </div>
+ </div>
+
+      </form>
 {% endif %}
 {% endblock content %}

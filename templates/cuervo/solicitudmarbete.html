@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block stylesheets %}
  <link href="/static/css/forms.css" rel="stylesheet">
 <style>
@@ -43,7 +43,7 @@
     {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Solicitud: {{ coil_request_instance.id }}</h2>
+    <h2>Solicitud: {{ coil_request_instance.id }} <span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span></h2>
     {% endif %}
     <div class="container">
         <div class="user-box">
@@ -91,7 +91,7 @@
                         <input type="checkbox" id="select_all">
                     </th>
                     <th scope="col">Bobina</th>
-                    <th scope="col">SKU</th>
+                    <th scope="col">SKU Etiqueta</th>
                     <th scope="col">Folio Inicial</th>
                     <th scope="col">Folio Final</th>
                     <th scope="col">Total Rollo</th>
@@ -99,6 +99,7 @@
                     <th scope="col">Merma</th>
                     <th scope="col">No caja</th>
                     <th scope="col">Total por caja</th>
+                    <th scope="col">Provedor</th>
                 </tr>
             </thead>
             <tbody style="color: white">
@@ -117,6 +118,7 @@
                     <td>{{ bobina.missing }}</td>
                     <td>{{ bobina.boxNumber }}</td>
                     <td>{{ bobina.delivered }}</td>
+                    <td>{{ bobina.FK_coilProvider_id }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -133,6 +135,33 @@
     <button type="submit" name="crear" class="create"> Actualizar </button>
 
 </form>
+
+<!-- Modal -->
+<div class="modal fade" id="instruccionesModal" tabindex="-1" aria-labelledby="instruccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instruccionesModalLabel">Instrucciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><b>Objetivo:</b> Seccionar por submarca la  ministración de marbetes y asignar a su respectiva bobina.</p>
+		<p><b>Requisitos:</b> Carga previa de los marbetes pertenecientes a cada bobina, archivo de carga con el correcto formato.</p>
+                <p><b>Paso 1:</b> Cargar el archivo .csv.</p>
+                <p><b>Paso 2:</b> Ingresar el SKU del producto planeado para las bobinas a cargar (Al escribir los primeros 3 caracteres te arroja la sugerencia).</p>
+                <p><b>Paso 3:</b> Realizar la carga de bobinas.</p>
+		<p><b>IMPORTANTE:</b> El tiempo de carga de las bobinas depende de la cantidad de bobinas y marbetes que se asignan a estas bobinas. La página aparecerá
+		 actualizando durante la carga,<b> NO</b> se debe cerrar ni salir de la página donde se esta realizando la carga de bobinas.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock content %}
 
 {% block javascripts %}

@@ -20,6 +20,7 @@
                         <th scope="col">Merma</th>
                         <th scope="col">No caja</th>
                         <th scope="col">Total por caja</th>
+                    	<th scope="col">Provedor</th>
                         <th scope="col">Estatus</th>
                 </tr>
             </thead>
@@ -34,6 +35,7 @@
                         <td>{{ bobina.notDelivered }}</td>
                         <td>{{ bobina.boxNumber }}</td>
                         <td>{{ bobina.missing }}</td>
+                    	<td>{{ bobina.FK_coilProvider_id }}</td>
                         <td>{{ bobina.FK_coilStatus_id.name }}</td>
                 </tr>
                 {% endfor %}

@@ -44,7 +44,14 @@ urlpatterns = [
     path('labelStatus/edit/<int:pk>', updateLabelStatus_view.as_view(), name='status-edit'),
     path('labelStatusCreate/', createStatus_view, name='status-create'),
 
-    path('labelinit/', init_label_information, name='init-create'),
+    path('labelinit/', charge_zip_server, name='init-create'),
+    path('labelinit-csv/', charge_csv_server, name='init-create-csv'),
+
+    path('progress/', progress_charge_labels, name='progress_charge_labels'),
+    path('progress/data/', progress_data_ajax, name='progress_data_ajax'),
+    path('mark-as-seen/<int:id>/', mark_as_seen, name='mark_as_seen'),
+    path('view-log-files/<int:id>/', view_log_files, name='view_log_files'),
+    path('folios/<str:file_name>/', view_folios, name='view_folios'),
 
     path('labeluploadinventory/', init_label_in_inventory, name='label-inventory'),
 
@@ -53,6 +60,7 @@ urlpatterns = [
     path('solicitudmarbete/', solicitudmarbete_request, name='solicitudmarbete'),
 
     path('labeldamaged/', init_label_damaged, name='label-damaged'),
+    path('obtener_uniqueid/', obtener_uniqueid, name='obtener_uniqueid'),
     path('agregar_codigo/', agregar_codigo, name='agregar_codigo'),
     path('quitar_codigo/', quitar_codigo, name='quitar_codigo'),
     path('confirmar_listado/', confirmar_listado, name='confirmar_listado'),
@@ -65,6 +73,16 @@ urlpatterns = [
     path('confirmar_listado/', confirmar_listado, name='confirmar_listado'),
 
     path('coilcreate/', init_coil_create, name='coil-create'),
+
+    path('granel-lote/', init_granel_lot, name='granel-lote'),
+
+    path('granel-lot-delete/<int:pk>/', delete_granel_lot, name='granel-lot-delete-id'),
+
+    path('consumo-envasado/', Consumo_Envasado, name='consumo-envasado'),
+
+    path('consumo-manualidades/', Consumo_Manualidades, name='consumo-manualidades'),
+
+    path('noasignacion/', num_asignacion, name='no-asignacion'),
 
     path('coilStatus/', coilStatus_view, name='coilStatus'),
     path('coilStatus/delete/<int:pk>', deleteCoilStatus_view.as_view(), name='coil-status-delete'),
@@ -155,6 +173,9 @@ urlpatterns = [
 
     path('label/api', update_label, name='label-api'),
     path('labelstatus/api', list_status, name='status-api'),
+    path('autocomplete-sku/', autocomplete_sku, name='autocomplete_sku'),
+    path('autocomplete-brand/', autocomplete_brand, name='autocomplete_brand'),
+    path('autocomplete-subbrand/', autocomplete_subbrand, name='autocomplete_subbrand'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

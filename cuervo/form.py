@@ -33,6 +33,14 @@ class CoilChoiceFieldFilter(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return f"No. Caja: {obj.boxNumber} - SKU: {obj.sku} Rango: {obj.initNumber} - {obj.finishNumber}"
 
+class lotChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.granel_lot
+
+class BrandChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f"{obj.name} - {obj.subbrand}"
+
 
 class LoginForm(forms.Form):
     password = forms.CharField(
@@ -84,6 +92,10 @@ class CoilTypeForm(forms.Form):
 
 class CoilProviderForm(forms.Form):
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+
+class Granelloteform(forms.Form):
+    ordenproduccion = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    granel_lot = lotChoiceField(queryset=granel_lot.objects.all(), required=False)
 
 class CreateCoilForm(forms.Form):
     initNumber = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={"class": "form"}))
@@ -175,15 +187,19 @@ class FilterLabelForm(forms.Form):
     startDatetime.widget.attrs.update({
         'class': 'datetimepicker',
         'size': 14,
-        'onchange': 'this.form.submit();'
     })
     endDatetime = forms.DateTimeField(help_text='End Date Time', required=False)
     endDatetime.widget.attrs.update({
         'class': 'datetimepicker',
         'size': 14,
-        'onchange': 'this.form.submit();'
     })
-    sku = SkuChoiceField(queryset=SKU.objects.all(), required=False)
+    sku = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'id': 'sku',
+            'autocomplete': 'off'
+        })
+    )
 
 class UpdateLabelForm(forms.ModelForm):
     FK_inventoryLocation_id = MyModelChoiceField(queryset=inventoryLocation.objects.all())
@@ -194,19 +210,46 @@ class UpdateLabelForm(forms.ModelForm):
         fields = 'FK_inventoryLocation_id', 'FK_labelStatus_id'
 
 class LabelInitForm(forms.Form):
-    brand = MyModelChoiceField(queryset=sku_Type.objects.all())
+    brand = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            'id': 'brand',
+            'autocomplete': 'off',
+            'class': 'form'
+        })
+    )
     ministrationNumber = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
-    supplier = MyModelChoiceField(queryset=coilProvider.objects.all())
+    zip_pass = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    
+class LabelInitFormCSV(forms.Form):
+    brand = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            'id': 'brand',
+            'autocomplete': 'off',
+            'class': 'form'
+        })
+    )
+    ministrationNumber = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    
+class LabelInitInventoryForm(forms.Form):
+    brand = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            'id': 'brand',
+            'autocomplete': 'off',
+            'class': 'form'
+        })
+    )
 
 class ZipForm(forms.ModelForm):
     brand_name = MyModelChoiceField(queryset=sku_Type.objects.all())
     class Meta:
         model = zip_file_parent
-        fields = ['password', 'ministration_number', 'brand_name', 'route']
+        fields = ['password', 'ministration_number', 'brand_name']
         widgets = {
             'ministration_number': forms.TextInput(attrs={"class": "form"}),
-            'password': forms.TextInput(attrs={"class": "form"}),
-            'route': forms.FileInput(attrs={"accept": ".zip"})
+            'password': forms.TextInput(attrs={"class": "form"})
         }
 
 class CoilRequestForm(forms.ModelForm):
@@ -221,7 +264,7 @@ class CoilRequestForm(forms.ModelForm):
         fields = 'FK_coil_id', 'FK_order_id', 'Fk_source_invLocation_id', 'Fk_destination_invLocation_id', 'FK_coil_request_status_id'
 
 class CoilRequestFilter(forms.Form):
-    Fk_coil_request_status = StatusChoiceField(queryset=coil_request_status.objects.all())
+    Fk_coil_request_status = StatusChoiceField(queryset=coil_request_status.objects.filter(status__in=["Aceptada", "Pendiente"]))
 
 CHOICESBOOLEAN =(
     (True, "SI"),
@@ -278,3 +321,26 @@ class CreateCoilFormv2(forms.Form):
 class FilterCoilFormOrderAsign(forms.Form):
     folio_inicial = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={"class": "form"}))
     folio_final = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={"class": "form"}))
+
+
+class Consumo_Envform(forms.Form):
+    ordenproduccion = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    granel_lot = lotChoiceField(queryset=granel_lot.objects.all(), required=False)
+
+
+
+class Consumo_Manform(forms.Form):
+    ordenproduccion = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    granel_lot = lotChoiceField(queryset=granel_lot.objects.all(), required=False)
+    folioinicial = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'folioinicial'}))
+    foliofinal = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'foliofinal'}))
+
+
+class AddGranelloteform(forms.Form):
+    ordenproduccion = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    granel_lot = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))
+
+
+class NumAsignacionform(forms.Form):
+    sku = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "form"}))
+    noasignacion = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "form"}))

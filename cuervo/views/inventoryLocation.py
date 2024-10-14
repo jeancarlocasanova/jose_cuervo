@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
 
+@permission_required('cuervo.view_inventorylocation', login_url='/login/')
 def inventoryLocation_view(request):
     inventory = inventoryLocation.objects.all()
     return render(request, "cuervo/inventoryLocation.html", {'inventory': inventory})

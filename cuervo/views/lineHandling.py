@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 
 # <------ LINE CRUD --------!>
-
+@permission_required('cuervo.view_line', login_url='/login/')
 def Line_view(request):
     ObjLine = line.objects.all()
     return render(request, "cuervo/Line.html", {'line': ObjLine})

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block stylesheets %}
     <link href="/static/css/forms.css" rel="stylesheet">
 {% endblock stylesheets %}
@@ -10,10 +10,10 @@
     {% if msg %}
     <h2 class="text-danger">{{ msg | safe }}</h2>
     {% else %}
-    <h2>Folios Dañados</h2>
+    <h2>Folios Dañados <span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span></h2>
     {% endif %}
 
-        <!-- Agregar alerta para los códigos no cambiados -->
+    <!-- Agregar alerta para los códigos no cambiados -->
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-warning" role="alert">
@@ -24,7 +24,7 @@
 
     <div style="margin-top:20px;">
         <label style="color: white" for="codigo">Marbetes:</label>
-        <input type="text" name="codigo" id="codigo" placeholder="Click para empezar a escanear">
+        <input type="text" name="codigo" id="codigo" placeholder="Click para empezar a escanear o ingresa el folio">
         <button type="button" class="button" onclick="agregarCodigo()">Agregar</button>
     </div>
 
@@ -32,62 +32,122 @@
         <!-- Aquí se mostrarán los códigos escaneados -->
     </ul>
 
+    <p id="contador" style="color: red">Total marbetes: 0</p>
+
     <input type="hidden" name="codigos" id="codigos-input">
     <button type="submit" class="create">Confirmar Listado</button>
 </form>
 
+<!-- Modal -->
+<div class="modal fade" id="instruccionesModal" tabindex="-1" aria-labelledby="instruccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instruccionesModalLabel">Instrucciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><b>Objetivo:</b> Marcar como marbete dañado los marbetes inutilizados.</p>
+		<p><b>Requisitos:</b> Escáner manual.</p>
+                <p><b>Paso 1:</b> Dar clic en el campo de escritura “Clic para empezar a escanear o ingresa el folio”.</p>
+                <p><b>Paso 2:</b> Escanear los marbetes dañados.</p>
+		<p><b>NOTA:</b> Si el folio esta registrado en el sistema se agregará automáticamente al listado, si no existe el folio o se ha agregado ese folio al listado saltará una alerta.</p>
+                <p><b>Paso 3:</b> Si el folio no se puede escanear ingresar el folio manualmente.</p>
+		<p><b>NOTA:</b> Si se ingresa el folio manualmente se debe ingresar completo, desde el “Ne-” por ejemplo; Ne-05434323354.</p>
+                <p><b>Paso 4:</b> Una vez escrito el folio, dar clic en “Agregar”, el folio se agregará al listado.</p>
+                <p><b>Paso 5:</b> Validar que los folios ingresados sean los correctos y sea la cantidad correcta, pues, debajo se mostrará la cantidad de marbetes que pondrás como dañados.</p>
+                <p><b>Paso 6:</b> Una vez validados los folios, dar clic en “Confirmar listado” y esperar a que el sistema procese los folios como dañados.</p>
+                <p><b>Paso 7:</b> Saltará una alerta indicando que marbetes si se marcaron como dañados, así como los que no se marcaron como dañados y porqué no se marcaron como dañados.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-     <script>
-        var codigosEscaneados = [];
 
-        function agregarCodigo() {
-            var codigoInput = document.getElementById("codigo");
-            var codigo = codigoInput.value.trim();
+<script>
+    var codigosEscaneados = [];
 
-            if (codigo !== "") {
-                codigosEscaneados.push(codigo);
-                actualizarLista();
-                codigoInput.value = "";
-            }
-        }
+function agregarCodigo() {
+    var codigoInput = document.getElementById("codigo");
+    var codigo = codigoInput.value.trim();
 
-        function quitarCodigo(index) {
-            codigosEscaneados.splice(index, 1);
+    if (codigo !== "" && !codigosEscaneados.some(c => c.codigo === codigo)) {
+        // Verificar si es una URL o un uniqueid
+        if (codigo.startsWith("http")) {
+            // Si es una URL
+            fetch(`/obtener_uniqueid/?url=${encodeURIComponent(codigo)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.uniqueid) {
+                        codigosEscaneados.push({codigo: codigo, uniqueid: data.uniqueid});
+                        actualizarLista();
+                    } else {
+                        alert('URL no encontrada');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al buscar el uniqueid');
+                });
+        } else {
+            // Si es un uniqueid
+            codigosEscaneados.push({codigo: codigo, uniqueid: codigo});
             actualizarLista();
         }
+    } else {
+        alert('Código ya agregado o inválido');
+    }
 
-        function actualizarLista() {
-            var lista = document.getElementById("codigo-list");
-            lista.innerHTML = "";
+    codigoInput.value = "";
+}
 
-            for (var i = 0; i < codigosEscaneados.length; i++) {
-                var li = document.createElement("li");
-                li.textContent = codigosEscaneados[i];
 
-                var quitarLink = document.createElement("a");
-                quitarLink.textContent = "(Quitar)";
-                quitarLink.href = "#";
-                quitarLink.onclick = (function(index) {
-                    return function() {
-                        quitarCodigo(index);
-                    };
-                })(i);
+function quitarCodigo(index) {
+    codigosEscaneados.splice(index, 1);
+    actualizarLista();
+}
 
-                li.appendChild(quitarLink);
-                lista.appendChild(li);
-            }
+function actualizarLista() {
+    var lista = document.getElementById("codigo-list");
+    lista.innerHTML = "";
 
-            var codigosInput = document.getElementById("codigos-input");
-            codigosInput.value = codigosEscaneados.join(",");
-        }
+    for (var i = 0; i < codigosEscaneados.length; i++) {
+        var li = document.createElement("li");
+        li.textContent = codigosEscaneados[i].uniqueid;
 
-        // Evento que detecta cuando se presiona una tecla en el campo de entrada
-        document.getElementById("codigo").addEventListener("keydown", function(event) {
-            // Si se presiona Enter (código 13), agregar el código
-            if (event.keyCode === 13) {
-                event.preventDefault();
-                agregarCodigo();
-            }
-        });
-    </script>
+        var quitarLink = document.createElement("a");
+        quitarLink.textContent = "(Quitar)";
+        quitarLink.href = "#";
+        quitarLink.onclick = (function(index) {
+            return function() {
+                quitarCodigo(index);
+            };
+        })(i);
+
+        li.appendChild(quitarLink);
+        lista.appendChild(li);
+    }
+
+    // Actualiza el contador
+    document.getElementById("contador").textContent = `Total marbetes: ${codigosEscaneados.length}`;
+
+    var codigosInput = document.getElementById("codigos-input");
+    codigosInput.value = codigosEscaneados.map(codigo => codigo.codigo).join(",");
+}
+
+
+document.getElementById("codigo").addEventListener("keydown", function(event) {
+    if (event.keyCode === 13) {
+        event.preventDefault();
+        agregarCodigo();
+    }
+});
+</script>
+
 {% endblock content %}
+

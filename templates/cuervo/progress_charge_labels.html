@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}
+<link href="/static/css/crud.css" rel="stylesheet">
+<style>
+.progress-bar-container {
+    width: 100%;
+    background-color: #2e2e2e;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 20px 0;
+    height: 20px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: rgba(67, 190, 27, 0.67); /* Green color for progress */
+    width: 0%;
+    text-align: center;
+    line-height: 20px; /* Same as container height */
+    color: black;
+    transition: width 0.4s ease;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container">
+    <h2 style="color: white; margin-bottom: 50px;">Progreso de las Cargas de los Archivos Zip</h2>
+
+    <div id="progress-container"></div>
+</div>
+{% else %}
+ <div class="w3-panel w3-yellow">
+    <h3 style="color: white">No has iniciado sesión!</h3>
+    <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar sesión</p>
+ </div>
+{% endif %}
+    <script>
+    var refresh = function () {
+        $.ajax({
+            url: 'data/',
+            data: {},
+            dataType: 'json',
+            success: function(data) {
+                var progressContainer = $('#progress-container');
+                progressContainer.empty(); // Limpiar contenido anterior
+                console.log(data)
+                $.each(data.progress_data, function(index, element) {
+                     var progressBar = `
+        <h4 style="color: white">${element.file_name_parent}</h4>
+        <div class="button-container">
+            <button type="button" class="btn btn-primary mark-as-seen"
+                onclick="markAsSeen(${element.id})">Marcar como Visto</button>
+            ${element.has_log_files ? `<button type="button" class="btn btn-secondary view-log-files"
+                onclick="viewLogFiles(${element.id})">Ver Archivos de Registro</button>` : ''}
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: ${element.progress_percentage}%;">
+                ${element.processed_files} / ${element.total_files} Archivos Procesados (${element.progress_percentage.toFixed(2)}%)
+            </div>
+        </div>`;
+                    progressContainer.append(progressBar);
+                });
+            },
+            error: function(xhr, status, error) {
+                // Manejo de errores en la solicitud AJAX
+                console.error("AJAX Error:", status, error);
+            }
+        });
+    }
+
+    // Inicializar el refresco de la barra de progreso cada 2 segundos
+    setInterval(refresh, 2000);
+    function markAsSeen(parentId) {
+    $.ajax({
+        url: `/mark-as-seen/${parentId}/`,
+        type: 'POST',
+        success: function(response) {
+            // Mostrar un mensaje de éxito o actualizar el DOM según la respuesta
+            alert(response.message);
+            location.reload();  // Llamar a la función de refresco para actualizar la barra de progreso
+        },
+        error: function(xhr, status, error) {
+            // Manejo de errores en la solicitud AJAX
+            alert("Error al marcar el archivo como visto.");
+        }
+    });
+}
+
+    function viewLogFiles(parentId) {
+        // Navegar a la vista 'view_log_files'
+        window.location.href = `/view-log-files/${parentId}/`;
+    }
+</script>
+{% endblock content %}
+

@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
 
 # <------ TYPE OF SKU CRUD --------!>
-
+@permission_required('cuervo.view_coil_request_status', login_url='/login/')
 def requestStatus_view(request):
     request_status = coil_request_status.objects.all()
     return render(request, "cuervo/request_status.html", {'request_status': request_status})

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+</head>
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
+  {% csrf_token %}
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Asignaci&oacute;n de Lotes Granel  <span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span><span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span></h2>
+    {% endif %}
+    <div class="container">
+        <div class="user-box">
+            {{ form.ordenproduccion }}
+            <label>Orden de produccion</label>
+        </div>
+
+        <button type="submit" name="buscar" class="button"> BUSCAR </button>
+
+        {% if orden %}
+        <h3 style="color: white">DATOS DE LA ORDEN</h3>
+        <table class="table" style="color: white">
+            <thead style="background-color: #1e264e; color: white">
+                <tr>
+                    <th scope="col">Orden</th>
+                    <th scope="col">SKU</th>
+                    <th scope="col">Descripcion SKU</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ orden.uniqueid }}</td>
+                    <td>{{ orden.FK_sku_id.sku }}</td>
+                    <td>{{ orden.FK_sku_id.description }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <br>
+    {% if orden.status == 'REL' %}
+    <div class="container">
+    <h3 style="color: white">LOTES GRANEL</h3>
+    <div>
+      <label style="color:white;">Lotes</label>
+        {{ form.granel_lot }}
+    </div>
+    <button type="submit" name="asignar" class="button"> ASIGNAR </button>
+    </div>
+    <div class="container">
+    <h3 style="color: white">Lotes de la orden</h3>
+    <table class="table" style="color: white">
+        <thead style="background-color: #1e264e; color: white">
+            <tr>
+                <th>Lote Granel</th>
+		<th>Accion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lotes in lotes_granel %}
+            <tr>
+                <td>{{ lotes.granel_lot }}</td>
+                <td><a href="{% url 'granel-lot-delete-id' lotes.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    {% endif %}
+    {% endif %}
+  </form>
+<!-- Modal -->
+<div class="modal fade" id="instruccionesModal" tabindex="-1" aria-labelledby="instruccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instruccionesModalLabel">Instrucciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><b>Objetivo:</b> Ingresar lotes granel a la orden de producción para que se realice el consumo en el sistema.</p>
+		<p><b>IMPORTANTE:</b> Se tiene que realizar antes del consumo, si no se realiza el operador no visualizará lotes para hacer el consumo.</p>
+		<p><b>Requisitos:</b> Carga previa de los marbetes pertenecientes a cada bobina, archivo de carga con el correcto formato.</p>
+                <p><b>Paso 1:</b> Ingresar la orden de producción a la que se le desea agregar lotes granel.</p>
+                <p><b>Paso 2:</b> Validar si tiene lotes granel registrados.</p>
+                <p><b>Paso 3:</b> Escribir el lote granel a asignar.</p>
+		<p><b>NOTA:</b> El lote granel se debe escribir como se conoce por parte de procesos, por ejemplo; 51924058. El sistema lo transformará a L05824.</p>
+                <p><b>Paso 4:</b> Dar clic en “Asignar”, el marbete se agrega a la orden de producción y está listo para el consumo.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

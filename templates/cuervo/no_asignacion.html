@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block stylesheets %}
+ <link href="/static/css/forms.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<form role="form" method="post" action="" style="margin-left: 250px; padding-right: 190px" enctype="multipart/form-data">
+  {% csrf_token %}
+
+     {% if msg %}
+    <h2 class="text-danger">{{ msg | safe }}</h2>
+    {% else %}
+    <h2>Numeros de Asignacion</h2>
+    {% endif %}
+    <div class="container">
+        <div class="user-box">
+            {{ form.sku }}
+            <label>SKU</label>
+        </div>
+
+        <button type="submit" name="buscar" class="button"> BUSCAR </button>
+
+        {% if sku %}
+        <h3 style="color: white">PRODUCTO</h3>
+        <table class="table" style="color: white">
+            <thead style="background-color: #1e264e; color: white">
+                <tr>
+                    <th scope="col">SKU</th>
+                    <th scope="col">Descripcion</th>
+                    <th scope="col">No. Asignacion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ sku.sku }}</td>
+                    <td>{{ sku.description }}</td>
+                    <td>{{ sku.asignacion }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <br>
+    <div class="container">
+    <h3 style="color: white">Crea o edita el numero de asignacion</h3>
+        <br>
+    <div class="user-box">
+        {{ form.noasignacion }}
+        <label>No. Asignacion</label>
+     </div>
+    <button type="submit" name="asignar" class="button"> ASIGNAR </button>
+    </div>
+
+    {% endif %}
+  </form>
+{% endblock content %}

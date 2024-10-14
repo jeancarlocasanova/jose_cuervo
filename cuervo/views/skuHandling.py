@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import ProtectedError
 
 # <------ TYPE OF SKU CRUD --------!>
-
+@permission_required('cuervo.view_sku_type', login_url='/login/')
 def skuType_view(request):
     sku_type = sku_Type.objects.all()
     return render(request, "cuervo/skuType.html", {'sku_type': sku_type})
@@ -70,7 +70,7 @@ def createSkuType_view(request):
 
 
 # <------ SKU CRUD --------!>
-
+@permission_required('cuervo.view_sku', login_url='/login/')
 def sku_view(request):
     sku = SKU.objects.all()
     return render(request, "cuervo/SKU.html", {'sku': sku})

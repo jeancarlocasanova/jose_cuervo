@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib import messages
 from django.db.models import Q
 
+@permission_required('auth.return_coils', login_url='/login/')
 def returnOfCoilsFilter(request):
     form = orderForm2()
     lot_form = None
@@ -20,24 +21,41 @@ def returnOfCoilsFilter(request):
                 uniqueid = form.cleaned_data.get("uniqueid")
                 try:
                     devolution = order.objects.get(uniqueid=uniqueid)
-                    id_order = devolution.id
-                    return redirect(f"/coilreturn/{id_order}")
+                    if devolution:
+                        id_order = devolution.id
+                        return redirect(f"/coilreturn/{id_order}")
+                    else:
+                        messages.error(request, 'Orden no encontrada')
                 except order.DoesNotExist:
-                    msg = 'No se ha encontrado ninguna orden de producción con el ID proporcionado.'
+                    messages.error(request, 'No se ha encontrado ninguna orden de producción con el ID proporcionado.')
             else:
-                msg = 'El formulario no es válido. Por favor, revise los datos ingresados.'
+                messages.error(request, 'El formulario no es válido. Por favor, revise los datos ingresados.')
     else:
         form = orderForm2()
 
     return render(request, 'cuervo/return_of_coils_filter.html', {'form': form, "msg": msg})
 
-@permission_required('cuervo.add_labelstatus', login_url='/login/')
+@permission_required('auth.return_coils', login_url='/login/')
 def returnOfCoils(request, order_id):
     order_obj = get_object_or_404(order, id=order_id)
+    consume_status = get_object_or_404(coilStatus, name='Consumida')
 
     coilsWithComa = order_obj.coils
     coilsWithComaList = coilsWithComa.split(',') if coilsWithComa else []
     coil_list = coil.objects.filter(id__in=coilsWithComaList)
+    coil_list = coil_list.exclude(FK_coilStatus_id=consume_status)
+
+    # Validar etiquetas disponibles o asignadas
+    assigned_status = get_object_or_404(labelStatus, name='Asignado')
+    available_status = get_object_or_404(labelStatus, name='Disponible')
+
+    valid_coils = []
+    for coil_item in coil_list:
+        if label.objects.filter(FK_coil_id=coil_item).filter(
+                Q(FK_labelStatus_id=assigned_status) | Q(FK_labelStatus_id=available_status)).exists():
+            valid_coils.append(coil_item)
+    print(valid_coils)
+    coil_list = valid_coils
 
     if request.method == "POST":
         selected_coils_ids = [key.split('selected_coils')[1] for key in request.POST.keys() if 'selected_coils' in key]
@@ -49,33 +67,95 @@ def returnOfCoils(request, order_id):
 
         try:
             devolved_status = get_object_or_404(coilStatus, name='Devuelta')
-            assigned_status = get_object_or_404(labelStatus, name='Asignado')
-            available_status = get_object_or_404(labelStatus, name='Disponible')
 
             for selected_coil in selected_coils:
-                # Actualiza el estado de la bobina
-                selected_coil.FK_coilStatus_id = devolved_status
-                selected_coil.save()
+            
+                obj_coil = coil.objects.create(
+                    initNumber=selected_coil.initNumber,
+                    finishNumber=selected_coil.finishNumber,
+                    numrollo=selected_coil.numrollo,
+                    notDelivered=selected_coil.notDelivered,
+                    missing=selected_coil.missing,
+                    delivered=selected_coil.delivered,
+                    boxNumber=selected_coil.boxNumber,
+                    purchaseOrder=selected_coil.purchaseOrder,
+                    orderUniqueid=selected_coil.orderUniqueid,
+                    sku=selected_coil.sku,
+                    qty_box=selected_coil.qty_box,
+                    FK_coilStatus_id=devolved_status,
+                    FK_coilType_id=selected_coil.FK_coilType_id,
+                    last_edit_user=selected_coil.last_edit_user,
+                    FK_coilProvider_id=selected_coil.FK_coilProvider_id
+                )
 
                 # Verifica y actualiza el folio inicial si es necesario
                 labels = label.objects.filter(FK_coil_id=selected_coil).order_by('uniqueid')
                 folio_final_num = int(selected_coil.finishNumber.split('-')[-1])
+                folio_inicial_num = int(selected_coil.initNumber.split('-')[-1])
 
-                labels_with_different_status = labels.exclude(Q(FK_labelStatus_id=assigned_status) | Q(FK_labelStatus_id=available_status))
+                labels_with_different_status = labels.exclude(
+                    Q(FK_labelStatus_id=assigned_status) | Q(FK_labelStatus_id=available_status))
 
-                if labels_with_different_status.exists():
-                    # Encuentra el primer folio que no tiene el estado diferente
-                    new_folio_inicial = labels_with_different_status.last().uniqueid.split('-')[-1]
-                    selected_coil.initNumber = f'{int(new_folio_inicial) + 1:010}'
+                # Lógica para encontrar un grupo de folios consecutivos al principio
+                consecutive_count = 0
+                new_folio_inicial = None
+                prev_label_number = None
+
+                for lbl in labels_with_different_status:
+                    label_number = int(lbl.uniqueid.split('-')[-1])
+
+                    if prev_label_number is None:
+                        prev_label_number = label_number
+                        consecutive_count = 1
+                    elif label_number == prev_label_number + 1:
+                        consecutive_count += 1
+                        prev_label_number = label_number
+                    else:
+                        break
+
+                    if consecutive_count >= 5:  # Comprueba si hay al menos 5 consecutivos al principio
+                        new_folio_inicial = label_number
+
+                if new_folio_inicial is not None:
+                    # Actualizar el initNumber del obj_coil con el nuevo folio inicial
+                    obj_coil.initNumber = f'Ne-{new_folio_inicial + 1:010}'
+                    obj_coil.save()
+
+                    # Actualizar el finishNumber del selected_coil con new_folio_inicial - 1
+                    selected_coil.finishNumber = f'Ne-{new_folio_inicial - 1:010}'
                     selected_coil.save()
 
-                    missing_count = folio_final_num - int(new_folio_inicial)
+                    # Calcular missing para selected_coil y obj_coil
+                    missing_count = folio_final_num - new_folio_inicial
+                    missing_count = missing_count - selected_coil.notDelivered
+
+                    obj_coil.missing = missing_count - 1
+                    obj_coil.save()
+                    
+                    missing_count = (new_folio_inicial - 1)  - folio_inicial_num
+                    missing_count = missing_count - selected_coil.notDelivered
+
                     selected_coil.missing = missing_count
                     selected_coil.save()
 
-            updated_coils = [str(coil_id) for coil_id in coilsWithComaList if str(coil_id) not in selected_coils_ids]
-            order_obj.coils = ','.join(updated_coils)
-            order_obj.save()
+                if new_folio_inicial is not None:
+                    coilTrace.objects.create(
+                        FK_coil_id=selected_coil,
+                        user_id=request.user,
+                        FK_order_id=order_obj,
+                        initLabel=selected_coil.initNumber,
+                        lastLabel=selected_coil.finishNumber,
+                        total_label=selected_coil.missing + 1
+                    )
+                else:
+                    coilTrace.objects.create(
+                        FK_coil_id=selected_coil,
+                        user_id=request.user,
+                        FK_order_id=order_obj,
+                        initLabel=selected_coil.initNumber,
+                        lastLabel=selected_coil.finishNumber,
+                        total_label=selected_coil.missing
+                    )
 
             messages.success(request, 'Las bobinas seleccionadas han sido devueltas exitosamente.')
         except Exception as e:
@@ -84,7 +164,6 @@ def returnOfCoils(request, order_id):
         return redirect(request.path_info)
 
     return render(request, "cuervo/return_of_coils.html", {"coils": coil_list, "order": order_obj})
-
 
 @permission_required('cuervo.add_coiltrace', login_url='/login/')
 def createReturnOfCoil(request):

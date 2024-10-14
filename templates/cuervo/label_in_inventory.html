@@ -1,6 +1,24 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
+{% load static %}
 {% block stylesheets %}
  <link href="/static/css/forms.css" rel="stylesheet">
+     <style>
+     #suggestions {
+        border: 1px solid #ccc;
+        max-height: 150px;
+        overflow-y: auto;
+        position: absolute;
+        background-color: white;
+        z-index: 1000;
+    }
+    #suggestions li {
+        padding: 8px;
+        cursor: pointer;
+    }
+    #suggestions li:hover {
+        background-color: #f0f0f0;
+    }
+    </style>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -18,11 +36,76 @@
                     </div>
                 {% endfor %}
             {% endif %}
-    <h2>Alta de Folios Almacén</h2>
+    <h2>Alta de Folios Almacén <span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span></h2>
  <div>
    <label style="color:white;">Archivo Excel</label>
    <input type="file" name="csv_file" accept=".xlsx" multiple>
  </div>
+    <div class="user-box">
+    {{ form.brand }}
+      <label>SKU</label>
+    </div>
    <button type="submit" name="login" class="create"> Crear </button>
   </form>
+
+<!-- Modal -->
+<div class="modal fade" id="instruccionesModal" tabindex="-1" aria-labelledby="instruccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instruccionesModalLabel">Instrucciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><b>Objetivo:</b> Seccionar por submarca la  ministración de marbetes y asignar a su respectiva bobina.</p>
+		<p><b>Requisitos:</b> Carga previa de los marbetes pertenecientes a cada bobina, archivo de carga con el correcto formato.</p>
+                <p><b>Paso 1:</b> Cargar el archivo .csv.</p>
+                <p><b>Paso 2:</b> Ingresar el SKU del producto planeado para las bobinas a cargar (Al escribir los primeros 3 caracteres te arroja la sugerencia).</p>
+                <p><b>Paso 3:</b> Realizar la carga de bobinas.</p>
+		<p><b>IMPORTANTE:</b> El tiempo de carga de las bobinas depende de la cantidad de bobinas y marbetes que se asignan a estas bobinas. La página aparecerá
+		 actualizando durante la carga,<b> NO</b> se debe cerrar ni salir de la página donde se esta realizando la carga de bobinas.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
+
+{% block javascripts %}
+    <script>
+        $(document).ready(function () {
+
+            $('#brand').on('keyup', function () {
+                let query = $(this).val();
+                if (query.length > 2) {
+                    $.ajax({
+                        url: "{% url 'autocomplete_sku' %}",
+                        data: {
+                            'term': query
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            $('#suggestions').remove();
+                            let suggestions = '<ul id="suggestions">';
+                            data.forEach(function (item) {
+                                suggestions += '<li>' + item.sku + '</li>';
+                            });
+                            suggestions += '</ul>';
+                            $('#brand').after(suggestions);
+                            $('#suggestions li').on('click', function () {
+                                $('#brand').val($(this).text());
+                                $('#suggestions').remove();
+                            });
+                        }
+                    });
+                } else {
+                    $('#suggestions').remove();
+                }
+            });
+        });
+    </script>
+{% endblock javascripts %}

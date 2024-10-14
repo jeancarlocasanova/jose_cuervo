@@ -1,7 +1,8 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block stylesheets %}
     <link href="/static/css/crud.css" rel="stylesheet">
+    <link href="/static/css/forms.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/jquery.datetimepicker.min.css' %}" type="text/css"/>
     <style>
         .form-group {
@@ -23,6 +24,21 @@
             max-height: 400px; /* Altura máxima de la tabla */
             overflow-y: auto; /* Habilitar el desplazamiento vertical */
         }
+          #suggestions {
+        border: 1px solid #ccc;
+        max-height: 150px;
+        overflow-y: auto;
+        position: absolute;
+        background-color: white;
+        z-index: 1000;
+    }
+    #suggestions li {
+        padding: 8px;
+        cursor: pointer;
+    }
+    #suggestions li:hover {
+        background-color: #f0f0f0;
+    }
     </style>
 {% endblock stylesheets %}
 
@@ -49,7 +65,7 @@
                     {{ form.sku }}
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="w3-button w3-yellow">Filtrar</button>
+                    <button type="submit" class="button">Filtrar</button>
                 </div>
             </div>
         </div>
@@ -117,6 +133,34 @@
             $(".datetimepicker").datetimepicker({
                 timepicker: true,
                 format: 'Y-m-d H:i'
+            });
+
+            $('#sku').on('keyup', function () {
+                let query = $(this).val();
+                if (query.length > 2) {
+                    $.ajax({
+                        url: "{% url 'autocomplete_sku' %}",
+                        data: {
+                            'term': query
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            $('#suggestions').remove();
+                            let suggestions = '<ul id="suggestions">';
+                            data.forEach(function (item) {
+                                suggestions += '<li>' + item.description + '</li>';
+                            });
+                            suggestions += '</ul>';
+                            $('#sku').after(suggestions);
+                            $('#suggestions li').on('click', function () {
+                                $('#sku').val($(this).text());
+                                $('#suggestions').remove();
+                            });
+                        }
+                    });
+                } else {
+                    $('#suggestions').remove();
+                }
             });
         });
     </script>

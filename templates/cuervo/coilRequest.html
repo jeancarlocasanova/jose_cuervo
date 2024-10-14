@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block stylesheets %}  <link href="/static/css/crud.css" rel="stylesheet"> {% endblock stylesheets %}
 
 {% block content %}
 {% if user.is_authenticated %}
 <div class="container">
-	<h1 style="color: white; margin-bottom: 30px">Manejo de Solicitudes de Bobinas</h1>
+	<h1 style="color: white; margin-bottom: 30px">Manejo de Solicitudes de Bobinas <span class="btn btn-info btn-sm" data-toggle="modal" data-target="#instruccionesModal">?</span></h1>
 
 
 	{% if statusRequest == 'Pendiente' %}
@@ -16,7 +16,6 @@
 			<tr>
 				<th scope="col">No. Solicitud</th>
 				<th scope="col">Orden</th>
-                <th scope="col">Lote</th>
                 <th scope="col">Fecha de emisión</th>
                 <th scope="col">Cantidad</th>
                  <th scope="col">Creada por</th>
@@ -33,7 +32,6 @@
 			<tr>
                 <td>{{ i.id }}</td>
 				<td>{{ i.FK_order_id.uniqueid }}</td>
-                <td>{{ i.FK_lot_id.granel_lot }}</td>
                 <td>{{ i.request_date }}</td>
                 <td>{{ i.total_number }}</td>
                 <td>{{ i.created_by }}</td>
@@ -57,17 +55,12 @@
 			<tr>
 				<th scope="col">No. Solicitud</th>
 				<th scope="col">Orden</th>
-                <th scope="col">Lote</th>
-                <th scope="col">Fecha de emisión</th>
-                <th scope="col">Cantidad</th>
-                 <th scope="col">Creada por</th>
-                 <th scope="col">Aceptada por</th>
-                <th scope="col">Bobinas</th>
+                		<th scope="col">Fecha de emisión</th>
+                		<th scope="col">Cantidad</th>
+                 		<th scope="col">Creada por</th>
+                 		<th scope="col">Aceptada por</th>
+                		<th scope="col">Bobinas</th>
 				<th scope="col">Estatus</th>
-				 {% if perms.cuervo.change_coilprovider %}
-				<th scope="col">Editar</th>{% endif %}
-				{% if perms.cuervo.delete_coilprovider %}
-				<th scope="col">Eliminar</th>{% endif %}
 			</tr>
 		</thead>
 		<tbody>
@@ -75,21 +68,16 @@
 			<tr>
                 <td>{{ i.id }}</td>
 				<td>{{ i.FK_order_id.uniqueid }}</td>
-                <td>{{ i.FK_lot_id.granel_lot }}</td>
                 <td>{{ i.request_date }}</td>
                 <td>{{ i.total_number }}</td>
                 <td>{{ i.created_by }}</td>
                 <td>{{ i.accepted_by }}</td>
-				<form role="form" method="post" action="{% url 'view-coils' i.id %}">
+		<form role="form" method="post" action="{% url 'view-coils' i.id %}">
                     {% csrf_token %}
                     <td><button type="submit"><a>VER BOBINAS</a></button></td>
                 </form>
                 <td>{{ i.FK_coil_request_status_id.status }}</td>
-				 {% if perms.cuervo.change_coil_request %}
-				<td><a href="{% url 'coil-request-edit' i.id %}"><span><img class="img" src="{% static 'media/edit.png' %}"/></span></a></td>{% endif %}
-				{% if perms.cuervo.delete_coil_request %}
-				<td><a href="{% url 'coil-request-delete-id' i.id %}"><span><img class="img" src="{% static 'media/delete.png' %}"/></span></a></td>{% endif %}
-			</tr>
+		</tr>
 		{% endfor %}
 		</tbody>
 	</table>
@@ -100,7 +88,6 @@
 			<tr>
 				<th scope="col">No. Solicitud</th>
 				<th scope="col">Orden</th>
-                <th scope="col">Lote</th>
                 <th scope="col">Fecha de emisión</th>
                 <th scope="col">Cantidad</th>
 				<th scope="col">Creada por</th>
@@ -118,7 +105,6 @@
 			<tr>
                 <td>{{ i.id }}</td>
 				<td>{{ i.FK_order_id.uniqueid }}</td>
-                <td>{{ i.FK_lot_id.granel_lot }}</td>
                 <td>{{ i.request_date }}</td>
                 <td>{{ i.total_number }}</td>
                 <td>{{ i.created_by }}</td>
@@ -144,6 +130,40 @@
             <p style="color: white">Por favor acceda al siguiente <a href="{% url 'login' %}" class="create">Link</a> para iniciar seccion</p>
  </div>
 {% endif %}
+
+
+<!-- Modal -->
+<div class="modal fade" id="instruccionesModal" tabindex="-1" aria-labelledby="instruccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instruccionesModalLabel">Instrucciones</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><b>Objetivo:</b> Visualizar las solicitudes creadas con el filtro seleccionado, ya sean solicitudes pendientes o aceptadas.</p>
+		<p><b>SOLICITUDES PENDIENTES:</b></p>
+                <p><b>Paso 1:</b> Validar que existan solicitudes pendientes.</p>
+                <p><b>Paso 2:</b> Para buscar la solicitud deseada, ingresar el numero de orden en el campo “Search”, si no aparece algún resultado puede ser por que la solicitud ya esta aceptada o porque no se ha creado.</p>
+                <p><b>Paso 3:</b> Para crear una solicitud, dar clic en “Crear Solicitud”.</p>
+                <p><b>Paso 4:</b> Para editar una solicitud, dar clic en el símbolo del lápiz dentro de cada solicitud que se muestre..</p>
+                <p><b>Paso 5:</b> Para borrar una solicitud, dar clic en el símbolo del bote de basura de cada solicitud que se muestre.</p>
+		<p><b>IMPORTANTE:</b> Validar que las bobinas de la solicitud sean las correctas, se puede editar la solicitud mientras se mantenga como pendiente, una vez aceptada la solicitud no se puede editar,
+				 si las bobinas no son correctas se debe realizar un proceso de devolución.</p>
+                <p><b>Paso 6:</b> Para validar las bobinas de cada solicitud, dar clic en “VER BOBINAS”, esto te mostrará las bobinas solicitadas.</p>
+		<p><b>SOLICITUDES ACEPTADAS:</b></p>
+		<p><b>Paso 1:</b> Validar que existan solicitudes aceptadas.</p>
+                <p><b>Paso 2:</b> Para buscar la solicitud deseada, ingresar el numero de orden en el campo “Search”, si no aparece algún resultado puede ser por que la solicitud aún no esta aceptada o porque no se ha creado.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock content %}
 
 {% block javascripts %}
